@@ -1,0 +1,574 @@
+<?xml version="1.0"?>
+<project name="Release Substitutions" default="perform-substitutions">
+
+    <target name="perform-substitutions-wrapper" unless="_bypass_substitutions" depends="-postbuild, -check-for-substitutions">
+        <antcall target="perform-substitutions" />
+    </target>
+
+    <target name="perform-substitutions" unless="_bypass_substitutions"
+            depends="-check-for-substitutions, -load-continued-versions,
+                     -make-temp-directory, -get-old-build-artifacts">
+        <property name="_rsdiff_txt" value="${autobuild.dir.build-artifacts}/rsdiff.txt" />
+        <property name="_rsdiff_docs_txt" value="${autobuild.dir.build-artifacts}/rsdiff_docs.txt" />
+        <delete file="${_rsdiff_txt}" quiet="true"/>
+        <delete file="${_rsdiff_docs_txt}" quiet="true"/>
+
+        <!-- to be documented: if you want to check for substitutions against
+             a different site (we check against milestones, unless autobuild.repository
+             is "thirdparty", in which case we check thirdparty), such as a one-off
+             candidate site, set the properties "autobuild.url.substitutions.release"
+             and "autobuild.url.substitutions.debug" (we'll append /plugins to find
+             the plugin jar).  As a shortcut, set autobuild.url.substitutions and
+             we'll append release/plugins and debug/plugins as needed. -->
+        <condition property="_is_thirdparty_repo">
+            <equals arg1="${autobuild.repository}" arg2="thirdparty" />
+        </condition>
+        <condition property="autobuild.url.spin"
+                   value="http://spin.tibco.com:${autobuild.spin.port}"
+                   else="http://spin.tibco.com">
+            <isset property="autobuild.spin.port" />
+        </condition>
+        <if>
+            <isset property="_is_thirdparty_repo" />
+            <then>
+                <property name="autobuild.url.substitutions.release" value="${autobuild.url.spin}/milestones/thirdparty" />
+                <property name="autobuild.url.substitutions.debug" value="${autobuild.url.spin}/milestones/thirdparty" />
+                <property name="autobuild.url.substitutions.ga.release" value="${autobuild.url.spin}/GA/thirdparty" />
+                <property name="autobuild.url.substitutions.ga.debug" value="${autobuild.url.spin}/GA/thirdparty" />
+            </then>
+        </if>
+     
+        <property name="autobuild.url.substitutions"  value="${autobuild.url.spin}/milestones" />
+        <property name="autobuild.url.substitutions.release" value="${autobuild.url.substitutions}/release" />
+        <property name="autobuild.url.substitutions.debug" value="${autobuild.url.substitutions}/debug" />
+        
+        <property name="autobuild.url.substitutions.ga" value="${autobuild.url.spin}/GA" />
+        <property name="autobuild.url.substitutions.ga.release" value="${autobuild.url.substitutions.ga}/release" />
+        <property name="autobuild.url.substitutions.ga.debug" value="${autobuild.url.substitutions.ga}/debug" />
+
+        <property name="autobuild.url.substitutions.reldist.release" value="${reldist.update.sites}/release" />
+        <property name="autobuild.url.substitutions.reldist.debug" value="${reldist.update.sites}/debug" />
+
+        <property name="_extension_sites_list"
+                  value="debug,release" />
+        <propertyselector property="_continued_versions_list"
+                          match="continued_plugin\.(.*)"
+                          select="\1" />
+        <property name="_bumped_buildno_file" value="${autobuild.dir.build-artifacts}/autoBumpedVersions.properties" />
+        <delete file="diff_plugin_list.properties" quiet="true" />
+        <delete file="${_bumped_buildno_file}" quiet="true" />
+        <foreach list="${_continued_versions_list}" param="_continued_plugin"
+                 target="-download-and-compare" inheritall="true" />
+        <property file="diff_plugin_list.properties" prefix="diff_plugin." />
+        <propertyselector property="_diff_plugin_list" match="diff_plugin\.(.*)" select="\1" />
+        <if>
+            <isset property="_diff_plugin_list" />
+            <then>
+                <bump.diff.plugins.buildno />
+                <delete file="diff_plugin_list.properties" quiet="true" />
+            </then>
+            <else>
+                <foreach list="${_continued_versions_list}" param="_continued_plugin"
+                         target="-perform-substitution" inheritall="true" />
+            </else>
+        </if>
+        <antcall target="-substitutions-cleanup" />
+    </target>
+
+    <target name="-check-for-substitutions">
+        <condition property="_bypass_substitutions">
+            <or>
+                <!-- if this is not a release build, or -->
+                <not>
+                    <isset property="official-release-build" />
+                </not>
+                <!-- there aren't any plugins to continue, or -->
+                <not>
+                    <available file="${autobuild.dir.release-unit}/build-artifacts/continuedVersions.properties" type="file" />
+                </not>
+                <!-- the bypass has been set manually or because of build number overrides, then -->
+                <istrue value="${autobuild.release.substitutions-bypass}" />
+                <istrue value="${match.build.number}" />
+            </or>
+        </condition>
+    <!-- set the bypass, and bypass the substitutions -->
+    </target>
+
+    <target name="-load-continued-versions" unless="_bypass_substitutions">
+        <property file="${autobuild.dir.release-unit}/build-artifacts/continuedVersions.properties"
+                  prefix="continued_plugin." />
+    </target>
+
+    <target name="-make-temp-directory" unless="_bypass_substitutions">
+        <property name="_subs_temp_dir" location="${autobuild.dir.release-unit}/substitutions" />
+        <property name="_old_artifacts" value="old-artifacts" />
+        <property name="_old_artifacts_dir" location="${autobuild.dir.release-unit}/${_old_artifacts}" />
+        <property file="${autobuild.dir.build-artifacts}/previous-tag.properties" />
+        <delete file="${autobuild.dir.build-artifacts}/previous-tag.properties" quiet="true"/>
+        <mkdir dir="${_subs_temp_dir}" />
+        <mkdir dir="${_subs_temp_dir}/debug" />
+        <mkdir dir="${_subs_temp_dir}/release" />
+        <mkdir dir="${_subs_temp_dir}/compare" />
+        <property name="_comps_temp_dir" location="${_subs_temp_dir}/compare" />
+    </target>
+
+    <target name="-get-old-build-artifacts" unless="_bypass_substitutions">
+        <!-- use an svn export to get the content of the directory, without the subversion
+             metadata.  it makes cleanup afterward slightly less error-prone. -->
+        <exec executable="svn" logerror="on" failonerror="false">
+            <arg line="export ${_old_artifacts_svn_url} ${_old_artifacts}" />
+        </exec>
+    </target>
+
+    <target name="-download-from-url">
+        <if>
+            <not>
+            <available file="${_subs_temp_dir}/${_subdir}/${_this_continued_plugin}.jar" />
+            </not>
+            <then>
+                <get src="${_target_url}/${_this_continued_plugin}.jar"
+                     dest="${_subs_temp_dir}/${_subdir}/${_this_continued_plugin}.jar"
+                     ignoreerrors="true" verbose="true" />
+            </then>
+        </if>
+    </target>
+
+    <target name="-download-debug-jar">
+        <echo>Attempting to download ${_this_continued_plugin}</echo>
+        <foreach list="${autobuild.url.substitutions.debug}/plugins,${autobuild.url.substitutions.ga.debug}/plugins,${autobuild.url.substitutions.reldist.debug}/plugins" 
+                 param="_target_url"
+                 target="-download-from-url" inheritall="true">
+            <param name="_subdir" value="debug" />
+        </foreach>
+    </target>
+
+    <target name="-download-release-jar">
+        <echo>Attempting to download ${_this_continued_plugin}</echo>
+        <foreach list="${autobuild.url.substitutions.release}/plugins,${autobuild.url.substitutions.ga.release}/plugins,${autobuild.url.substitutions.reldist.release}/plugins" 
+                 param="_target_url"
+                 target="-download-from-url" inheritall="true">
+            <param name="_subdir" value="release" />
+        </foreach>
+    </target>
+
+    <target name="-compare-debug-versions"
+            depends="-check-found-and-pack"
+            if="_found_this_plugin">
+        <mkdir dir="${_comps_temp_dir}/download" />
+        <mkdir dir="${_comps_temp_dir}/local" />
+        <property name="_downl_jar" location="${_comps_temp_dir}/download" />
+        <property name="_local_jar" location="${_comps_temp_dir}/local" />
+        <unjar src="${_subs_temp_dir}/debug/${_this_continued_plugin}.jar"
+               dest="${_downl_jar}" />
+        <unjar src="${autobuild.dir.output.jars.debug}/plugins/${_this_continued_plugin}.jar"
+               dest="${_local_jar}" />
+        <antcall target="-unpack-some-more" />
+        
+        <!-- comment by Sean Qi, try to use diff task instead
+        <property name="release.substitutions.diff-command" value="diff" />
+        <property name="release.substitutions.diff-options" value="-rq" />
+        <property name="autobuild.grep-switch-string" value="grep \\.class | grep differ" />
+        <exec executable="${autobuild.shell-command}" failonerror="false" outputproperty="_diff_output">
+            <arg line='${autobuild.shell-switch-char}c "${release.substitutions.diff-command} ${release.substitutions.diff-options} ${_downl_jar} ${_local_jar} | ${autobuild.grep-switch-string}"' />
+        </exec>
+        -->
+        
+        <if>
+            <isset property="this.is.documentation.plugin" />
+            <then>
+                <diff source="${_downl_jar}"
+                    dest="${_local_jar}"
+                    outputProperty="_diff_output"
+                    excludes="**/MANIFEST.MF"
+                    outputTypes="different,orphan"
+                    onlyFilePath="false" />
+                <if>
+                    <not>
+                        <equals arg1="${_diff_output}" arg2="" />
+                    </not>
+                    <then>
+                        <propertyfile file="diff_plugin_list.properties">
+                            <entry key="${_continued_plugin}" value="${_ver_no}" />
+                        </propertyfile>
+                        <echo file="${_rsdiff_docs_txt}" append="true">
+${_this_continued_plugin} : changes detected!
+The following classes in this plugin show changes:
+${_diff_output}</echo>
+                    </then>
+                </if>
+            </then>
+            <else>
+                <diff source="${_downl_jar}"
+                    dest="${_local_jar}"
+                    outputProperty="_diff_output"
+                    includes="**/*.class"
+                    excludes="**/MANIFEST.MF"
+                    outputTypes="different"
+                    onlyFilePath="true" />
+                <diff.special.files/>
+                <if>
+                    <not>
+                        <equals arg1="${_diff_output}" arg2="" />
+                    </not>
+                    <then>
+                        <propertyfile file="diff_plugin_list.properties">
+                            <entry key="${_continued_plugin}" value="${_ver_no}" />
+                        </propertyfile>
+                        <echo file="${_rsdiff_txt}" append="true">
+${_this_continued_plugin} : changes detected!
+The following classes in this plugin show changes:
+${_diff_output}</echo>
+                    </then>
+                </if>
+            </else>
+        </if>
+
+        <delete dir="${_downl_jar}" includeemptydirs="true" quiet="true"/>
+        <delete dir="${_local_jar}" includeemptydirs="true" quiet="true"/>
+    </target>
+
+    <target name="-unpack-some-more" if="_unpack_this_plugin">
+        <foreach param="_one_jar" target="-unpack-one-jar" inheritall="true">
+            <path>
+                <fileset dir="${_downl_jar}">
+                    <include name="*.jar" />
+                </fileset>
+            </path>
+            <param name="_dest" value="${_downl_jar}" />
+        </foreach>
+        <foreach param="_one_jar" target="-unpack-one-jar" inheritall="true">
+            <path>
+                <fileset dir="${_local_jar}">
+                    <include name="*.jar" />
+                </fileset>
+            </path>
+            <param name="_dest" value="${_local_jar}" />
+        </foreach>
+    </target>
+
+    <target name="-unpack-one-jar">
+        <unjar src="${_one_jar}" dest="${_dest}" />
+    </target>
+
+    <target name="-check-found-and-pack">
+        <available property="_found_plugin" file="${_subs_temp_dir}/release/${_this_continued_plugin}.jar" type="file" />
+        <condition property="_found_this_plugin">
+            <and>
+                <isset property="_found_plugin" />
+                <isset property="_found_plugin_jar" />
+            </and>
+        </condition>
+        <condition property="_found_plugin_display" else="false">
+            <isset property="_found_this_plugin" />
+        </condition>
+        <echo>Downloaded ${_this_continued_plugin} : ${_found_plugin_display}</echo>
+        <condition property="_unpack_this_plugin">
+            <and>
+                <isset property="_found_this_plugin" />
+                <available file="${autobuild.dir.output.release}/plugins/${_this_continued_plugin}" type="dir" />
+            </and>
+        </condition>
+        <condition property="_unpack_plugin_display" else="false">
+            <isset property="_unpack_this_plugin" />
+        </condition>
+        <echo>Unpack this plugin : ${_unpack_plugin_display}</echo>
+    </target>
+
+    <target name="-spew-if-found-abi-change" if="_abi_change_failure">
+        <antcall target="-substitutions-cleanup" />
+        <concat>
+            <fileset dir="${autobuild.dir.release-unit}" includes="${_rsdiff_txt}" />
+        </concat>
+        <fail>
+!!!
+!!!!!!!!!!!!!!!!!!!!!NO SUBSTITUTIONS HAVE BEEN PERFORMED!!!!!!!!!!!!!!!!!!!!!
+
+Release substitutions failed due to what appears to be an incompatible ABI change.
+See the output above this line, or the file rsdiff.txt in the build-artifacts.
+
+This build has failed.  Developers should either resolve the problems identified,
+committing the necessary changes, or should change the version number, or should
+otherwise take steps to insure that release substitutions does not fail.
+
+Please read the incompatible ABI wiki page for the detail about how to solve the issue:
+http://wiki.tibco.com/FrameworksWiki/BuildTools/Cookbook/ResolvingABIIncompatibilities
+
+!!!!!!!!!!!!!!!!!!!!!NO SUBSTITUTIONS HAVE BEEN PERFORMED!!!!!!!!!!!!!!!!!!!!!
+</fail>
+    </target>
+
+    <target name="-spew-if-found-docs-change" if="_docs_change_failure">
+        <antcall target="-substitutions-cleanup" />
+        <concat>
+            <fileset dir="${autobuild.dir.release-unit}" includes="${_rsdiff_docs_txt}" />
+        </concat>
+        <fail>
+!!!
+!!!!!!!!!!!!!!!!!!!!!NO SUBSTITUTIONS HAVE BEEN PERFORMED!!!!!!!!!!!!!!!!!!!!!
+
+The release-substitution step for the doc help plugin failed!
+
+Since the doc help files are not under svn source control and are retrieved
+from the machine potsticker during the build time, the build number of the
+doc help plugin won't be bumped up automatically. Now, the difference of the
+file sets for the doc plugin are detected. You have to touch the build files
+docs.properties or MANIFEST.MF under plugins/${plugin_id} to force bump up the
+build number OR update the build number in MANIFEST.MF directly.
+
+!!!!!!!!!!!!!!!!!!!!!NO SUBSTITUTIONS HAVE BEEN PERFORMED!!!!!!!!!!!!!!!!!!!!!
+</fail>
+    </target>
+
+    <target name="-substitute-in-update-site" if="_found_this_plugin">
+        <copy file="${_subs_temp_dir}/debug/${_this_continued_plugin}.jar"
+              todir="${autobuild.dir.output.jars.debug}/plugins"
+              overwrite="true" />
+        <copy file="${_subs_temp_dir}/release/${_this_continued_plugin}.jar"
+              todir="${autobuild.dir.output.jars.release}/plugins"
+              overwrite="true" />
+    </target>
+
+    <target name="-copy-update-to-extension" if="_found_this_plugin" unless="_unpack_this_plugin">
+        <propertycopy property="_target_site_base" from="autobuild.dir.output.${_target}" override="true" />
+        <property name="_target_site" value="${_target_site_base}/plugins" />
+        <copy file="${_subs_temp_dir}/${_target}/${_this_continued_plugin}.jar"
+              todir="${_target_site}"
+              overwrite="true" />
+    </target>
+
+    <target name="-unjar-update-to-extension" if="_unpack_this_plugin">
+        <propertycopy property="_target_site_base" from="autobuild.dir.output.${_target}" override="true" />
+        <property name="_target_site" value="${_target_site_base}/plugins" />
+        <delete quiet="true" includeemptydirs="true">
+            <fileset dir="${_target_site}/${_this_continued_plugin}" includes="**/*" defaultexcludes="no"/>
+        </delete>
+        <mkdir dir="${_target_site}/${_this_continued_plugin}" />
+        <unjar src="${_subs_temp_dir}/${_target}/${_this_continued_plugin}.jar"
+               dest="${_target_site}/${_this_continued_plugin}" />
+    </target>
+
+    <target name="-substitute-in-extension-sites">
+        <if>
+            <isset property="_unpack_this_plugin" />
+            <then>
+                <foreach list="${_extension_sites_list}" param="_target"
+                         target="-unjar-update-to-extension" inheritall="true"/>
+            </then>
+            <else>
+                <foreach list="${_extension_sites_list}" param="_target"
+                         target="-copy-update-to-extension" inheritall="true"/>
+            </else>
+        </if>
+    </target>
+
+    <target name="-substitute-map" if="_found_this_plugin">
+        <!-- always delete the invalid one, even if there's no replacement. -->
+        <delete>
+            <fileset dir="${autobuild.dir.release-unit}/build-artifacts" includes="*-${_this_continued_plugin}.map.gz" />
+        </delete>
+        <copy todir="${autobuild.dir.release-unit}/build-artifacts" overwrite="true" failonerror="false">
+            <fileset dir="${_old_artifacts_dir}" includes="*-${_this_continued_plugin}.map.gz" />
+        </copy>
+    </target>
+
+    <target name="-set-var">
+        <propertycopy property="_ver_no" override="true" from="continued_plugin.${_continued_plugin}" />
+        <var name="_this_continued_plugin" value="${_continued_plugin}_${_ver_no}" />
+        <if>
+            <isset property="documentation.plugin.list" />
+            <then>
+              <for list="${documentation.plugin.list}" param="a.documentation.plugin">
+                    <sequential>
+                      <condition property="this.is.documentation.plugin">
+                          <equals arg1="${_continued_plugin}" arg2="@{a.documentation.plugin}" casesensitive="false"/>
+                      </condition>
+                    </sequential>
+                </for>
+            </then>
+        </if>
+        <available property="_found_plugin_jar" file="${autobuild.dir.output.jars.debug}/plugins/${_this_continued_plugin}.jar" type="file" />
+    </target>
+
+    <target name="-download-and-compare"
+            depends="-set-var, -download-debug-jar, -download-release-jar, -compare-debug-versions" />
+
+    <target name="-perform-substitution"
+            depends="-set-var, -check-found-and-pack, -substitute-in-update-site, -substitute-in-extension-sites, -substitute-map" />
+
+    <target name="-substitutions-cleanup">
+        <delete quiet="true" dir="${_subs_temp_dir}"/>
+        <delete quiet="true" dir="${_old_artifacts_dir}"/>
+    </target>
+
+    <macrodef name="bump.diff.plugins.buildno" description="Auto bumping up the build number for ABI issue">
+        <sequential>
+            <for list="${_diff_plugin_list}" param="diff-plugin-id">
+                <sequential>
+                    <propertycopy property="_diff_plugin_version" override="true" from="diff_plugin.@{diff-plugin-id}" />
+                    <var name="_diff_plugin_name" value="@{diff-plugin-id}_${_diff_plugin_version}" />
+                    <propertyregex property="_diff_plugin_version_prefix" override="true" input="${_diff_plugin_version}"
+                                   regexp="(^\d+\.\d+\.\d+\.)" select="\1" />
+                    <propertyregex property="_diff_plugin_buildno" override="true" input="${_diff_plugin_version}"
+                                   regexp="([^\.]*$)" select="\1" />
+                    <math result="_diff_plugin_buildno" operand1="${_diff_plugin_buildno}" operation="add" operand2="1" />
+
+                    <!--Update pluginVersion.properties-->
+                    <propertyfile file="${autobuild.svn.pluginVersionProperties.working}">
+                        <entry key="@{diff-plugin-id}" type="int" pattern="000" value="${_diff_plugin_buildno}" />
+                        <entry key="@{diff-plugin-id},0.0.0" type="int" pattern="000" value="${_diff_plugin_buildno}" />
+                    </propertyfile>
+                    <tempfile property="_diff_plugin_buildno_file" />
+                    <propertyfile file="${_diff_plugin_buildno_file}">
+                        <entry key="_diff_plugin_buildno_formatted" type="int" pattern="000" default="${_diff_plugin_buildno}" />
+                    </propertyfile>
+                    <var file="${_diff_plugin_buildno_file}" />
+                    <delete file="${_diff_plugin_buildno_file}" quiet="true"/>
+                    <var name="_bumped_plugin_version" value="${_diff_plugin_version_prefix}${_diff_plugin_buildno_formatted}" />
+                    <var name="_bumped_plugin_name" value="@{diff-plugin-id}_${_bumped_plugin_version}" />
+
+                    <!--Update build-artifacts/continuedVersions.properties-->
+                    <propertyfile file="${autobuild.dir.release-unit}/build-artifacts/continuedVersions.properties">
+                        <entry key="@{diff-plugin-id}" value="${_bumped_plugin_version}" />
+                    </propertyfile>
+
+                    <!--write into autoBumpedVersions.properties-->
+                    <echo file="${_bumped_buildno_file}" append="true">@{diff-plugin-id}=${_bumped_plugin_version}${line.separator}</echo>
+  
+                    <!-- update map.gz file -->
+                    <for param="diff.plugin.map.gz">
+                        <fileset dir="${autobuild.dir.release-unit}/build-artifacts">
+                            <include name="*${_diff_plugin_name}*"/>
+                        </fileset>
+                        <sequential>
+                            <propertyregex property="_map_file" override="true" input="@{diff.plugin.map.gz}"
+                                           regexp="([^/\\]*$)" select="\1" />
+                            <propertyregex property="_map_prefix" override="true" input="${_map_file}"
+                                           regexp="([\w]*-)" select="\1" />
+                            <move file="@{diff.plugin.map.gz}"           
+                                  tofile="${autobuild.dir.release-unit}/build-artifacts/${_map_prefix}${_bumped_plugin_name}.map.gz" />
+                        </sequential>
+                    </for>
+                   
+                    <echo>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Warning:  It appears to be an incompatible ABI change for the plugin 
+@{diff-plugin-id}.  The build number with the release version 
+is automatically bumped up to ${_bumped_plugin_version}!
+
+Please view build-artifacts/rsdiff*.txt for the detailed content of the difference.
+
+Please read the incompatible ABI wiki page for the detail:
+http://wiki.tibco.com/FrameworksWiki/BuildTools/Cookbook/ResolvingABIIncompatibilities
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                    </echo>
+
+                    <!--Update build-artifacts/tests.xml-->
+                    <if>
+                        <available file="${autobuild.dir.release-unit}/build-artifacts/tests.xml" type="file" />
+                        <then>
+                            <replaceregexp file="${autobuild.dir.release-unit}/build-artifacts/tests.xml" 
+                                           match="${_diff_plugin_name}"
+                                           replace="${_bumped_plugin_name}" byline="true" />
+                        </then>
+                    </if>
+
+                    <!--Rename the output build files and bump the bundle version in MANIFEST.MF-->
+                    <var name="_bump_output_list" value="${autobuild.dir.output.debug},${autobuild.dir.output.release},${autobuild.dir.output.jars.debug},${autobuild.dir.output.jars.release},${autobuild.workspace.update-sites.local}" />
+                    <for list="${_bump_output_list}" param="bump-target">
+                        <sequential>
+                            <var name="_bump_target_location" value="@{bump-target}/plugins" />
+                            <if>
+                                <available file="${_bump_target_location}/${_diff_plugin_name}" type="dir" />
+                                <then>
+                                    <move file="${_bump_target_location}/${_diff_plugin_name}"           
+                                          tofile="${_bump_target_location}/${_bumped_plugin_name}" />
+                                    <replaceregexp file="${_bump_target_location}/${_bumped_plugin_name}/META-INF/MANIFEST.MF" 
+                                                   match="Bundle-Version: (.*)"
+                                                   replace="Bundle-Version: ${_bumped_plugin_version}" byline="true" />
+                                </then>
+                            </if>
+                            <if>
+                                <available file="${_bump_target_location}/${_diff_plugin_name}.jar" type="file" />
+                                <then>
+                                    <unzip src="${_bump_target_location}/${_diff_plugin_name}.jar" dest="${_bump_target_location}/${_bumped_plugin_name}">
+                                        <patternset>
+                                            <include name="META-INF/MANIFEST.MF"/>
+                                        </patternset>  
+                                    </unzip>
+                                    <replaceregexp file="${_bump_target_location}/${_bumped_plugin_name}/META-INF/MANIFEST.MF" 
+                                                   match="Bundle-Version: (.*)"
+                                                   replace="Bundle-Version: ${_bumped_plugin_version}" byline="true" />
+                                    <move file="${_bump_target_location}/${_diff_plugin_name}.jar"           
+                                          tofile="${_bump_target_location}/${_bumped_plugin_name}.jar" />
+                                    <zip destfile="${_bump_target_location}/${_bumped_plugin_name}.jar" 
+                                         basedir="${_bump_target_location}/${_bumped_plugin_name}" update="true" />    
+                                    <delete dir="${_bump_target_location}/${_bumped_plugin_name}" quiet="true" />
+                                    <delete file="${_bump_target_location}/${_diff_plugin_name}.jar" quiet="true" />
+                                </then>
+                            </if>
+                        </sequential>
+                    </for>
+
+                    <!--Bump the bundle version in feature.xml-->
+                    <for list="${_bump_output_list}" param="bump-target">
+                        <sequential>
+                            <!--Since we don't know this plugin belong to which feature, we have to update all the feature.xml-->
+                            <!--Bump the feature.xml in jar file-->
+                            <for param="bump-target-feature">
+                                <fileset dir="@{bump-target}/features">
+                                    <include name="${feature}*.jar" />
+                                </fileset>
+                                <sequential>
+                                    <unzip src="@{bump-target-feature}" dest="@{bump-target-feature}.tmp"/>
+                                    <replaceregexp file="@{bump-target-feature}.tmp/feature.xml" 
+                                                   match="&lt;plugin([^&gt;]*)id=&quot;@{diff-plugin-id}&quot;([^&gt;]*)version=&quot;([^&quot;]*)&quot;" 
+                                                   replace="&lt;plugin\1id=&quot;@{diff-plugin-id}&quot;\2version=&quot;${_bumped_plugin_version}&quot;" 
+                                                   flags="s" />
+                                    <delete file="@{bump-target-feature}" quiet="true" />
+                                    <zip destfile="@{bump-target-feature}" basedir="@{bump-target-feature}.tmp" update="true" />
+                                    <delete dir="@{bump-target-feature}.tmp" quiet="true" />
+                                </sequential>
+                            </for>
+
+                            <!--Bump the feature.xml in dir-->
+                            <for param="bump-target-feature">
+                                <dirset dir="@{bump-target}/features">
+                                    <include name="${feature}*" />
+                                </dirset>
+                                <sequential>
+                                    <replaceregexp file="@{bump-target-feature}/feature.xml" 
+                                                   match="&lt;plugin([^&gt;]*)id=&quot;@{diff-plugin-id}&quot;([^&gt;]*)version=&quot;([^&quot;]*)&quot;" 
+                                                   replace="&lt;plugin\1id=&quot;@{diff-plugin-id}&quot;\2version=&quot;${_bumped_plugin_version}&quot;" 
+                                                   flags="s" />
+                                </sequential>
+                            </for>
+                        </sequential>
+                    </for>
+                    <echo>Bump plugin: @{diff-plugin-id} from ${_diff_plugin_version} to ${_bumped_plugin_version}</echo>
+                </sequential>
+            </for>
+        </sequential>
+    </macrodef>
+    
+    <macrodef name="diff.special.files" description="Diff special file like that some jar file contained .war " >
+        <sequential>
+            <if>
+                <equals arg1="${full.diff.enable}" arg2="true" />
+                <then>
+                    <diff source="${_downl_jar}"
+                          dest="${_local_jar}"
+                          outputProperty="_diff_output"
+                          includes="**/*.*"
+                          excludes="**/MANIFEST.MF"
+                          outputTypes="different"
+                          onlyFilePath="true" />  
+                </then>
+            </if>
+        </sequential>
+    </macrodef>
+    
+</project>

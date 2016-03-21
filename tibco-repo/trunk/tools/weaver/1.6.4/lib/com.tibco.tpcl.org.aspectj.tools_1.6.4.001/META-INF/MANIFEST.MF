@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Bundle-Name: AspectJ Tools
+Bundle-ManifestVersion: 2
+Bundle-Vendor: The Eclipse Foundation
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-SymbolicName: com.tibco.tpcl.org.aspectj.tools
+Bundle-Version: 1.6.4.001
+

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Code Coverage" default="coverage-run" basedir=".">
+
+<property file="user.properties" />
+	
+<property name="emma.dir" value="${emma.dir}" />
+  <path id="emma.lib" >
+    <pathelement location="${emma.dir}/emma.jar" />
+    <pathelement location="${emma.dir}/emma_ant.jar" />
+  </path>
+<taskdef resource="emma_ant.properties" classpathref="emma.lib" />
+
+<!--
+<property name="junit-src.dir" value="" />
+<property name="testResultsFolder" value="" />
+-->
+
+<property name="out.instr.dir" value="${testResultsFolder}/instr" />
+<property name="coverage.dir" value="${testResultsFolder}" />
+
+
+	<target name="coverage-run">
+
+<mkdir dir="${out.instr.dir}" />
+
+    <emma>
+      <instr instrpathref="run.classpath"
+             destdir="${out.instr.dir}"	
+             metadatafile="${coverage.dir}/metadata.emma"
+             merge="true" >
+		<filter includes="com.tibco.*" excludes="test.*, *.test" />
+	</instr>
+    </emma>
+
+<path id="instr.classpath">
+	<pathelement location="${out.instr.dir}"/>
+	<path refid="run.classpath"/>
+	<path refid="emma.lib" />
+</path>
+
+<ant antfile="junit.xml" >
+	<reference refid="instr.classpath" torefid="junit.classpath" />
+	<property name="junit-src.dir" value="${junit-src.dir}" />
+	<property name="coverage.dir" value="${coverage.dir}" />
+</ant>
+
+
+	</target>
+
+
+	<target name="coverage-report">
+	
+<emma>
+     <report sourcepath="." >
+	       <fileset dir="${coverage.dir}" >
+		         <include name="*.emma" />
+	        </fileset>
+	        <txt outfile="${coverage.dir}/coverage.txt" />
+	        <html outfile="${coverage.dir}/coverage.html" />
+		<xml outfile="${coverage.dir}/coverage.xml" />
+	</report>
+</emma>
+
+	</target>
+
+
+</project>

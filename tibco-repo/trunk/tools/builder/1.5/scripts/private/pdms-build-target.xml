@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="pdms-build-request">
+
+    <import file="${autobuild.dir.release-unit}/build-artifacts/tag.xml" optional="true" />
+    
+    <target name="release-build" depends="bin-clean, conf-clean" >
+        <antcall target="build" inheritall="false">
+            <param name="official-release-build" value="true" />
+            <param name="ignore-local-builds" value="true" />
+        </antcall>
+    </target>
+    
+    <target name="pdms-build" description="Trigger the release build from PDMS system." depends="-load-ant-contrib">
+        <property file="${autobuild.dir.release-unit}/build-artifacts/release-build.properties" />
+        <fail unless="release.code" >
+!!!
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+ERROR: This target only works after a successful practice run of an official release build.
+Try "ant release-build" first.
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        </fail>
+
+        <propertyregex property="release-unit.version" regexp="^(\d+\.\d+\.\d+)\." input="${release.code}" select="\1" />
+        <property name="release-unit.feature-id" value="${feature}" />
+
+        <echoproperties>
+            <propertyset>
+                <propertyref prefix="release-unit."/>
+                <propertyref prefix="autobuild.svn.tag.target."/>
+            </propertyset>
+        </echoproperties>
+
+        <input addproperty="go-nogo-answer">
+Check the property values immediately above.  If they are correct, and you are
+ready to request the build, type "yes", otherwise simply hit return.
+        </input>
+        <condition property="go.pdms">
+            <equals arg1="yes" arg2="${go-nogo-answer}"/>
+        </condition>
+        
+        <fail unless="go.pdms">
+!!!
+++++++++++++++++++++++++++++++
+
+Didn't get the go-ahead!"
+
+++++++++++++++++++++++++++++++
+        </fail>
+
+        <property name="default.request.notes" value="none" />
+        <input message="Please enter build request notes, on a single line (or hit return for '${default.request.notes}':"
+               addproperty="pdms.request.notes" defaultvalue="${default.request.notes}" />
+
+        <urlencode property="encode.request.notes" value="${pdms.request.notes}" />
+
+        <property name="default.ant.publish" value="true" />
+        <input message="Please type 'no' or '0' not to publish the build to http://reldist.na.tibco.com/reldist (or hit return for '${default.ant.publish}' to publish):"
+               addproperty="t.ant.publish" defaultvalue="${default.ant.publish}" />
+        <if>
+            <equals arg1="${t.ant.publish}" arg2="yes" />
+            <then>
+                <property name="ant.publish" value="true" />
+            </then>
+            <else>
+                <property name="ant.publish" value="${t.ant.publish}" />
+            </else>
+        </if>
+ 
+        <input message="Please enter AD account username (or hit return for '${autobuild.user.name}':"
+               addproperty="ad.username" defaultvalue="${autobuild.user.name}" />
+        <if>
+            <available classname="org.apache.tools.ant.input.SecureInputHandler"/>
+            <then>
+                <input message="Please enter AD account password:" addproperty="ad.password">
+                    <handler classname="org.apache.tools.ant.input.SecureInputHandler"/>
+                </input>
+            </then>
+            <else>
+                <input message="Please enter AD account password:" addproperty="ad.password"/>
+            </else>
+        </if>
+
+        <property name="_cdc_port" value="8008" />
+        <property name="_pdms_feature_id" value="feature_id=${feature}" />
+        <property name="_pdms_svn_url" value="svn_url=${autobuild.svn.tag.target.source.url}" />
+        <property name="_pdms_svn_rev_num" value="revision_no=${autobuild.svn.tag.target.revision}" />
+        <property name="_pdms_release_version" value="ru_version=${release-unit.version}" />
+        <property name="_pdms_ant_publish" value="ant_publish=${ant.publish}" />
+        <property name="_pdms_request_notes" value="request_note=${encode.request.notes}" />
+        <property name="_pdms_ampchar" value="&amp;" />
+        <property name="_pdms_output" value="${autobuild.dir.release-unit}/output.txt" />
+
+        <echo>
+Parameters' Information for the Release-Unit PDMS Auto Build:
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+${_pdms_feature_id}
+${_pdms_svn_url}
+${_pdms_svn_rev_num}
+${_pdms_release_version}
+${_pdms_ant_publish}
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        </echo>
+
+        <!-- need to add the port for CDC developers -->
+        <propertyregex property="_new_pdms_svn_url" override="true"
+                       input="${_pdms_svn_url}"
+                       regexp=":${_cdc_port}" replace="" />
+        <if>
+            <isset property="_new_pdms_svn_url" />
+            <then>
+                <property name="_pdms_page" value="http://qa.tibco.com:${_cdc_port}/php/tsi_pdmss_rubuild_schedule.php" />
+                <property name="pdms_url" value="${_pdms_page}?${_pdms_feature_id}${_pdms_ampchar}${_new_pdms_svn_url}${_pdms_ampchar}${_pdms_svn_rev_num}${_pdms_ampchar}${_pdms_release_version}${_pdms_ampchar}${_pdms_ant_publish}${_pdms_ampchar}${_pdms_request_notes}" />
+            </then>
+            <else>
+                <property name="_pdms_page" value="http://qa.tibco.com/php/tsi_pdmss_rubuild_schedule.php" />
+                <property name="pdms_url" value="${_pdms_page}?${_pdms_feature_id}${_pdms_ampchar}${_pdms_svn_url}${_pdms_ampchar}${_pdms_svn_rev_num}${_pdms_ampchar}${_pdms_release_version}${_pdms_ampchar}${_pdms_ant_publish}${_pdms_ampchar}${_pdms_request_notes}" />
+            </else>
+        </if>
+        <get src="${pdms_url}"
+             dest="${_pdms_output}"
+             username="${ad.username}"
+             password="${ad.password}" />
+        <loadfile property="_pdms_message"
+                  srcFile="${_pdms_output}"/>
+        <echo>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+${_pdms_message}
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        </echo>
+        <property name="_pdms_feature_missing" value="ERROR: No RU entry has been defined in PDMS for the supplied feature ID" />
+        <propertyregex property="_found_pdms_feature_error"
+                       input="${_pdms_message}${line.separator}"
+                       regexp="(${_pdms_feature_missing}).*"
+                       select="\1" />
+        <if>
+            <isset property="_found_pdms_feature_error" />
+            <then>
+                <echo>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The feature ID ${feature} wasn't found in the PDMS. 
+Please contact the QA manager to enable the PDMS auto build for this RU.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                </echo>
+            </then>
+        </if>
+        <delete file="${output}" quiet="true"/>
+    </target>
+</project>

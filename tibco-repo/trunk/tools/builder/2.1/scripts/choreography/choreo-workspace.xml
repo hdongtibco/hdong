@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="choreo-workspace">
+
+    <import file="${autobuild.dir.scripts}/private/autobuild-common.xml" />
+
+    <property name="autobuild.dir.scripts.dependencies" location="${autobuild.dir.scripts}/private/dependencies.xml" />
+    <available file="${autobuild.dir.scripts.dependencies}" property="_dependencies_script_located" type="file" />
+    <fail unless="_dependencies_script_located">
+The script which is used to gather dependencies,
+${autobuild.dir.scripts.dependencies}
+does not appear to exist or is not a file.
+Please check your configuration and try again.</fail>
+
+    <import file="${autobuild.dir.scripts.dependencies}" />
+
+    <target name="-check-properties" depends="-check-eclipse"/>
+
+</project>

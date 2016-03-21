@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="archivist-diff">
+<!-- contains the target archivist-diff from autobuild-main. -->
+
+    <!-- run archivist diff for dev build -->
+    <target name="archivist-diff" depends="-load-ant-contrib, -load-archivist-libs" unless="official-release-build" if="autobuild.archivist.diff">
+
+        <!-- run the target archivist-main -->
+        <ant antfile="${autobuild.dir.archivist.root}/build.xml" target="archivist-main" />
+
+        <property name="archivist.file" value="${autobuild.dir.release-unit}/archivist.txt" />
+        <property name="archivist.modify.file" value="${autobuild.dir.release-unit}/archivist-modify.txt" />
+        <if>
+            <isset property="eclipse.nature.build" />
+            <then>
+                <!-- for dual-build good output diff -->
+                <property name="archivist.orig.modify.file" value="${autobuild.dir.release-unit}/archivist/archivist-eclipse-orig-modify.txt" />
+            </then>
+            <else>
+                <property name="archivist.orig.modify.file" value="${autobuild.dir.release-unit}/archivist/archivist-orig-modify.txt" />
+            </else>
+        </if>
+        <!-- generate archivist-modify.txt -->
+        <archivist.modify orgFile="${archivist.file}" 
+                          generateFile="${archivist.modify.file}" />
+        <if>
+            <available file="${archivist.orig.modify.file}" />
+            <then>
+                <diff source="${archivist.modify.file}"
+                      dest="${archivist.orig.modify.file}"
+                      outputProperty="_violates_best"
+                      outputTypes="different,orphan"
+                      onlyFilePath="false" />
+                <if>
+                    <not>
+                        <equals arg1="${_violates_best}" arg2="" />
+                    </not>
+                    <then>
+                        <fail>
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The new generated file ${archivist.modify.file} 
+doesn't match ${archivist.orig.modify.file}.
+Please look at the generated file and verfiy the new meta-data change.
+Fail now!
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++       
+                        </fail>
+                    </then>
+                </if>
+            </then>
+            <else>
+                <echo>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Warning! The original file is missing for comparison. The file should be:
+${archivist.orig.modify.file} 
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                </echo>
+            </else>
+        </if>
+    </target>
+</project>

@@ -1,0 +1,1183 @@
+<?xml version="1.0"?>
+<project name="builder.private">
+
+    <!-- PRIVATE TARGETS (called from other targets)
+         Note that all of these targets are deliberately named in such
+         a manner that they cannot be invoked from the command line. -->
+
+    <target name="-classpaths" depends="-set-generic-properties, -set-role-dependent-properties">
+        <tempfile property="_classpaths.temp.file" />
+        <echoproperties destfile="${_classpaths.temp.file}"/>
+
+        <if>
+            <isset property="osgi.debug.mode" />
+            <then>
+                <autobuild.debug.antrunner buildFile="${autobuild.dir.scripts}/private/classpaths.xml"
+                                           propertyFile="${_classpaths.temp.file}" />
+            </then>
+            <else>
+                <autobuild.antrunner buildFile="${autobuild.dir.scripts}/private/classpaths.xml"
+                                     propertyFile="${_classpaths.temp.file}" />
+            </else>
+        </if>
+        <delete file="${_classpaths.temp.file}" quiet="true"/>
+    </target>
+
+    <target name="-prebuild" if="_prebuild_target_exists">
+        <ant antfile="${autobuild.dir.release-unit}/prebuild.xml" />
+    </target>
+
+    <target name="-switch-jdk-version">
+        <if>
+            <isset property="autobuild.jdk.force-15" />
+            <then>
+                <if>
+                    <isset property="autobuild.dir.java15-classes" />
+                    <then>
+                        <property name="_dir.java-classes" value="${autobuild.dir.java15-classes}" />
+                    </then>
+                    <else>
+                        <fail>
+!!!
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Build failed!  
+The property autobuild.jdk.force-15 has been set, but property autobuild.dir.java15-classes 
+has not been set.  Unable to continue.  Please set the property autobuild.dir.java15-classes 
+in the user-overrides.xml to point at a valid jre/lib folder from JDK 1.5.
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                        </fail>
+                    </else>
+                </if>
+            </then>
+            <elseif>
+                <isset property="autobuild.jdk.force-16" />
+                <then>
+                    <if>
+                        <isset property="autobuild.dir.java16-classes" />
+                        <then>
+                            <property name="_dir.java-classes" value="${autobuild.dir.java16-classes}" />
+                        </then>
+                        <else>
+                            <fail>
+!!!
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
+Build failed!  
+The property autobuild.jdk.force-16 has been set, but property autobuild.dir.java16-classes 
+has not been set.  Unable to continue.  Please set the property autobuild.dir.java16-classes 
+in the user-overrides.xml to point at a valid jre/lib folder from JDK 1.6.
+    
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                            </fail>
+                        </else>
+                    </if>
+                </then>
+            </elseif>
+            <elseif>
+                <isset property="autobuild.jdk.force-17" />
+                <then>
+                    <if>
+                        <isset property="autobuild.dir.java17-classes" />
+                        <then>
+                            <property name="_dir.java-classes" value="${autobuild.dir.java17-classes}" />
+                        </then>
+                        <else>
+                            <fail>
+!!!
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
+Build failed!  
+The property autobuild.jdk.force-17 has been set, but property autobuild.dir.java17-classes 
+has not been set.  Unable to continue.  Please set the property autobuild.dir.java17-classes 
+in the user-overrides.xml to point at a valid jre/lib folder from JDK 1.7.
+    
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                            </fail>
+                        </else>
+                    </if>
+                </then>
+            </elseif>
+            <else>
+                <property name="_dir.java-classes" value="${autobuild.dir.java-classes}" />
+            </else>
+        </if>
+    </target>
+
+    <target name="-do-ant-runner" depends="-check-properties, -display-parameters, -copy-user-ru-overrides,
+                                  -check-configuration, gather-dependencies, -collect-dependencies-site-xml,
+                                  -set-generic-properties, -collect-logs, -acquire-doc-plugins, -prebuild, -create-fake-manifests">
+        
+        <!-- store all properties, so we can pick them up inside antRunner -->
+        <tempfile property="_antrunner.temp.file" />
+        <echoproperties destfile="${_antrunner.temp.file}"/>
+        
+        <trycatch property="fail_message">
+            <try>
+                <if>
+                    <isset property="osgi.debug.mode" />
+                    <then>
+                        <autobuild.debug.antrunner buildFile="${autobuild.dir.scripts}/build-release-unit.xml"
+                                                   propertyFile="${_antrunner.temp.file}" />
+                    </then>
+                    <else>
+                        <autobuild.antrunner buildFile="${autobuild.dir.scripts}/build-release-unit.xml"
+                                             propertyFile="${_antrunner.temp.file}" />
+                    </else>
+                </if>
+                <!-- The devtools.antrunner macrodef wraps a call to the antRunner Eclipse application.  We do this because
+                     we are leveraging the Eclipse extension mechanism to make our custom ant tasks
+                     visible.  Furthermore, these ant tasks call into Eclipse PDE code (FeatureBuildScriptGenerator),
+                     which must be on the classpath.  We tried NOT using antrunner, just taskdefs, but it turns out
+                     that Eclipse's internal BuildTimeSiteFactory (a core requirement) only works in an OSGi environment. -->
+        
+                <delete file="${_antrunner.temp.file}" quiet="true"/>
+            </try>
+            <catch>
+                <!-- restore all plugins' fake MANIFEST.MF files, if exists -->
+                <antcall target="-restore-fake-manifests" />
+                <fail>${fail_message}</fail>
+            </catch>
+        </trycatch>
+        
+        <!-- restore all plugins' fake MANIFEST.MF files, if exists -->
+        <antcall target="-restore-fake-manifests" />
+    </target>
+    
+    <!-- generate release-unit.plugin.id.list property -->
+    <target name="-get-release-unit-plugin-ids"
+        if="_bypass_validate_manifest"
+        unless="release-unit.plugin.id.list">
+        <for param="feature.id" list="${feature},${feature}.test,${feature}.source,${feature}.devdocs">
+            <sequential>
+                <if>
+                    <available file="${autobuild.dir.release-unit}/features/@{feature.id}" type="dir" />
+                    <then>
+                        <tempfile property="_plugins_temp_file" />
+                        <xslt in="${autobuild.dir.release-unit}/features/@{feature.id}/feature.xml" out="${_plugins_temp_file}"
+                            style="${autobuild.dir.scripts}/private/extractPlugins.xsl">
+                            <param name="feature_id" expression="${feature.id}" />
+                        </xslt>
+                        <property file="${_plugins_temp_file}" prefix="_plugins_in_release_unit." />
+                        <delete file="${_plugins_temp_file}" quiet="true" />
+                    </then>
+                </if>
+            </sequential>
+        </for>
+        <propertyselector property="release-unit.plugin.id.list"
+            match="_plugins_in_release_unit\.plugin_[^-]*-(.*)"
+            override="true"
+            select="\1" />
+    </target>
+    
+    <target name="-create-fake-manifests"
+        if="_bypass_validate_manifest"
+        depends="-get-release-unit-plugin-ids">
+        <for param="plugin.id" list="${release-unit.plugin.id.list}">
+            <sequential>
+                <if>
+                    <or>
+                        <not>
+                            <available file="${autobuild.dir.release-unit}/plugins/@{plugin.id}/MANIFEST.MF.build.bak" />
+                        </not>
+                        <length file="${autobuild.dir.release-unit}/plugins/@{plugin.id}/MANIFEST.MF.build.bak" length="0" />
+                    </or>
+                    <then>
+                        <copy file="${autobuild.dir.release-unit}/plugins/@{plugin.id}/META-INF/MANIFEST.MF"
+                            tofile="${autobuild.dir.release-unit}/plugins/@{plugin.id}/MANIFEST.MF.build.bak" />
+                    </then>
+                </if>
+                <replaceregexp file="${autobuild.dir.release-unit}/plugins/@{plugin.id}/META-INF/MANIFEST.MF"
+                    match="Fragment-Host:[^\r\n]*[\r\n]*"
+                    replace=""
+                    flags="s" />
+            </sequential>
+        </for>
+    </target>
+    
+    <target name="-restore-fake-manifests"
+        if="_bypass_validate_manifest"
+        depends="-restore-release-unit-plugins, -restore-candidate-plugins">
+        <for param="plugin.id" list="${release-unit.plugin.id.list}">
+            <sequential>
+                <delete file="${autobuild.dir.release-unit}/plugins/@{plugin.id}/MANIFEST.MF.build.bak" quiet="true" />
+            </sequential>
+        </for>
+    </target>
+    
+    <target name="-restore-release-unit-plugins"
+        if="_bypass_validate_manifest"
+        depends="-get-release-unit-plugin-ids">
+        
+        <for param="plugin.id" list="${release-unit.plugin.id.list}">
+            <sequential>
+                <copy file="${autobuild.dir.release-unit}/plugins/@{plugin.id}/MANIFEST.MF.build.bak"
+                    tofile="${autobuild.dir.release-unit}/plugins/@{plugin.id}/META-INF/MANIFEST.MF"
+                    overwrite="true" />
+            </sequential>
+        </for>
+    </target>
+    
+    <!-- generate candidate.plugin.list property -->
+    <target name="-get-candidate-plugins" if="_bypass_validate_manifest" unless="candidate.plugin.list">
+        <for param="feature.dir">
+            <dirset dir="${autobuild.dir.output.release}/features">
+                <include name="*" />
+            </dirset>
+            <sequential>
+                <propertyregex property="feature.name" override="true" input="@{feature.dir}"
+                    regexp="([^/\\]*$)" select="\1" />
+                <propertyregex property="feature.id" override="true" input="${feature.name}"
+                    regexp="([^_]+).*" select="\1" />
+                                
+                <tempfile property="_plugins_temp_file" />
+                <xslt in="@{feature.dir}/feature.xml" out="${_plugins_temp_file}"
+                    style="${autobuild.dir.scripts}/private/extractPlugins.xsl">
+                    <param name="feature_id" expression="${feature.id}" />
+                </xslt>
+                <property file="${_plugins_temp_file}" prefix="_plugins_in_candidate_dirs." />
+                <delete file="${_plugins_temp_file}" quiet="true" />
+            </sequential>
+        </for>
+        <propertyselector property="candidate.plugin.list"
+            match="_plugins_in_candidate_dirs\.plugin_.*"
+            override="true" />
+    </target>
+    
+    <target name="-restore-candidate-plugins" depends="-get-candidate-plugins" if="_bypass_validate_manifest">
+        <for param="plugin" list="${candidate.plugin.list}">
+            <sequential>
+                <propertycopy property="plugin.version" from="@{plugin}" override="true" />
+                <propertyregex property="plugin.id" override="true" input="@{plugin}"
+                    regexp="([^-]*$)" select="\1" />
+                
+                <!-- restore the MANIFEST.MF in candidate.dirs -->
+                <var name="candidate.dirs" value="${autobuild.dir.output.candidates}/debug,${autobuild.dir.output.candidates}/release/eclipse,${autobuild.dir.output.candidates}/jar/debug,${autobuild.dir.output.candidates}/jar/release,${autobuild.workspace.update-sites.local},${autobuild.workspace.update-sites.local-debug}" />
+                
+                <for list="${candidate.dirs}" param="target.candidate.dir">
+                    <sequential>
+                        <if>
+                            <available file="@{target.candidate.dir}/plugins/${plugin.id}_${plugin.version}" type="dir" />
+                            <then>
+                                <copy file="${autobuild.dir.release-unit}/plugins/${plugin.id}/MANIFEST.MF.build.bak"
+                                    tofile="@{target.candidate.dir}/plugins/${plugin.id}_${plugin.version}/META-INF/MANIFEST.MF"
+                                    overwrite="true" />
+                                <replaceregexp file="@{target.candidate.dir}/plugins/${plugin.id}_${plugin.version}/META-INF/MANIFEST.MF"
+                                    match="(Bundle-Version:[ \t]*)[^\r\n]*([\r\n]*)"
+                                    replace="\1${plugin.version}\2"
+                                    flags="s" />
+                            </then>
+                            <elseif>
+                                <available file="@{target.candidate.dir}/plugins/${plugin.id}_${plugin.version}.jar" type="file" />
+                                <then>
+                                    <tempfile property="temp.manifest.file"/>
+                                    <copy file="${autobuild.dir.release-unit}/plugins/${plugin.id}/MANIFEST.MF.build.bak"
+                                        tofile="${temp.manifest.file}" />
+                                    <replaceregexp file="${temp.manifest.file}"
+                                        match="(Bundle-Version:[ \t]*)[^\r\n]*([\r\n]*)"
+                                        replace="\1${plugin.version}\2"
+                                        flags="s" />
+                                    <jar destfile="@{target.candidate.dir}/plugins/${plugin.id}_${plugin.version}.jar"
+                                        manifest="${temp.manifest.file}"
+                                        update="true" />
+                                    <delete file="${temp.manifest.file}" quiet="true" />
+                                </then>
+                            </elseif>
+                            <else>
+                                <fail message="Can't find plugin ${plugin.id}_${plugin.version} in directory @{target.candidate.dir}/plugins" />
+                            </else>
+                        </if>
+                    </sequential>
+                </for>
+            </sequential>
+        </for>
+    </target>
+    
+    <target name="-generate-sites" depends="-do-ant-runner">
+        <update.site.creator sitedirectory="${autobuild.dir.output.jars.release}" fastupdatesitexml="${fast.update.site.xml}" />
+        <update.site.creator sitedirectory="${autobuild.dir.output.jars.debug}" fastupdatesitexml="${fast.update.site.xml}" />
+        <update.site.creator sitedirectory="${autobuild.workspace.update-sites.local}" fastupdatesitexml="${fast.update.site.xml}" />
+        <update.site.creator sitedirectory="${autobuild.workspace.update-sites.local-debug}" fastupdatesitexml="${fast.update.site.xml}" />
+    </target>
+
+    <target name="-generate-p2-jars" depends="-do-ant-runner">
+        <!-- generate p2 content.jar -->
+        <if>
+            <and>
+                <equals arg1="${autobuild.p2.packaging}" arg2="true" />
+                <available file="${autobuild.dir.output.candidates}/jar/p2/release" type="dir" />
+                <available file="${autobuild.dir.output.candidates}/jar/p2/debug" type="dir" />
+            </and>
+            <then>
+                <var name="autobuild.dir.eclipse.startup" unset="true" />
+                <m.validate.eclipse eclipsedirprop="autobuild.dir.eclipse-3.7" target-version="3.7" />
+                <eclipse.startup eclipseLocation="${autobuild.dir.eclipse-3.7}" />
+
+                <echo>=============================================================================================</echo>
+                <echo>Eclipse startup jar: ${autobuild.dir.eclipse.startup}</echo>
+                <echo>=============================================================================================</echo>
+                <echo>Generating p2 jar files at ${autobuild.dir.output.jars.release}.</echo>
+                <generate.p2.site p2.source.path="${autobuild.dir.output.candidates}/jar/p2/release" p2.dest.path="${autobuild.dir.output.jars.release}" />
+                <echo/>
+                <echo>Generating p2 jar files at ${autobuild.dir.output.jars.debug}.</echo>
+                <generate.p2.site p2.source.path="${autobuild.dir.output.candidates}/jar/p2/debug" p2.dest.path="${autobuild.dir.output.jars.debug}" />
+                <delete quiet="true" dir="${autobuild.dir.output.candidates}/jar/p2"/>
+                <if>
+                    <or>
+                    <not>
+                        <available file="${autobuild.dir.output.jars.release}/artifacts.jar" type="file" />
+                    </not>
+                    <not>
+                        <available file="${autobuild.dir.output.jars.release}/content.jar" type="file" />
+                    </not>
+                    <not>
+                        <available file="${autobuild.dir.output.jars.debug}/artifacts.jar" type="file" />
+                    </not>
+                    <not>
+                        <available file="${autobuild.dir.output.jars.debug}/content.jar" type="file" />
+                    </not>
+                    </or>
+                    <then>
+                        <fail>!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+There is the error when generating the p2 jar files.
+Fail the build now.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                        </fail>
+                    </then>
+                </if>
+                <if>
+                    <and>
+                        <available file="${autobuild.dir.output.candidates}/${_build_dir_name}/jar/release" type="dir" />
+                        <available file="${autobuild.dir.output.candidates}/${_build_dir_name}/jar/debug" type="dir" />
+                    </and>
+                    <then>
+                        <echo/>
+                        <echo>Generating p2 jar files at ${autobuild.dir.output.candidates}/${_build_dir_name}/jar/release.</echo>
+                        <generate.p2.site p2.source.path="${autobuild.dir.output.candidates}/${_build_dir_name}/jar/release" p2.dest.path="${autobuild.dir.output.candidates}/${_build_dir_name}/jar/release" />
+                        <echo/>
+                        <echo>Generating p2 jar files at ${autobuild.dir.output.candidates}/${_build_dir_name}/jar/debug.</echo>
+                        <generate.p2.site p2.source.path="${autobuild.dir.output.candidates}/${_build_dir_name}/jar/debug" p2.dest.path="${autobuild.dir.output.candidates}/${_build_dir_name}/jar/debug" />
+                        <if>
+                            <or>
+                                <not>
+                                    <available file="${autobuild.dir.output.candidates}/${_build_dir_name}/jar/release/artifacts.jar" type="file" />
+                                </not>
+                                <not>
+                                    <available file="${autobuild.dir.output.candidates}/${_build_dir_name}/jar/release/content.jar" type="file" />
+                                </not>
+                                <not>
+                                    <available file="${autobuild.dir.output.candidates}/${_build_dir_name}/jar/debug/artifacts.jar" type="file" />
+                                </not>
+                                <not>
+                                    <available file="${autobuild.dir.output.candidates}/${_build_dir_name}/jar/debug/content.jar" type="file" />
+                                </not>
+                            </or>
+                            <then>
+                                <fail>!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+There is the error when generating the p2 jar files for the
+dual-build. Fail the build now.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                                </fail>
+                            </then>
+                        </if>
+                    </then>
+                </if>
+            </then>
+        </if>
+    </target>
+
+    <target name="-postbuild" if="_postbuild_target_exists" depends="-do-ant-runner, -relocate-fixed-release">
+        <ant antfile="${autobuild.dir.release-unit}/postbuild.xml" />
+    </target>
+
+    <target name="-check-release-build" if="official-release-build">
+        <echo>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+This is an official release build.
+You can't run an auto test with an official release build.
+Please refer to the wiki page for setting up JUnit auto test.
+http://wiki.tibco.com/FrameworksWiki/BuildTools/Usage/Testing
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        </echo>
+    </target>
+
+    <target name="-check-successful-build" unless="official-release-build">
+        <available property="_latest_build_available" file="${autobuild.dir.build-artifacts}/latest-build.xml" />
+        <if>
+            <not>
+                <isset property="_latest_build_available" />
+            </not>
+            <then>
+                <echo>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+There is no a successful build for running JUnit auto test.
+Please refer to the wiki page for setting up JUnit auto test.
+http://wiki.tibco.com/FrameworksWiki/BuildTools/Usage/Testing
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                </echo>
+            </then>
+        </if>
+    </target>
+
+    <target name="-check-tests" if="_latest_build_available">
+        <property file="${autobuild.dir.build-artifacts}/tests.properties" />
+        <available property="_found_test_feature" file="${autobuild.dir.build-artifacts}/tests.xml" />
+        <if>
+            <not>
+                <isset property="_found_test_feature" />
+            </not>
+            <then>
+                <echo>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+There is no a test feature for running JUnit auto test.
+Please refer to the wiki page for setting up JUnit auto test.
+http://wiki.tibco.com/FrameworksWiki/BuildTools/Usage/Testing
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                </echo>
+            </then>
+            <else>
+                <property name="_run_test" value="true" />
+                <if>
+                    <not>
+                        <isset property="_found_unpacked_test_bundle" />
+                    </not>
+                    <then>
+                        <echo>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+There is no a unpacked test bundle for running JUnit auto test.
+Please refer to the wiki page for setting up JUnit auto test.
+http://wiki.tibco.com/FrameworksWiki/BuildTools/Usage/Testing
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                        </echo>
+                    </then>
+                    <else>
+                        <if>
+                            <and>
+                                <not>
+                                    <isset property="_found_test_class" />
+                                </not>
+                                <not>
+                                    <isset property="_found_plugin_test_scripts" />
+                                </not>
+                                <not>
+                                    <isset property="bypass.check.test-class" />
+                                </not>
+                            </and>
+                            <then>
+                                <echo>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+There is no a test class found for running JUnit auto test.
+Please refer to the wiki page for setting up JUnit auto test.
+http://wiki.tibco.com/FrameworksWiki/BuildTools/Usage/Testing
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                                </echo>
+                            </then>
+                        </if>
+                    </else>
+                </if>
+            </else>
+        </if>
+    </target>
+
+    <target name="-no-tests-message" unless="_do_test">
+        <echo>Either there are no tests to run, or this is an official release build.</echo>
+    </target>
+
+    <target name="-write-last-build-succeeded"
+            depends="-do-ant-runner, -developer-write-last-build-succeeded, -release-write-last-build-succeeded" />
+
+    <target name="-release-write-last-build-succeeded" if="official-release-build">
+        <property name="autobuild.release-build.properties" location="${autobuild.dir.build-artifacts}/release-build.properties" />
+        <delete file="${autobuild.release-build.properties}" quiet="true" />
+        <propertyfile file="${autobuild.release-build.properties}" comment="# builder 1.5 2009 hearts and flowers release">
+            <entry key="internal.target.path" value="${autobuild.repository}${autobuild.svn.tags-prefix}${autobuild.svn.tags-suffix}/${release-unit}/${touch.time}.${autobuild.user.name}"/>
+            <!-- note that the following value is baked, because we have no documented way of overriding it -->
+            <entry key="publish.target.folder" value="/tsi/root/reldist"/>
+            <entry key="local.base.location" value="${autobuild.dir.candidates}"/>
+            <entry key="local.target.location" value="$${local.base.location}/${internal.target.path}"/>
+            <entry key="local.release.update-site" value="$${local.target.location}/jar/release"/>
+            <entry key="local.debug.update-site" value="$${local.target.location}/jar/debug"/>
+            <!-- note that the following value is fixed, because we have no documented way of overriding it. -->
+            <entry key="release.base.location" value="http://reldist.na.tibco.com/candidates"/>
+            <entry key="release.target.location" value="$${release.base.location}/${internal.target.path}"/>
+            <entry key="release.update-site" value="$${release.target.location}/jar/release"/>
+        </propertyfile>
+
+        <!-- copy the obfuscation zip files to logs dir of output. -->
+        <copy todir="${autobuild.dir.output.logs}" overwrite="true">
+            <fileset dir="${autobuild.dir.build-artifacts}">
+                <include name="yguard2-*" />
+                <include name="proguard-*" />
+            </fileset>
+        </copy>
+
+        <for param="built-feature">
+            <dirset id="autobuild.build.latest.features"
+                    dir="${autobuild.dir.output.release}/features">
+                <include name="*" />
+            </dirset>
+            <sequential>
+                <propertyregex property="built-feature-id" override="true" input="@{built-feature}"
+                               regexp="([^/\\]*)_[^_]*$" select="\1" />
+                <propertyregex property="built-feature-last-part" override="true" input="${built-feature-id}"
+                               regexp="\.([^\.]+$)" select="\1" />
+                <propertyregex property="built-feature-version" override="true" input="@{built-feature}"
+                               regexp="(\d{1,3}\.\d{1,3}\.\d{1,3}.*)" select="\1" />
+                <property name="built-feature-name" value="${built-feature-id}_${built-feature-version}" />
+                <if>
+                    <or>
+                        <equals arg1="${built-feature-last-part}" arg2="test" />
+                        <equals arg1="${built-feature-last-part}" arg2="devdocs" />
+                        <equals arg1="${built-feature-last-part}" arg2="source" />
+                    </or>
+                    <then>
+                        <var name="built-feature-type" value="${built-feature-last-part}" />
+                    </then>
+                    <else>
+                        <var name="built-feature-type" value="code" />
+                    </else>
+                </if>               
+                <echo file="${autobuild.release-build.properties}" append="true">release.${built-feature-type}=${built-feature-version}
+</echo>
+            </sequential>
+        </for>
+    </target>
+
+    <target name="-developer-write-last-build-succeeded" unless="official-release-build" depends="-check-properties">
+        <if>
+            <isset property="autobuild.qualifier.fixed" />
+            <then>
+                <var name="autobuild.dir.output.release" value="${autobuild.dir.output.candidates}/release/eclipse" />
+            </then>
+        </if>
+        <copy todir="${autobuild.dir.build-artifacts}">
+            <fileset dir="${autobuild.dir.release-unit}" includes="*Versions.properties" />
+        </copy>
+        <condition property="autobuild.build.latest.has-tests" value="true" else="false">
+            <available file="build-artifacts/tests.xml" />
+        </condition>
+        <condition property="autobuild.build.latest.url"
+                   value="${autobuild.url.builds.base}/${autobuild.repository}${autobuild.svn.tags-prefix}${autobuild.svn.tags-suffix}/${release-unit}/${touch.time}.${autobuild.user.name}">
+            <isset property="autobuild.url.builds.base" />
+        </condition>
+        <delete file="${autobuild.dir.build-artifacts}/latest-build.xml" quiet="true" />
+        <delete file="${autobuild.build.latest.artifacts-file}" quiet="true" />
+        <echo file="${autobuild.dir.build-artifacts}/latest-build.xml">&lt;?xml version="1.0" ?>
+&lt;project name="Build ${touch.time}.${autobuild.user.name}">
+    &lt;!-- THIS IS A GENERATED FILE.  If you change it, fish on you, baby. -->
+    &lt;import file="${autobuild.build.latest.artifacts-file}" optional="true" />
+    &lt;!-- booleans for success and the existence of a test feature -->
+    &lt;property name="autobuild.build.latest.success" value="true" />
+    &lt;property name="autobuild.build.latest.has-tests" value="${autobuild.build.latest.has-tests}" />
+
+    &lt;!-- stuff that contributes to locations and qualifiers: timestamp, username -->
+    &lt;property name="autobuild.build.latest.timestamp" value="${touch.time}" />
+    &lt;property name="autobuild.build.latest.username" value="${autobuild.user.name}" />
+
+    &lt;!-- locations (outputs, configuration) -->
+    &lt;property name="autobuild.build.latest.extension-location"
+              location="${autobuild.dir.output.release}" />
+    &lt;property name="autobuild.build.latest.update-site"
+              location="${autobuild.dir.output.jars.release}" />
+    &lt;property name="autobuild.build.latest.debug-site"
+              location="${autobuild.dir.output.jars.debug}" />
+    &lt;property name="autobuild.build.latest.configuration-extension"
+              location="${autobuild.dir.eclipse.extensions}" />
+    &lt;property name="autobuild.build.latest.test-results"
+              location="${autobuild.dir.output.test-results}" />
+    &lt;property name="autobuild.build.latest.eclipse-target"
+              location="${autobuild.dir.eclipse.target}" /></echo>
+        <if>
+            <isset property="autobuild.url.builds.base" />
+            <then>
+                <echo file="${autobuild.dir.build-artifacts}/latest-build.xml" append="true">
+    &lt;!-- url for this build (only if a base url is defined) -->
+    &lt;property name="autobuild.build.latest.url" value="${autobuild.build.latest.url}"/></echo>
+            </then>
+        </if>
+        <echo file="${autobuild.dir.build-artifacts}/latest-build.xml" append="true">
+&lt;/project>
+</echo>
+        <if>
+            <available file="${latest-build-file}" />
+            <then>
+                <generate.artifacts.list />
+            </then>
+        </if>
+    </target>
+
+    <!-- this target basically depends upon a whole bunch of sanity checks,
+         to try to insure that the errors we get out are comprehensible. -->
+    <target name="-check-properties"
+            depends="-set-build-properties, -feature-set, -release-unit-set, -load-ant-contrib, -check-svn-props-new, 
+                     -create-overrides, -switch-jdk-version, -set-bootclasspath, -check-eclipse, -set-startup-property, -check-others" />
+
+    <target name="-make-artifacts-dir">
+        <mkdir dir="${autobuild.dir.build-artifacts}" />
+    </target>
+
+    <target name="-copy-user-ru-overrides" depends="-make-artifacts-dir" if="_user_release_unit_overrides_exists">
+        <copy todir="${autobuild.dir.build-artifacts}" file="${autobuild.user-release-unit.overrides}" failonerror="false" />
+    </target>
+
+    <target name="-create-overrides" depends="-check-user-overrides"
+            unless="_builder_is_configured">
+        <antcall target="-configuration-failure" />
+    </target>
+
+    <target name="-configuration-failure">
+        <echo>Oops!  It looks as though this is the first time that you've used builder.</echo>
+        <echo>You will need to do some setup before you are able to build successfully.</echo>
+        <echo>I have created a user configuration file for you.</echo>
+        <echo>Please take a look at the file ${autobuild.user.overrides}</echo>
+        <echo>(This message may also appear if your builder "tools" installation is corrupt)</echo>
+        <fail>Please modify ${autobuild.user.overrides} and try again.</fail>
+    </target>
+
+    <target name="-check-user-overrides" unless="_user_overrides_present">
+        <antcall target="-create-user-overrides" />
+    </target>
+
+    <target name="-create-user-overrides" >
+        <mkdir dir="${user.home}/tibco-build" />
+        <copy file="${autobuild.dir.scripts}/boilerplate/user-overrides.xml" todir="${user.home}/tibco-build">
+            <filterset>
+                <filter token="USERNAME" value="${autobuild.user.name}" />
+            </filterset>
+        </copy>
+    </target>
+
+    <!-- this target provides a summary display of important base properties,
+         which is displayed for every build. -->
+    <target name="-display-parameters" depends="showprop">
+        <condition property="_username_exists"
+                   value="${autobuild.user-release-unit.overrides}"
+                   else="not in use">
+            <isset property="_user_release_unit_overrides_exists" />
+        </condition>
+        <echo>Release Unit: ${release-unit}</echo>
+        <echo>Feature: ${feature}</echo>
+        <echo>Eclipse host: ${autobuild.dir.eclipse.install}</echo>
+        <echo>Eclipse target: ${autobuild.dir.eclipse.target}</echo>
+        <echo>Configuration: ${autobuild.dir.eclipse.extensions}</echo>
+        <echo>Java: ${_dir.java-classes}</echo>
+        <echo>Scripts: ${autobuild.dir.scripts}</echo>
+        <echo>User Overrides: ${autobuild.user.overrides}</echo>
+        <echo>Per-User Release Unit Overrides: ${_username_exists}</echo>
+        <echo>Output base: ${autobuild.dir.candidates}</echo>
+        <echo>Tags look like: [repository root url]${autobuild.svn.tags-prefix}/tags${autobuild.svn.tags-suffix}/${autobuild.svn.tagname-base}-x.y.z.nnn/${autobuild.svn.tag-pattern}</echo>
+    </target>
+
+    <target name="-collect-dependencies-site-xml">
+        <copy file="${autobuild.dir.eclipse.extensions}/dependenciesFeature.xml" todir="${autobuild.dir.build-artifacts}" failonerror="false" />
+    </target>
+
+    <target name="-feature-set" unless="feature">
+        <property name="o1" value="&#10; - define it in build.properties"/>
+        <property name="o2" value="&#10; - call ant -Dfeature=FEATURE-NAME"/>
+        <property name="msg" value="You must set the property 'feature'.&#10;Possiblities:${o1}${o2}"/>
+        <antcall target="Usage"/>
+        <fail message="${msg}"/>
+    </target>
+
+    <target name="-release-unit-set" if="official-release-build" unless="release-unit">
+        <property name="o1" value="&#10; - define it in build.properties"/>
+        <property name="o2" value="&#10; - call ant -Drelease-unit=RELEASE-UNIT-NAME"/>
+        <property name="msg" value="When the property 'official-release-build' is set, you must set the property 'release-unit' as well.&#10;Possibilities:${o1}${o2}" />
+        <antcall target="Usage" />
+        <fail message="${msg}" />
+    </target>
+    
+    <target name="-check-svn-props-new" depends="-load-ant-contrib, -release-discover-tagsURL" if="_need_check_tag_pattern">
+
+        <fail if="release.svn.bypass.flag">
+!!!
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The property "autobuild.svn.tag-pattern" for this release unit is set to
+"${autobuild.svn.tag-pattern}".  The svn url of this branch has to be retrieved
+to check for the tag-pattern.  So, the property release.svn.bypass.flag can not
+be set for this case. Failing now. 
+
+Please refer to the wiki page about the tag-pattern to fix this issue.
+http://wiki.tibco.com/DataIntWiki/DevTools/BuildTools/TagPropertiesSetting
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+</fail>
+
+        <fail unless="svn.revURL">
+!!!
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The property "autobuild.svn.tag-pattern" for this release unit is 
+"${autobuild.svn.tag-pattern}".  However, the svn url of this branch
+"${svn.revURL}" can't be retrieved.  Please check your local svn repository.
+Failing now. 
+
+Please refer to the wiki page about the tag-pattern to fix this issue.
+http://wiki.tibco.com/DataIntWiki/DevTools/BuildTools/TagPropertiesSetting
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+</fail>
+    </target>
+
+    <!--target name="-check-svn-props" if="release-unit">
+        <propertyregex property="_svn_wc_dir"
+                       input="${autobuild.svn.tag-pattern}"
+                       regexp=".*?([^/]+$)"
+                       select="\1" />
+        <propertyregex property="_base_dir"
+                       input="${basedir}"
+                       regexp=".*?([^/\\]+$)"
+                       select="\1" />
+        <condition property="_svn_pattern_matches_dir">
+            <equals arg1="${_svn_wc_dir}" arg2="${_base_dir}" />
+        </condition>
+
+        <condition property="_release_tag_fail">
+             <and>
+                 <isset property="official-release-build" />
+                 <not>
+                     <isset property="_svn_pattern_matches_dir" />
+                 </not>
+             </and>
+        </condition>
+        <fail if="_release_tag_fail">
+The property "autobuild.svn.tag-pattern" for this release unit ends in the
+directory name "${_svn_wc_dir}".  However, the directory in this working copy
+(indicating, more dangerously, the same in the branch?) does not match.  It
+is "${_base_dir}", instead.  Please insure that the name of the directory
+matches the pattern, wherever it appears in subversion (and check it out
+without renaming).  Otherwise, automated tagging fails.  Failing now.
+</fail>
+    </target-->
+
+    <!-- print out the warning message for engineer builds when there is the tag-pattern issue. -->
+    <target name="-svn-tag-pattern-warning" unless="_svn_pattern_matches_dir">
+        <echo>
+The property "autobuild.svn.tag-pattern" for this release unit ends in the
+directory name "${_svn_wc_dir}".  However, the directory in this working copy
+(indicating, more dangerously, the same in the branch?) does not match.  It
+is "${_base_dir}", instead.  Please insure that the name of the directory
+matches the pattern, wherever it appears in subversion (and check it out
+without renaming).  Otherwise, automated tagging fails.  Warning now.
+        </echo>
+    </target>
+
+    <target name="-get-platform">
+        <condition property="_is_OS_X">
+            <os family="unix" name="Mac OS X" />
+        </condition>
+        <!-- default -->
+        <!--condition property="_is_unixish">
+            <and>
+                <os family="unix" />
+                <not>
+                    <os name="Mac OS X" />
+                </not>
+            </and>
+        </condition -->
+        <condition property="_is_windows">
+            <os family="windows" />
+        </condition>
+    </target>
+
+    <target name="-set-osx-classpath" if="_is_OS_X">
+        <!-- differs from other unixen by s/rt.jar/classes.jar/ java_is_apple_version -->
+        <if>
+            <available file="${_dir.java-classes}/classes.jar" type="file" />
+            <then>
+                <condition property="_java_is_sane">
+                    <and>
+                        <available file="${_dir.java-classes}/jsse.jar" type="file" />
+                        <available file="${_dir.java-classes}/jce.jar" type="file" />
+                    </and>
+                </condition>
+                <property name="bootclasspath" value="${_dir.java-classes}/classes.jar:${_dir.java-classes}/jsse.jar:${_dir.java-classes}/jce.jar" />
+            </then>
+            <else>
+                <condition property="_java_is_sane">
+                    <and>
+                        <available file="${_dir.java-classes}/rt.jar" type="file" />
+                        <available file="${_dir.java-classes}/jsse.jar" type="file" />
+                        <available file="${_dir.java-classes}/jce.jar" type="file" />
+                    </and>
+                </condition>
+                <property name="bootclasspath" value="${_dir.java-classes}/rt.jar:${_dir.java-classes}/jsse.jar:${_dir.java-classes}/jce.jar" />
+            </else>
+        </if>
+    </target>
+
+    <target name="-set-windows-classpath" if="_is_windows">
+        <!-- windows pathsep -->
+        <property name="bootclasspath" value="${_dir.java-classes}/rt.jar;${_dir.java-classes}/jsse.jar;${_dir.java-classes}/jce.jar" />
+        <property name="autobuild.shell-command" value="cmd" />
+        <property name="autobuild.shell-switch-char" value="/" />
+        <property name="autobuild.grep-switch-string" value="grep \.class | grep differ" />
+    </target>
+
+    <target name="-set-bootclasspath" depends="-get-platform, -set-osx-classpath, -set-windows-classpath">
+        <condition property="_java_is_sane">
+            <and>
+                <available file="${_dir.java-classes}" type="dir" />
+                <available file="${_dir.java-classes}/rt.jar" type="file" />
+                <available file="${_dir.java-classes}/jsse.jar" type="file" />
+                <available file="${_dir.java-classes}/jce.jar" type="file" />
+            </and>
+        </condition>
+        <!-- except for os x, all unixen use the same bootclasspath value, once you've abstracted out the directory location -->
+        <property name="bootclasspath" value="${_dir.java-classes}/rt.jar:${_dir.java-classes}/jsse.jar:${_dir.java-classes}/jce.jar"/>
+        <property name="autobuild.shell-command" value="sh" />
+        <property name="autobuild.shell-switch-char" value="-" />
+        <fail unless="_java_is_sane">
+The setting for _dir.java-classes in ${autobuild.user.overrides} is:
+${_dir.java-classes}
+However, either this directory does not exist, or it does not contain the
+jars required to invoke javac.  Please correct your configuration.</fail>
+    </target>
+
+    <target name="-set-fixed-output-location" if="autobuild.qualifier.fixed">     
+        <if>
+            <isset property="eclipse.nature.build" />
+            <then>
+                <property name="autobuild.dir.output.candidates" location="${autobuild.dir.candidates}/eclipse" />
+                <var name="autobuild.dir.output.release" unset="true" />
+                <property name="autobuild.dir.output.release" location="${autobuild.dir.output.candidates}/config/eclipse" />
+                <delete dir="${autobuild.dir.output.release}" quiet="true" />
+            </then>
+            <else>
+                <property name="autobuild.dir.output.candidates" location="${autobuild.dir.candidates}" />
+                <property name="autobuild.dir.output.release" location="${autobuild.dir.output.candidates}/config/eclipse" />
+                <delete dir="${autobuild.dir.output.release}" quiet="true" />
+           </else>
+        </if>
+        <property name="autobuild.dir.output.logs" location="${autobuild.dir.output.candidates}/logs/${touch.time}" />
+    </target>
+
+    <target name="-relocate-fixed-release" if="autobuild.qualifier.fixed" depends="-do-ant-runner">
+        <mkdir dir="${autobuild.dir.output.candidates}/release/eclipse/features" />
+        <mkdir dir="${autobuild.dir.output.candidates}/release/eclipse/plugins" />
+        <echo message="" file="${autobuild.dir.output.candidates}/release/eclipse/.eclipseextension" />
+        <copy todir="${autobuild.dir.output.candidates}/release/eclipse/features">
+            <fileset dir="${autobuild.dir.output.release}/features" includes="**/*" />
+        </copy>
+        <copy todir="${autobuild.dir.output.candidates}/release/eclipse/plugins">
+            <fileset dir="${autobuild.dir.output.release}/plugins" includes="**/*" />
+        </copy>
+        <delete quiet="true" dir="${autobuild.dir.output.release}" deleteonexit="true"/>
+    </target>
+
+    <target name="-set-stamped-output-location" unless="autobuild.qualifier.fixed">
+        <property name="autobuild.dir.output.candidates" location="${autobuild.dir.candidates}/${autobuild.repository}${autobuild.svn.tags-prefix}${autobuild.svn.tags-suffix}/${release-unit}/${touch.time}.${autobuild.user.name}"/>
+        <property name="autobuild.dir.output.logs" location="${autobuild.dir.output.candidates}/logs" />
+    </target>
+
+    <target name="-set-generic-properties"
+            depends="-set-fixed-output-location, -set-stamped-output-location">
+        <property name="autobuild.svn.featureVersionProperties.working" location="${autobuild.dir.release-unit}/featureVersions.properties" />
+        <property name="autobuild.svn.pluginVersionProperties.working" location="${autobuild.dir.release-unit}/pluginVersions.properties" />
+        <property name="autobuild.qualifiers.features" location="${autobuild.dir.release-unit}/featureQualifiers.properties" />
+        <property name="autobuild.qualifiers.plugins" location="${autobuild.dir.release-unit}/pluginQualifiers.properties" />
+        <condition property="_qualifiers_exist">
+            <or>
+                <available file="${autobuild.qualifiers.features}" />
+                <available file="${autobuild.qualifiers.plugins}" />
+            </or>
+        </condition>
+    </target>
+
+    <target name="-set-role-dependent-properties">
+        <property name="autobuild.dir.output.release" location="${autobuild.dir.output.candidates}/release/eclipse" />
+        <property name="autobuild.dir.output.debug" location="${autobuild.dir.output.candidates}/debug" />
+        <property name="autobuild.dir.output.test-results" location="${autobuild.dir.output.candidates}/junit" />
+
+        <property name="autobuild.dir.output.jars.release" location="${autobuild.dir.output.candidates}/jar/release"/>
+        <property name="autobuild.dir.output.jars.debug" location="${autobuild.dir.output.candidates}/jar/debug"/>
+    </target>
+
+    <target name="-make-logs-dir">
+        <mkdir dir="${autobuild.dir.output.logs}" />
+        <condition property="_dependencies_logs_exist">
+            <or>
+                <available file="${autobuild.workspace.log}" />
+            </or>
+        </condition>
+    </target>
+
+    <!-- also turns off the log and copies it to the right place. -->
+    <target name="-collect-logs" depends="-set-role-dependent-properties, -make-logs-dir"  if="_dependencies_logs_exist">
+        <!-- now that we know the proper location for logging, move the setup log there. -->
+        <echo level="verbose">Looking for ${autobuild.workspace.log}</echo>
+        <copy file="${autobuild.workspace.log}" todir="${autobuild.dir.output.logs}" failonerror="false" />
+        <delete file="${autobuild.workspace.log}" quiet="true" />
+    </target>
+
+    <macrodef name="update-local-builds-site-xml">
+        <sequential>
+            <mkdir dir="${autobuild.workspace.update-sites.local}/features"/>
+            <mkdir dir="${autobuild.workspace.update-sites.local}/plugins"/>
+            <update.site.creator
+                sitedirectory="${autobuild.workspace.update-sites.local}" fastupdatesitexml="${fast.update.site.xml}" />
+            <mkdir dir="${autobuild.workspace.update-sites.local-debug}/features"/>
+            <mkdir dir="${autobuild.workspace.update-sites.local-debug}/plugins"/>
+            <update.site.creator
+                sitedirectory="${autobuild.workspace.update-sites.local-debug}" fastupdatesitexml="${fast.update.site.xml}" />
+        </sequential>
+    </macrodef>
+
+    <!-- use a macrodef instead of it
+    <target name="-update-local-builds-site-xml">
+        <mkdir dir="${autobuild.workspace.update-sites.local}/features"/>
+        <mkdir dir="${autobuild.workspace.update-sites.local}/plugins"/>
+        <update.site.creator
+            sitedirectory="${autobuild.workspace.update-sites.local}" />
+        <mkdir dir="${autobuild.workspace.update-sites.local-debug}/features"/>
+        <mkdir dir="${autobuild.workspace.update-sites.local-debug}/plugins"/>
+        <update.site.creator
+            sitedirectory="${autobuild.workspace.update-sites.local-debug}" />
+    </target>
+    -->
+ 
+    <target name="-set-qa-output-location">
+        <property name="autobuild.dir.output.candidates" location="${autobuild.dir.candidates}/${autobuild.repository}${autobuild.svn.tags-prefix}${autobuild.svn.tags-suffix}/${release-unit}/qa"/>
+        <delete dir="${autobuild.dir.output.candidates}" includeemptydirs="true" quiet="true" />
+        <property name="autobuild.dir.output.logs" location="${autobuild.dir.output.candidates}/logs" />
+    </target>
+
+    <!-- check others conditions before build -->
+    <target name="-check-others" >
+        <!-- check .project file in the RU dir -->
+        <if>
+            <available file="${autobuild.dir.release-unit}/.project" type="file" />
+            <then>
+                <fail>
+!!!
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Fail now!  The file .project can't exist at the top level of
+the release unit under
+${autobuild.dir.release-unit}.
+
+Please remove it and restart the build.
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                </fail>
+            </then>
+        </if>
+
+        <!-- check build.properties file in features -->
+        <if>
+            <available file="${autobuild.dir.release-unit}/features" type="dir" />
+            <then>
+                <for param="check-feature">
+                    <dirset dir="${autobuild.dir.release-unit}/features">
+                        <include name="*" />
+                    </dirset>
+                    <sequential>
+                        <if>
+                            <not>
+                                <available file="@{check-feature}/build.properties" />
+                            </not>
+                            <then>
+                                <fail>
+!!!
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The file build.properties must exist under the feature
+@{check-feature}
+
+The content of the build.properties can be:
+  bin.includes = feature.xml
+  qualifier = context
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                                </fail>
+                            </then>
+                        </if>
+                    </sequential>
+                </for>
+            </then>
+        </if>
+
+        <get.plugin.ids plugins.name="_all_plugins_id" />
+        <!-- check build.properties & MANIFEST.MF file in plugins-->
+        <if>
+            <isset property="_all_plugins_id" />
+            <then>
+                <for param="check-plugin" list="${_all_plugins_id}">
+                    <sequential>
+                        <!-- build.properties -->
+                        <if>
+                            <not>
+                                <available file="${autobuild.dir.release-unit}/plugins/@{check-plugin}/build.properties" />
+                            </not>
+                            <then>
+                                <!-- not check document plugin -->
+                                <check.document.list plugin="@{check-plugin}" />
+                                <if>
+                                    <isset property="_bypass_check" />                    
+                                    <then>
+                                        <var name="_bypass_check" unset="true" />     
+                                    </then>
+                                    <else>             
+                                        <fail>
+        !!!
+        ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        
+        The file build.properties must exist under the plugin
+        ${autobuild.dir.release-unit}/plugins/@{check-plugin}
+        
+        The content of the build.properties can be:
+          bin.includes = META-INF/,\
+          qualifier = context
+        
+        ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                                        </fail>
+                                    </else>
+                                </if>
+                            </then>
+                        </if>
+                        
+                        <!-- MANIFEST.MF -->
+                        <check.document.list plugin="@{check-plugin}" />
+                        <if>
+                            <isset property="_bypass_check" />                    
+                            <then>
+                                <var name="_bypass_check" unset="true" />
+                            </then>
+                            <elseif>
+                                <not>
+                                    <available file="${autobuild.dir.release-unit}/plugins/@{check-plugin}/META-INF/MANIFEST.MF" />
+                                </not>
+                                <then>
+                                    <fail>
+        !!!
+        ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        
+        The file MANIFEST.MF must exist under the plugin
+        ${autobuild.dir.release-unit}/plugins/@{check-plugin}/META-INF
+        
+        The content of the MANIFEST.MF looks like :
+            Manifest-Version: 1.0
+            Bundle-ManifestVersion: 1
+            Bundle-Name: bundleName
+            Bundle-SymbolicName: com.xxx.xxx.xxx
+            Bundle-Version: 1.0.0.qualifier
+            
+        ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                                    </fail>
+                                </then>
+                            </elseif>
+                        </if>
+                    </sequential>
+                </for>
+            </then>
+        </if>
+    </target>
+    
+    <macrodef name="get.plugin.ids">
+        <attribute name="plugins.name" />
+        <sequential>
+            <for param="feature.id" list="${feature},${feature}.test,${feature}.source,${feature}.devdocs">
+                <sequential>
+                    <if>
+                        <available file="${autobuild.dir.release-unit}/features/@{feature.id}" type="dir" />
+                        <then>
+                            <tempfile property="_plugins_temp_file" />
+                            <xslt in="${autobuild.dir.release-unit}/features/@{feature.id}/feature.xml" out="${_plugins_temp_file}"
+                                style="${autobuild.dir.scripts}/private/extractPlugins.xsl">
+                                <param name="feature_id" expression="${feature.id}" />
+                            </xslt>
+                            <property file="${_plugins_temp_file}" prefix="_plugins_in_release_unit." />
+                            <delete file="${_plugins_temp_file}" quiet="true" />
+                        </then>
+                    </if>
+                </sequential>
+            </for>
+            <propertyselector property="@{plugins.name}"
+                match="_plugins_in_release_unit\.plugin_[^-]*-(.*)"
+                override="true"
+                select="\1" />              
+        </sequential>
+    </macrodef>    
+      
+    
+    <macrodef name="check.document.list" >
+        <attribute name="plugin" />
+        <sequential>
+            <if>
+                <isset property="documentation.plugin.list" />
+                <then>
+                <for param="doc.plugin" list="${documentation.plugin.list}" >
+                    <sequential>
+                        <if>
+                            <equals arg1="@{plugin}" arg2="@{doc.plugin}" />
+                            <then>
+                                <var name="_bypass_check" value="true" />
+                            </then>
+                        </if>
+                    </sequential>
+                </for>
+                </then>
+            </if>
+        </sequential>
+    </macrodef>
+    
+    <macrodef name="generate.p2.site" description="generate content.jar">
+        <attribute name="p2.source.path" />
+         <attribute name="p2.dest.path" />
+        <sequential>
+            <java classname="org.eclipse.core.launcher.Main"
+                maxMemory="${autobuild.max.memory}" fork="true" failonerror="on" logerror="on">
+                <classpath>
+                    <pathelement location="${autobuild.dir.eclipse.startup}" />
+                </classpath>
+                <arg line='-debug 
+                    -consolelog 
+                    -nosplash 
+                    -verbose 
+                    -application org.eclipse.equinox.p2.publisher.FeaturesAndBundlesPublisher 
+                    -metadataRepository  file:@{p2.dest.path}
+                    -artifactRepository  file:@{p2.dest.path} 
+                    -source @{p2.source.path}
+                    -compress 
+                    -append 
+                    -publishArtifacts
+                    ' />
+            </java>
+        </sequential>
+    </macrodef>
+    
+    
+</project>

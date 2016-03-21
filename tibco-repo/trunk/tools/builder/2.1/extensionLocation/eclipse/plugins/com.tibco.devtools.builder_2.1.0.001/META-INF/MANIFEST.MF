@@ -1,0 +1,46 @@
+Manifest-Version: 1.0
+Require-Bundle: org.eclipse.pde.build
+Export-Package: com.tibco.devtools.builder;version="2.1.0";uses:="org.
+ osgi.framework,com.tibco.devtools.builder.utilities,com.tibco.devtool
+ s.builder.generators",com.tibco.devtools.builder.codegen;version="2.1
+ .0";uses:="com.tibco.devtools.builder,com.tibco.devtools.builder.code
+ gen.utility",com.tibco.devtools.builder.codegen.utility;version="2.1.
+ 0";uses:="com.tibco.devtools.builder.codegen",com.tibco.devtools.buil
+ der.generators;version="2.1.0"; uses:="org.eclipse.pde.internal.build
+ .site,  com.tibco.devtools.builder,  org.eclipse.pde.internal.build, 
+  com.tibco.devtools.buildscripts,  org.eclipse.update.core,  com.tibc
+ o.devtools.builder.utilities,  com.tibco.devtools.buildscripts.tasks"
+ ,com.tibco.devtools.builder.task;version="2.1.0"; uses:="com.tibco.de
+ vtools.builder,  org.apache.tools.ant,  com.tibco.devtools.builder.ut
+ ilities,  com.tibco.devtools.builder.generators",com.tibco.devtools.b
+ uilder.task.codegen;version="2.1.0";uses:="org.apache.tools.ant",com.
+ tibco.devtools.builder.utilities;version="2.1.0"; uses:="com.tibco.de
+ vtools.builder,  org.osgi.framework,  org.eclipse.update.core,  org.e
+ clipse.osgi.service.resolver"
+Bundle-Vendor: TIBCO Software Inc.
+Bundle-ClassPath: builder-core.jar,builder-ant.jar
+Bundle-Version: 2.1.0.001
+Bundle-Name: Stand-alone Builder Tool
+Bundle-ManifestVersion: 2
+Import-Package: com.tibco.devtools.builder;version="[2.1.0,3.0.0)",com
+ .tibco.devtools.builder.codegen;version="[2.1.0,3.0.0)",com.tibco.dev
+ tools.builder.codegen.utility;version="[2.1.0,3.0.0)",com.tibco.devto
+ ols.builder.generators;version="[2.1.0,3.0.0)",com.tibco.devtools.bui
+ lder.task;version="[2.1.0,3.0.0)",com.tibco.devtools.builder.task.cod
+ egen;version="[2.1.0,3.0.0)",com.tibco.devtools.builder.utilities;ver
+ sion="[2.1.0,3.0.0)",com.tibco.devtools.buildscripts;version="[1.1.0,
+ 2.0.0)",com.tibco.devtools.buildscripts.resources;version="[1.1.0,2.0
+ .0)",com.tibco.devtools.buildscripts.selectors;version="[1.1.0,2.0.0)
+ ",com.tibco.devtools.buildscripts.tasks;version="[1.1.0,2.0.0)",com.t
+ ibco.devtools.buildscripts.tasks.optional;version="[1.1.0,2.0.0)",com
+ .tibco.devtools.buildscripts.tasks.proguard;version="[1.1.0,2.0.0)",c
+ om.tibco.devtools.buildscripts.tasks.yguard;version="[1.1.0,2.0.0)",o
+ rg.apache.tools.ant,org.eclipse.core.runtime,org.eclipse.equinox.p2.p
+ ublisher.eclipse,org.eclipse.osgi.service.resolver,org.eclipse.pde.bu
+ ild,org.eclipse.pde.internal.build,org.eclipse.pde.internal.build.bui
+ lder,org.eclipse.pde.internal.build.site,org.osgi.framework,org.xml.s
+ ax,org.xml.sax.helpers
+Bundle-SymbolicName: com.tibco.devtools.builder; singleton:=true
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+
+

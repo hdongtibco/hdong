@@ -1,0 +1,44 @@
+Manifest-Version: 1.0
+Export-Package: com.tibco.devtools.builder;version="1.5.3";uses:="org.
+ osgi.framework,com.tibco.devtools.builder.utilities,com.tibco.devtool
+ s.builder.generators",com.tibco.devtools.builder.codegen;version="1.5
+ .3";uses:="com.tibco.devtools.builder,com.tibco.devtools.builder.code
+ gen.utility",com.tibco.devtools.builder.codegen.utility;version="1.5.
+ 3";uses:="com.tibco.devtools.builder.codegen",com.tibco.devtools.buil
+ der.generators;version="1.5.3"; uses:="org.eclipse.pde.internal.build
+ .site,  com.tibco.devtools.builder,  org.eclipse.pde.internal.build, 
+  com.tibco.devtools.buildscripts,  org.eclipse.update.core,  com.tibc
+ o.devtools.builder.utilities,  com.tibco.devtools.buildscripts.tasks"
+ ,com.tibco.devtools.builder.task;version="1.5.3"; uses:="com.tibco.de
+ vtools.builder,  org.apache.tools.ant,  com.tibco.devtools.builder.ut
+ ilities,  com.tibco.devtools.builder.generators",com.tibco.devtools.b
+ uilder.task.codegen;version="1.5.3";uses:="org.apache.tools.ant",com.
+ tibco.devtools.builder.utilities;version="1.5.3"; uses:="com.tibco.de
+ vtools.builder,  org.osgi.framework,  org.eclipse.update.core,  org.e
+ clipse.osgi.service.resolver"
+Bundle-Vendor: TIBCO Software Inc.
+Bundle-ClassPath: builder-core.jar,builder-ant.jar
+Bundle-Version: 1.5.3.022
+Bundle-Name: Stand-alone Builder Tool
+Bundle-ManifestVersion: 2
+Import-Package: org.apache.tools.ant,org.eclipse.core.runtime,org.ecli
+ pse.osgi.service.resolver,org.eclipse.pde.build,org.eclipse.pde.inter
+ nal.build,org.eclipse.pde.internal.build.builder,org.eclipse.pde.inte
+ rnal.build.site,org.eclipse.update.core,org.eclipse.update.core.model
+ ,org.osgi.framework,org.xml.sax,org.xml.sax.helpers,com.tibco.devtool
+ s.builder;version="[1.5.3,2.0.0)",com.tibco.devtools.builder.generato
+ rs;version="[1.5.3,2.0.0)",com.tibco.devtools.builder.task;version="[
+ 1.5.3,2.0.0)",com.tibco.devtools.builder.task.codegen;version="[1.5.3
+ ,2.0.0)",com.tibco.devtools.builder.utilities;version="[1.5.3,2.0.0)"
+ ,com.tibco.devtools.builder.codegen;version="[1.5.3,2.0.0)",com.tibco
+ .devtools.builder.codegen.utility;version="[1.5.3,2.0.0)",com.tibco.d
+ evtools.buildscripts;version="[1.0.2,2.0.0)",com.tibco.devtools.build
+ scripts.resources;version="[1.0.2,2.0.0)",com.tibco.devtools.buildscr
+ ipts.selectors;version="[1.0.2,2.0.0)",com.tibco.devtools.buildscript
+ s.tasks;version="[1.0.2,2.0.0)",com.tibco.devtools.buildscripts.tasks
+ .optional;version="[1.0.2,2.0.0)",com.tibco.devtools.buildscripts.tas
+ ks.proguard;version="[1.0.2,2.0.0)",com.tibco.devtools.buildscripts.t
+ asks.yguard;version="[1.0.2,2.0.0)"
+Bundle-SymbolicName: com.tibco.devtools.builder; singleton:=true
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+

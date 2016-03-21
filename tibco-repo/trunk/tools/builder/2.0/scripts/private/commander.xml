@@ -1,0 +1,274 @@
+<project name="commander-tools" basedir=".">
+
+	<target name="-setConditions">
+		<condition property="isWindows">
+			<os family="windows" />
+		</condition>
+
+		<condition property="isLinux">
+			<os name="Linux" />
+		</condition>
+
+		<condition property="isMac">
+			<os family="mac"/>
+		</condition>
+	</target>
+
+	<target name="-setwin" if="isWindows">
+		<property name="ostype" value="windows"/>
+		<property name="ecpreflighttool" value="ecclientpreflight.exe"/>
+		<property name="ectool" value="ectool.exe"/>
+	</target>
+
+	<target name="-setlnx" if="isLinux">
+		<property name="ostype" value="linux"/>
+		<property name="ecpreflighttool" value="ecclientpreflight"/>
+		<property name="ectool" value="ectool"/>
+	</target>
+
+	<target name="-setmac" if="isMac">
+		<property name="ostype" value="macosx"/>
+		<property name="ecpreflighttool" value="ecclientpreflight"/>
+		<property name="ectool" value="ectool"/>
+	</target>
+
+
+	<target name="-testClientExistence">
+	    <property name="client.dir" location="${autobuild.dir.user}/ecclienttools-3.5.0" />
+		<condition property="clientExists">
+			<available file="${client.dir}/${ectool}"/>
+		</condition>
+	</target>
+
+	<target name="-getClients" unless="clientExists">
+
+        <condition property="client.update.site"
+            value="http://spin.tibco.com:${autobuild.spin.port}/devtools/tool-downloads"
+            else="http://spin.tibco.com/devtools/tool-downloads">
+            <isset property="autobuild.spin.port" />
+        </condition>
+
+        <get src="${client.update.site}/${ostype}/ecclienttools-3.5.0-${ostype}.tar.gz"
+             dest="${client.dir}-${ostype}.tar.gz"
+             verbose="true" usetimestamp="true"/>
+        <gunzip src="${client.dir}-${ostype}.tar.gz"/>
+        <untar src="${client.dir}-${ostype}.tar" dest="${autobuild.dir.user}"/>
+        <chmod file="${client.dir}/${ectool}" perm="ugo+x"/>
+        <chmod file="${client.dir}/${ecpreflighttool}" perm="ugo+x"/>
+        <delete file="${client.dir}-${ostype}.tar.gz"/>
+        <delete file="${client.dir}-${ostype}.tar"/>
+	</target>
+
+
+    <target name="-getCommanderClient" depends="-setConditions, -setwin, -setlnx, -setmac, -testClientExistence, -getClients" />
+    
+    
+    <macrodef name="get.svn.url">
+        <attribute name="id"/>
+        <attribute name="working.copy" default="${autobuild.dir.release-unit}"/>
+        <sequential>
+            <exec executable="svn" logerror="on" failonerror="on" outputproperty="@{id}.svn.info.wc">
+                <arg line="info --xml @{working.copy}" />
+            </exec>
+            <xmlproperty prefix="@{id}.svn">
+                <propertyresource name="@{id}.svn.info.wc"/>
+            </xmlproperty>
+            <echo>svnurl = ${@{id}.svn.info.entry.url}</echo>
+        </sequential>
+    </macrodef>
+
+    <macrodef name="commander.login">
+        <sequential>
+            <exec executable="${client.dir}/${ectool}">
+                <arg value="--server"/>
+                <arg value="commander-dc.tibco.com"/>
+                <arg value="login"/>
+                <arg value="intbuild"/>
+                <arg value="T1b3ngbuild"/>
+            </exec>
+        </sequential>
+    </macrodef>
+    
+    <macrodef name="commander.preflight">
+        <attribute name="svnurl"/>
+        <attribute name="svnrev"/>
+        <attribute name="working-copy"/>
+        <attribute name="email" default="${autobuild.user.name}"/>
+        <attribute name="feature" default="${feature}"/>
+        <sequential>
+            <dirname property="commander.dir" file="${ant.file.commander-tools}"/>
+            <echo>svnurl=@{svnurl}</echo>
+            <echo>svnpath=@{working-copy}</echo>
+            <echo>email=@{email}</echo>
+            <echo>feature=@{feature}</echo>
+            <condition property="is.svn.info.entry.url.empty">
+                <length string="@{svnurl}" trim="true" length="0" />
+            </condition>
+            <fail if="is.svn.info.entry.url.empty" message="Empty svnurl passed"/>
+            <exec executable="${client.dir}/${ecpreflighttool}">
+                <arg value="--server"/>
+                <arg value="commander-dc.tibco.com"/>
+                <arg value="--username"/>
+                <arg value="intbuild"/>
+                <arg value="--projectName"/>
+                <arg value="Preflight_RU_Test"/>
+                <arg value="--procedureName"/>
+                <arg value="ru_build"/>
+                <arg value="--scmType"/>
+                <arg value="subversion"/>
+                <arg value="--svnpath"/>
+                <arg value="@{working-copy}"/>
+                <arg value="-c"/>
+                <arg value="${commander.dir}/commander-data.xml"/>
+                <arg value="--param"/>
+                <arg value="buildType=preflight"/>
+                <arg value="--param"/>
+                <arg value="email_notify=@{email}" />
+                <arg value="--param"/>
+                <arg value="feature_name=@{feature}" />
+                <arg value="--param"/>
+                <arg value="svn_url=@{svnurl}"/>
+                <arg value="--param"/>
+                <arg value="svn_revision=@{svnrev}"/>
+            </exec>
+            <echo> Please see status of job at https://commander-dc.tibco.com:5443/commander/jobs.php </echo>
+        </sequential>
+    </macrodef>
+
+    <macrodef name="commander.integration">
+        <attribute name="svnurl"/>
+        <attribute name="svnrevision" default="HEAD"/>
+        <attribute name="email" default="${autobuild.user.name}"/>
+        <attribute name="feature" default="${feature}"/>
+        <sequential>
+            <condition property="is.svn.info.entry.url.empty">
+                <length string="@{svnurl}" trim="true" length="0" />
+            </condition>
+            <fail if="is.svn.info.entry.url.empty" message="Empty svnurl passed"/>
+            <exec executable="${client.dir}/${ectool}">
+                <arg value="--server"/>
+                <arg value="commander-dc.tibco.com"/>
+                <arg value="runProcedure"/>
+                <arg value="RU_Test"/>
+                <arg value="--procedureName"/>
+                <arg value="ru_build"/>
+                <arg value="--actualParameter"/>
+                <arg value="preflight=false"/>
+                <arg value="svn_url=@{svnurl}"/>
+                <arg value="svn_revision=@{svnrevision}"/>
+                <arg value="buildType=integration"/>
+                <arg value="email_notify=@{email}" />
+                <arg value="feature_name=@{feature}" />
+            </exec>
+        </sequential>
+    </macrodef>
+
+    <macrodef name="commander.assembly">
+        <attribute name="source.dir" default="${autobuild.dir.release-unit}"/>
+        <attribute name="svnrevision" default="HEAD"/>
+        <attribute name="email" default="${autobuild.user.name}"/>
+        <attribute name="assembly.id"/>
+        <attribute name="build.qualifier"/>
+        <attribute name="major"/>
+        <attribute name="minor" default="0"/>
+        <attribute name="patch" default="0"/>
+        <sequential>
+
+            <get.svn.url id="assy" working.copy="@{source.dir}" />
+            
+            <commander.login/>
+
+            <exec executable="${client.dir}/${ectool}">
+                <arg value="--server"/>
+                <arg value="commander-dc.tibco.com"/>
+                <arg value="runProcedure"/>
+                <arg value="install-packaging"/>
+                <arg value="--procedureName"/>
+                <arg value="Generic-Product-Assembly-Build"/>
+                <arg value="--actualParameter"/>
+                <arg value="assembly_ID=@{assembly.id}"/>
+                <arg value="build_qualifier=@{build.qualifier}"/>
+                <arg value="dev_email_address=@{email}" />
+                <arg value="SVN_revision=@{svnrevision}"/>
+                <arg value="SVN_URL=${assy.svn.info.entry.url}"/>
+                <arg value="VERSION-MAJOR=@{major}" />
+                <arg value="VERSION-MINOR=@{minor}" />
+                <arg value="VERSION_MAINT=@{patch}" />
+            </exec>
+
+        </sequential>
+    </macrodef>
+
+    <macrodef name="commander.test.installer">
+        <attribute name="bomloc" default="${bomloc}"/>
+        <attribute name="svnrevision" default="HEAD"/>
+        <attribute name="port" default="all"/>
+        <attribute name="email" default="${autobuild.user.name}"/>
+        <attribute name="prodid"/>
+        <attribute name="major"/>
+        <attribute name="minor" default="0"/>
+        <attribute name="patch" default="0"/>
+        <sequential>
+            
+            <commander.login/>
+
+            <exec executable="${client.dir}/${ectool}">
+                <arg value="--server"/>
+                <arg value="commander-dc.tibco.com"/>
+                <arg value="runProcedure"/>
+                <arg value="install-packaging"/>
+                <arg value="--procedureName"/>
+                <arg value="testbuild-install-packaging-procedure"/>
+                <arg value="--actualParameter"/>
+                <arg value="prodid=@{prodid}"/>
+                <arg value="dev_email_address=@{email}" />
+                <arg value="bomsvn=@{svnrevision}"/>
+                <arg value="BOMLOC=@{bomloc}"/>
+                <arg value="PORT=@{port}"/>
+                <arg value="VERSION-MAJOR=@{major}" />
+                <arg value="VERSION-MINOR=@{minor}" />
+                <arg value="VERSION_MAINT=@{patch}" />
+                <arg value="VERSION_UPDATE=000"/>
+            </exec>
+
+        </sequential>
+    </macrodef>
+
+    <macrodef name="commander.installer">
+        <attribute name="bomloc" default="${bomloc}"/>
+        <attribute name="svnrevision" default="HEAD"/>
+        <attribute name="port" default="all"/>
+        <attribute name="email" default="${autobuild.user.name}"/>
+        <attribute name="prodid"/>
+        <attribute name="major"/>
+        <attribute name="minor" default="0"/>
+        <attribute name="patch" default="0"/>
+        <attribute name="build.qualifier"/>
+        <sequential>
+            
+            <commander.login/>
+
+            <exec executable="${client.dir}/${ectool}">
+                <arg value="--server"/>
+                <arg value="commander-dc.tibco.com"/>
+                <arg value="runProcedure"/>
+                <arg value="install-packaging"/>
+                <arg value="--procedureName"/>
+                <arg value="testbuild-install-packaging-procedure"/>
+                <arg value="--actualParameter"/>
+                <arg value="prodid=@{prodid}"/>
+                <arg value="dev_email_address=@{email}" />
+                <arg value="bomsvn=@{svnrevision}"/>
+                <arg value="BOMLOC=@{bomloc}"/>
+                <arg value="PORT=@{port}"/>
+                <arg value="VERSION-MAJOR=@{major}" />
+                <arg value="VERSION-MINOR=@{minor}" />
+                <arg value="VERSION_MAINT=@{patch}" />
+                <arg value="VERSION_UPDATE=@{build.qualifier}"/>
+            </exec>
+
+        </sequential>
+    </macrodef>
+
+
+</project>

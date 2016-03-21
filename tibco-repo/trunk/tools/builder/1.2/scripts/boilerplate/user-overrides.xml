@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="@USERNAME@">
+    <!-- This file contains properties which are specific to each user/machine.
+            Please examine each property and modify it for your configuration -->
+
+    <!-- autobuild.configuration.post-1.1:
+            This is a magic upgrade property.  Just leave it alone. -->
+    <property name="autobuild.configuration.post-1.1" value="true" />
+
+    <!-- autobuild.dir.java-classes:
+            This is the location of the JRE that you want to use to run ant, Eclipse,
+            and builder.   The folder specified must contain rt.jar (or the equivalent).
+            The default value is very likely to be incorrect, even on Windows. -->
+    <property name="autobuild.dir.java-classes"
+              location="c:/program files/java/jdk1.5.0/jre/lib" />
+
+    <!-- autobuild.dir.eclipse:
+            For 1.2 and later, this should be a bare Eclipse installation.
+            For 1.1, modify the first property in the compatibility file.
+            The default is very likely to be incorrect, even on Windows. -->
+    <property name="autobuild.dir.eclipse"
+              location="c:/program files/eclipse/3.2" />
+
+    <!-- autobuild.dir.user:
+            The default location is the directory that contains this file.
+            Changing it may be convenient, but is particularly useful for release.
+            This is the base directory for most configuration and output. -->
+    <property name="autobuild.dir.user"
+              location="${user.home}/tibco-build" />
+
+    <!-- autobuild.dir.candidates:
+            The output location for build candidates (the output of builder).
+            The default value is a folder next to this file, which should be fine for
+            most people. -->
+    <property name="autobuild.dir.candidates"
+              location="${autobuild.dir.user}/candidates" />
+
+    <!-- autobuild.workspace.lgpl-cache:
+            If you are working on a project with dependencies on features with
+            restrictive licenses, you will need to install those materials
+            (manually), then point this property at the location where
+            they were installed (typically ending in "components/eclipse").
+            Others should leave this commented out. -->
+    <!--property name="autobuild.workspace.lgpl-cache"
+                 location="/path/to/tibcohome/components/eclipse"  /-->
+
+    <!-- 1.1 compatibility:
+            The following properties enable 1.1 compatibility, permitting one
+            configuration to be used for both 1.1 and 1.2 builds, triggered off
+            the build script in the release unit.  Don't edit these; do edit
+            the file pointed at (builder-1.1-compatibility.xml) if you will
+            be using both 1.1 and 1.2 to build different release units. -->
+    <condition property="autobuild.builder.1.1.overrides" value="${autobuild.dir.user}/tools/builder-1.1-compatibility.xml">
+        <not>
+            <isset property="autobuild.boilerplate.version" />
+        </not>
+    </condition>
+    <import file="${autobuild.builder.1.1.overrides}" optional="true" />
+
+</project>

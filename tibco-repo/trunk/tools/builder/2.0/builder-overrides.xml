@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Builder 2.x Overrides">
+
+    <!-- this is the subversion-delivery version, which differs slightly from the
+         eclipse-delivery version.  this property will be dumped using
+         ant properties, which aids debugging. -->
+    <!--property name="autobuild.dir.eclipse.install" location="${autobuild.dir.eclipse}" /-->
+    <property name="autobuild.dir.tools"
+              location="${autobuild.dir.builder.root}/extensionLocation/eclipse" />
+    <property name="autobuild.dir.plugins"
+              location="${autobuild.dir.tools}/plugins" />
+
+    <property name="autobuild.version.builder" value="2.0.0.016" />
+    <property name="autobuild.dir.builder"
+              location="${autobuild.dir.plugins}/com.tibco.devtools.builder_${autobuild.version.builder}" />
+    <property name="autobuild.dir.scripts"
+              location="${autobuild.dir.builder.root}/scripts" />
+    <!--property name="autouild.dir.annotations"
+              location="${autobuild.dir.builder.root}/annotations" /-->
+
+    <property name="autobuild.version.workspace" value="1.10.0.014" />
+    <property name="autobuild.dir.workspace.installer"
+              location="${autobuild.dir.plugins}/com.tibco.devtools.workspace.installer_${autobuild.version.workspace}.jar" />
+
+    <property name="autobuild.version.mergeru" value="1.0.0.001" />
+    <property name="autobuild.dir.mergeru"
+              location="${autobuild.dir.plugins}/com.tibco.devtools.mergeru.ant_${autobuild.version.mergeru}" />
+              
+    <!-- enable archivist integration by identifying the linked archivist root for this version of builder -->
+    <property name="autobuild.builder.archivist-version" value="1.0" />
+    <property name="autobuild.dir.archivist.root"
+              location="${autobuild.dir.user}/tools/archivist/${autobuild.builder.archivist-version}" />
+
+    <!-- enable findbugs integration by identifying the linked findbugs root for this version of builder -->
+    <property name="autobuild.builder.findbugs-version" value="1.3.9" />
+    <property name="autobuild.dir.findbugs.root"
+              location="${autobuild.dir.user}/tools/findbugs/${autobuild.builder.findbugs-version}" />
+
+    <!-- enable weaver integration by identifying the linked weaver root for this version of builder -->
+    <property name="autobuild.builder.tpcl.weaver-version" value="1.6.4" />
+    <property name="autobuild.dir.tpcl.weaver.root"
+              location="${autobuild.dir.user}/tools/weaver/${autobuild.builder.tpcl.weaver-version}" />
+
+    <!-- enable updater integration by identifying the linked updater root for this version of builder -->
+    <property name="autobuild.updater-version" value="2.0" />
+    <property name="autobuild.dir.updater.root"
+              location="${autobuild.dir.user}/tools/updater/${autobuild.updater-version}" />
+              
+    <!-- enable installzipassembly integration by identifying the linked installzipassembly root for this version of builder -->         
+    <property name="autobuild.builder.installzipassembly" value="1.0" />
+    <property name="autobuild.dir.installzipassembly.root"
+              location="${autobuild.dir.user}/tools/installzipassembly/${autobuild.builder.installzipassembly}" />
+              
+</project>

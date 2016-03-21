@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Weaver 1.x Overrides">
+
+    <!-- this is the subversion-delivery version, which differs slightly from the
+         eclipse-delivery version.  this property will be dumped using
+         ant properties, which aids debugging. -->
+    <property name="autobuild.dir.tpcl.weaver"
+              location="${autobuild.dir.tpcl.weaver.root}/lib" />
+
+    <property name="autobuild.dir.tpcl.weaver.scripts"
+              location="${autobuild.dir.tpcl.weaver.root}/scripts" />
+    
+    <property name="version.m.n.s" value="1.6.4.001" />
+
+    <path id="autobuild.path.tpcl.weaver">
+        <pathelement location="${autobuild.dir.tpcl.weaver}/com.tibco.tpcl.org.aspectj.tools_${version.m.n.s}/aspectjrt.jar"/>
+        <pathelement location="${autobuild.dir.tpcl.weaver}/com.tibco.tpcl.org.aspectj.tools_${version.m.n.s}/aspectjtools.jar"/>
+    </path>
+
+</project>

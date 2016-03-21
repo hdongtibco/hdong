@@ -1,0 +1,1284 @@
+<?xml version="1.0"?>
+<project name="Automated tagging for release builds">
+
+    <import file="${autobuild.dir.release-unit}/build-artifacts/tag.xml" optional="true" />
+
+    <property name="_site_provenance" value="site-provenance.xml" />
+    <target name="tag"
+            description="Tag the build of the release unit."
+            depends="-set-build-properties, -make-artifacts-dir, -check-version, -load-ant-contrib, -set-tag-properties, -creating-tag, -search-svn-externals" />
+
+    <target name="-creating-tag" if="_version_available">
+        <!-- detect whether the old build files exist -->
+        <exec executable="svn" 
+              logerror="on"
+              failonerror="on" 
+              outputproperty="_list_artifacts">
+            <arg line='ls -r ${autobuild.svn.tag.target.revision} ${_svn_copy_base_url}' />
+        </exec>
+        <propertyregex property="_artifacts_exist" override="true"
+                       input="${_list_artifacts}"
+                       regexp="build-artifacts" replace="" />
+        <propertyregex property="_feature_versions_exist" override="true"
+                       input="${_list_artifacts}"
+                       regexp="featureVersions.properties" replace="" />
+        <propertyregex property="_dual_build_exist" override="true"
+                       input="${_list_artifacts}"
+                       regexp="dual-build" replace="" />
+        <if>
+            <or>
+                <isset property="_artifacts_exist" />
+                <isset property="_feature_versions_exist" />
+                <isset property="_dual_build_exist" />
+            </or>
+            <then>
+                <fail>!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Auto tagging has to fail now!  The build artifacts files are existing under
+${_svn_copy_base_url}/.
+Please make sure to delete the old build files from the svn repository.
+    build-artifacts
+    featureVersions.properties
+    dual-build
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                </fail>
+            </then>
+        </if>
+
+        <!-- make the new tag.  this part is easy. -->
+        <echo>${tag.create.comment}</echo>
+        <exec executable="svn"
+              logerror="on"
+              failonerror="on">
+            <arg line='mkdir --parents -m  "${tag.create.comment}" ${autobuild.svn.tag.target.url}' />
+        </exec>
+        <!-- using the property that we generated via regexes above, do a repo-to-repo copy. -->
+        <echo>${tag.copy.comment}</echo>
+        <if>
+            <isset property="_has_tag_pattern" />
+            <then>
+                <if>
+                    <isset property="_trimmed_url_repo" />
+                    <then>
+                        <exec executable="svn"
+                              logerror="on"
+                              failonerror="off"
+                              outputproperty="svn.url.exists">
+                            <arg line='ls ${_trimmed_url_repo}' />
+                        </exec>
+                        <if>
+                            <not>
+                                <equals arg1="${svn.url.exists}" arg2="" />
+                            </not>
+                            <then>
+                                <property name="_m_autobuild.svn.tag.target.url" value="${autobuild.svn.tag.target.url}" />
+                            </then>
+                        </if>
+                    </then>
+                </if>
+                <property name="_m_autobuild.svn.tag.target.url" value="${autobuild.svn.tag.target.url}/${autobuild.svn.tag-pattern}" />
+            </then>
+            <else>
+                <property name="_m_autobuild.svn.tag.target.url" value="${autobuild.svn.tag.target.url}/${release-unit}" />
+            </else>
+        </if>
+        <exec executable="svn"
+              logerror="on"
+              failonerror="on">
+            <arg line='cp --parents -m "${tag.copy.comment}" -r ${autobuild.svn.tag.target.revision} ${_svn_copy_base_url} ${_m_autobuild.svn.tag.target.url}' />
+        </exec>
+
+        <!-- release has tags checked out, more or less permanently, and in a predictable place.
+             so, here we let them specify the working-copy.base, and append $repo/tags to that.
+             that means we can do an update.  if the property is unset, we have to check out
+             the newly-created tag. -->
+        <!-- we're also setting a property that identifies the location of the release unit
+             within the new tag working copy. -->
+
+        <if>
+            <isset property="autobuild.release.tags.working-copy.base" />
+            <then>
+                <property name="_target_working_copy"
+                          location="${autobuild.release.tags.working-copy.base}/${autobuild.repository}${autobuild.svn.tags-prefix}/tags${autobuild.svn.tags-suffix}/${autobuild.svn.tag.target}/${autobuild.svn.tag-pattern}" />
+            </then>
+            <else>
+                <property name="_target_working_copy"
+                          location="../${autobuild.svn.tag.target}/${autobuild.svn.tag-pattern}" />
+            </else>
+        </if>
+        <echo>checking out the tag location ${_target_working_copy}</echo>
+
+        <delete dir="${_target_working_copy}" includeemptydirs="true" quiet="true"/>
+        <mkdir dir="${_target_working_copy}"/>
+        <exec executable="svn"
+              logerror="on"
+              failonerror="on">
+            <arg line="co -N ${autobuild.svn.tag.target.url}/${autobuild.svn.tag-pattern} ${_target_working_copy}/."/>
+        </exec>
+
+        <echo>Target Working Copy: ${_target_working_copy}</echo>
+        <!-- now copy the extra bits (build numbers and contents of build-artifacts dir)
+             to the new working copy of the new tag. -->
+        <echo>copying build-artifacts and *Versions.properties to working copy ${_target_working_copy}</echo>
+        <copy todir="${_target_working_copy}">
+            <fileset dir="${autobuild.dir.release-unit}">
+                <include name="build-artifacts/*" />
+                <include name="*Versions.properties" />
+            </fileset>
+        </copy>
+        <!-- add the copied bits to version control. -->
+        <echo>adding build-artifacts and *Versions.properties to working copy ${_target_working_copy}</echo>
+        <exec executable="svn"
+              logerror="on"
+              failonerror="off">
+            <arg line="add ${_target_working_copy}/featureVersions.properties ${_target_working_copy}/pluginVersions.properties ${_target_working_copy}/build-artifacts" />
+        </exec>
+
+        <!-- and commit.  finished. -->
+        <echo>${tag.commit.comment}</echo>
+        <exec executable="svn"
+              logerror="on"
+              failonerror="on">
+            <arg line='commit -m "${tag.commit.comment}" ${_target_working_copy}' />
+        </exec>
+
+    </target>
+
+    <!-- add the svn-externals.txt and update svn:externals property -->
+    <target name="-search-svn-externals" unless="skip.update.svn-externals">
+        <var name="svnexternals.list" unset="true" />
+        <tempfile property="svnexternals.temp.file" />
+        <tempfile property="svnexternals.property.temp.file" />
+
+        <exec executable="svn"
+              logerror="on"
+              failonerror="on"
+              outputproperty="svnexternals.xml">
+            <arg line='proplist -R --xml .' />
+        </exec>
+
+        <echo file="${svnexternals.temp.file}">${svnexternals.xml}</echo>
+        <xslt in="${svnexternals.temp.file}" out="${svnexternals.property.temp.file}"
+              style="${autobuild.dir.scripts}/private/svnExternals.xsl">
+        </xslt>
+        <loadfile property="svnexternals.list" srcfile="${svnexternals.property.temp.file}"/>    
+        <delete file="${svnexternals.property.temp.file}" quiet="true" />
+        <delete file="${svnexternals.temp.file}" quiet="true" />
+
+        <if>
+            <isset property="svnexternals.list" />
+            <then>
+                <foreach list="${svnexternals.list}" param="svnexternals.list.line" delimiter="${line.separator}" trim="true"
+                         target="-update-svn-externals" inheritall="true" />
+            </then>
+        </if>
+    </target>
+
+    <target name="-update-svn-externals">
+        <var name="svnexternals.path" unset="true" />
+        <var name="_found_svn_externals" unset="true" />
+        <var name="svnexternals.output" unset="true" />
+        <var name="svnexternals.file" unset="true" />
+        <propertyregex property="svnexternals.path" override="true" input="${svnexternals.list.line}"
+                       regexp="^path=(.*)" select="\1" />
+        <propertyregex property="svnexternals.path2" override="true" input="${svnexternals.path}"
+                       regexp="(\\)" replace="/" />
+        <if>
+            <isset property="svnexternals.path2" />
+            <then>
+                <var name="svnexternals.path" unset="true" />
+                <property name="svnexternals.path" value="${svnexternals.path2}" />
+            </then>
+        </if>
+        <exec executable="svn"
+              logerror="on"
+              failonerror="on"
+              outputproperty="svnexternals.output">
+            <arg line='propget svn:externals ${svnexternals.path}' />
+        </exec>
+        <if>
+            <not>
+                <equals arg1="${svnexternals.output}" arg2="" />
+            </not>
+            <then>
+                <echo>
+The svn externals property is found!!!
+************************************************************************************
+${svnexternals.output}
+************************************************************************************
+                </echo>
+
+                <property name="svnexternals.file" value="${autobuild.dir.release-unit}/${svnexternals.path}/svn-externals.txt" />
+                <delete file="${svnexternals.file}" quiet="true" />
+
+                <for param="svnexternals.line" list="${svnexternals.output}" delimiter="${line.separator}" trim="true"> 
+                    <sequential> 
+                        <var name="svn-pattern1" unset="true" />
+                        <var name="svn-pattern2" unset="true" />
+                        <var name="svn-pattern3" unset="true" />
+                        <propertyregex property="svn-pattern1" override="true" input="@{svnexternals.line}"
+                                       regexp="(^-r.*)" select="\1" />
+                        <propertyregex property="svn-pattern2" override="true" input="@{svnexternals.line}"
+                                       regexp="(\ -r.*)" select="\1" />
+                        <propertyregex property="svn-pattern3" override="true" input="@{svnexternals.line}"
+                                       regexp="(^\#.*)" select="\1" />
+                        <if>
+                            <or>
+                                <isset property="svn-pattern1" />
+                                <isset property="svn-pattern2" />
+                                <isset property="svn-pattern3" />
+                            </or>
+                            <then>
+                                <echo file="${svnexternals.file}" append="true">@{svnexternals.line}${line.separator}</echo>
+                            </then>
+                            <else>
+                                <var name="this-part" unset="true" />
+                                <var name="this-part2" unset="true" />
+                                <var name="new-this-part" unset="true" />
+                                <propertyregex property="this-part" override="true" input="@{svnexternals.line}"
+                                               regexp="(^[^ ]*)" select="\1" />
+                                <propertyregex property="this-part2" override="true" input="@{svnexternals.line}"
+                                               regexp="([^ ]*$)" select="\1" />
+                                <if>
+                                    <and>
+                                    <not>
+                                        <available file="${autobuild.dir.release-unit}/${svnexternals.path}/${this-part}" />
+                                    </not>
+                                    <not>
+                                        <available file="${autobuild.dir.release-unit}/${svnexternals.path}/${this-part2}" />
+                                    </not>
+                                    </and>
+                                    <then>
+                                        <fail>
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Auto tagging has to fail now! Both of the directories 
+${this-part} and ${this-part2} 
+is not existing under ${autobuild.dir.release-unit}.
+
+But the svn:externals lists this subdirectory.
+************************************************************************************
+${svnexternals.output}
+************************************************************************************
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                                        </fail>
+                                    </then>
+                                </if>
+
+                                <var name="var.svninfo.temp.file" unset="true" />
+                                <tempfile property="svninfo.temp.file" />
+                                <tempfile property="svninfo.property.temp.file" />
+
+                                <if>
+                                    <available file="${autobuild.dir.release-unit}/${svnexternals.path}/${this-part}" />
+                                    <then>
+                                        <property name="new-this-part" value="${this-part}" />
+                                    </then>
+                                    <else>
+                                        <property name="new-this-part" value="${this-part2}" />
+                                    </else>
+                                </if>
+
+                                <exec executable="svn"
+                                      logerror="on"
+                                      failonerror="on"
+                                      outputproperty="var.svninfo.temp.file">
+                                    <arg line='info --xml ${autobuild.dir.release-unit}/${svnexternals.path}/${new-this-part}' />
+                                </exec>
+
+                                <echo file="${svninfo.temp.file}">${var.svninfo.temp.file}</echo>
+                                <xslt in="${svninfo.temp.file}" out="${svninfo.property.temp.file}"
+                                      style="${autobuild.dir.scripts}/private/svnInfo.xsl">
+                                    <param name="tags-prefix" expression="${autobuild.svn.tags-prefix}" />
+                                    <param name="tags-suffix" expression="${autobuild.svn.tags-suffix}" />
+                                </xslt>
+                                <property file="${svninfo.property.temp.file}" />
+                                <delete file="${svninfo.temp.file}" quiet="true"/>
+                                <delete file="${svninfo.property.temp.file}" quiet="true"/>
+                                <propertyregex property="_found_dotdot" override="true" input="${this-part}" 
+                                               regexp="(\.\.).*" select="\1" />
+                                <if>
+                                    <and>
+                                        <available file="${autobuild.dir.release-unit}/${svnexternals.path}/${this-part}" />
+                                        <not>
+                                            <isset property="_found_dotdot" />
+                                        </not>
+                                    </and>
+                                    <then>
+                                        <echo file="${svnexternals.file}" append="true">${this-part} -r ${svn.revision} ${svn.revURL}${line.separator}</echo>
+                                    </then>
+                                    <else>
+                                        <echo file="${svnexternals.file}" append="true">-r ${svn.revision} ${svn.revURL} ${this-part2}${line.separator}</echo>
+                                    </else>
+                                </if>
+                                <property name="_found_svn_externals" value="true" />
+                            </else>
+                        </if>
+                    </sequential> 
+                </for>
+            </then>
+        </if>
+
+        <if>
+            <isset property="_found_svn_externals" />
+            <then>
+                <if>
+                    <equals arg1="${svnexternals.path}" arg2="." />
+                    <then>
+                        <delete dir="${_target_working_copy}" includeemptydirs="true" quiet="true"/>
+                        <mkdir dir="${_target_working_copy}"/>
+                        <exec executable="svn"
+                              logerror="on"
+                              failonerror="on">
+                            <arg line="co -N ${autobuild.svn.tag.target.url}/${autobuild.svn.tag-pattern}/${svnexternals.path} ${_target_working_copy}/."/>
+                        </exec>
+                    </then>
+                    <else>
+                        <delete dir="${_target_working_copy}/${svnexternals.path}" includeemptydirs="true" quiet="true"/>
+                        <mkdir dir="${_target_working_copy}/${svnexternals.path}"/>
+                        <exec executable="svn"
+                              logerror="on"
+                              failonerror="on">
+                            <arg line="co -N ${autobuild.svn.tag.target.url}/${autobuild.svn.tag-pattern}/${svnexternals.path} ${_target_working_copy}/${svnexternals.path}/."/>
+                        </exec>
+                    </else>
+                </if>
+
+                <echo>propsetting svn:externals to working copy ${_target_working_copy}/${svnexternals.path}</echo>
+                <exec executable="svn"
+                      logerror="on"
+                      failonerror="on">
+                    <arg line='propset svn:externals ${_target_working_copy}/${svnexternals.path} -F ${svnexternals.file}' />
+                </exec>
+                <echo>copying svn-externals.txt to working copy ${_target_working_copy}/${svnexternals.path}</echo>
+                <copy file="${autobuild.dir.release-unit}/${svnexternals.path}/svn-externals.txt" todir="${_target_working_copy}/${svnexternals.path}" overwrite="true" />
+                <echo>adding svn-externals.txt file to working copy ${_target_working_copy}/${svnexternals.path}</echo>
+                <exec executable="svn"
+                      logerror="on"
+                      failonerror="on">
+                    <arg line="add ${_target_working_copy}/${svnexternals.path}/svn-externals.txt" />
+                </exec>
+
+                <property name="tag.svnexternals.commit.comment" value="updating svn:externals under ${autobuild.svn.tag.target.url}/${autobuild.svn.tag-pattern}/${svnexternals.path}" />
+                <echo>${tag.svnexternals.commit.comment}</echo>
+                <echo>path=${_target_working_copy}/${svnexternals.path}</echo>
+                <exec executable="svn"
+                      logerror="on"
+                      failonerror="on">
+                    <arg line='commit -m "${tag.svnexternals.commit.comment}" ${_target_working_copy}/${svnexternals.path}' />
+                </exec>
+            </then>
+        </if>
+    </target>
+
+    <target name="-set-tag-properties">
+        <fail unless="official-release-build">
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Your build is the engineer build. The auto tagging is only for 
+the offical release build!
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        </fail>
+
+        <if>
+            <not>
+                <isset property="_version_available" />
+            </not>
+            <then>
+                <echo>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+It appears that there's no successful build to tag! Please make
+sure the successful release build ready for tagging.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                </echo>
+            </then>
+        </if>
+
+        <!-- if the commit messages have been overridden in a file, set them. -->
+        <property file="tagComments.properties" />
+        <!-- if not, set the defaults -->
+        <property name="tag.create.comment" value="creating ${autobuild.svn.tag.target} for ${autobuild.svn.tag.target.source.url}" />
+
+        <!-- this is handling the mess that happens when people stuff significant chunks of
+             a repository into a tag, rather than just one release unit.  we're basically
+             looking at the URL of the working copy, removing all but the first particle
+             of tag pattern from the end of that, and using that as the base to copy into
+             the new tag. -->
+        <if>
+            <isset property="_has_tag_pattern" />
+            <then>
+                <propertyregex property="_trimmed_pattern"
+                               input="${autobuild.svn.tag-pattern}"
+                               regexp="([^/]+).*"
+                               select="\1" />
+                <!-- need to replace the dot "." to "\." -->
+                <propertyregex property="_tag-pattern" override="true" input="${autobuild.svn.tag-pattern}" regexp="\." replace="\\\\\." />
+                <if>
+                     <isset property="_tag-pattern" />
+                     <then>
+                         <propertyregex property="_trimmed_url_repo"
+                                        input="${autobuild.svn.tag.target.source.url}"
+                                        regexp="(.*)${_tag-pattern}"
+                                        select="\1" />
+                     </then>
+                     <else>
+                         <propertyregex property="_trimmed_url_repo"
+                                        input="${autobuild.svn.tag.target.source.url}"
+                                        regexp="(.*)${autobuild.svn.tag-pattern}"
+                                        select="\1" />
+                     </else>
+                </if>
+                <if>
+                     <isset property="_trimmed_url_repo" />
+                     <then>
+                         <property name="_svn_copy_base_url" value="${_trimmed_url_repo}${_trimmed_pattern}" />
+                     </then>
+                     <else>
+                         <property name="_svn_copy_base_url" value="${autobuild.svn.tag.target.source.url}" />
+                     </else>
+                </if>
+                <property name="tag.copy.comment" value="copying ${_svn_copy_base_url}@${autobuild.svn.tag.target.revision} to ${autobuild.svn.tag.target.url}/${autobuild.svn.tag-pattern}" />
+            </then>
+            <else>
+                <property name="_svn_copy_base_url" value="${autobuild.svn.tag.target.source.url}" />
+                <property name="tag.copy.comment" value="copying ${_svn_copy_base_url}@${autobuild.svn.tag.target.revision} to ${autobuild.svn.tag.target.url}/${release-unit}" />
+            </else>
+        </if>
+        <property name="tag.commit.comment" value="committing build-artifacts and *Versions.properties to tag ${autobuild.svn.tag.target}" />
+    </target>
+
+    <target name="-check-version">
+        <!-- check for the existence of a file containing the build number,
+             if and only if this is an official release build -->
+        <available property="_version_available"
+                   file="${autobuild.dir.build-artifacts}/tag.xml" />
+        <available property="_latest_available"
+                   file="${autobuild.dir.build-artifacts}/latest-build.xml" />
+        <available property="_list_available"
+                   file="${autobuild.dir.build-artifacts}/artifacts-list.xml" />
+    </target>
+
+    <target name="-check-build">
+        <condition property="_build_completed">
+            <or>
+                <isset property="_version_available" />
+                <isset property="_latest_available" />
+            </or>
+        </condition>
+        <fail unless="_build_completed">
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+It appears that there's no latest successful build yet!  Please do run 
+the build first.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+</fail>
+    </target>
+    
+    <target name="publish" description="Publish the latest successful build to the site." depends="-check-output, -compare-publish, -or-publish, -dev-publish, -copy-site-provenance-xml" />
+    
+    <!-- checke jar file before do "ant publish" -->
+    <target name="-check-output" depends="-load-ant-contrib" if="official-release-build">
+        <property file="build-artifacts/release-build.properties" />
+        <if>
+            <available file="${local.target.location}/logs/full-ru.txt" />
+            <then>
+                <!-- get all features and plugins from full-ru.txt -->
+                <loadfile property="_full_ru" srcFile="${local.target.location}/logs/full-ru.txt"/>
+                <propertyregex property="_full_ru" override="true" input="${_full_ru}"  regexp="(\=)" replace="s/" />
+                <!-- detect jar files exsit or not -->
+                <for param="line" list="${_full_ru}" delimiter="${line.separator}" trim="true" > 
+                    <sequential>
+                        <if>
+                            <or>
+                            <not>
+                                <available file="${local.target.location}/jar/debug/@{line}" />
+                            </not>
+                            <not>
+                                <available file="${local.target.location}/jar/release/@{line}" />
+                            </not>
+                            </or>
+                            <then>
+                                <fail>
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The jar file @{line} is missing in output directory.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                                  
+                                </fail>
+                            </then>
+                        </if>
+                    </sequential> 
+                </for> 
+            </then>
+            <else>
+                <fail>
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The file full-ru.txt that lists features/plugins doesn't exist under
+${local.target.location}/logs.
+Please make sure this is a complete release build to publish.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                </fail>
+            </else>
+        </if> 
+    </target>
+    
+    <target name="-dev-publish" depends="-check-version, -check-build, -load-build-macro"
+            unless="official-release-build">
+        <property name="publish.target.folder" location="${autobuild.dir.user}/shared-builds" />
+        <m.really.publish m.publish.target.folder="${publish.target.folder}" m.publish.source="${autobuild.build.latest.update-site}" 
+                          m.publish.target="${publish.target.folder}/release" />
+        <m.really.publish m.publish.target.folder="${publish.target.folder}" m.publish.source="${autobuild.build.latest.update-site}" 
+                          m.publish.target="${publish.target.folder}/debug" />
+    </target>
+
+    <target name="-or-publish" depends="-check-version, -check-build, -load-build-macro"
+            if="official-release-build">
+        <property file="build-artifacts/release-build.properties" />
+        <m.really.publish m.publish.target.folder="${publish.target.folder}" m.publish.source="${local.release.update-site}" 
+                          m.publish.target="${publish.target.folder}/release" />
+        <m.really.publish m.publish.target.folder="${publish.target.folder}" m.publish.source="${local.debug.update-site}" 
+                          m.publish.target="${publish.target.folder}/debug" />
+    </target>
+
+
+    <target name="generate-site-xml" description="Generate the site.xml for the download site." depends="-load-ant-contrib,-check-version"> 
+        <property name="default.target.folder" location="${autobuild.dir.user}/workspaceInstaller/local-builds-site" />
+        <input message="Please enter the directory path of the site (or hit return for the default path):"
+               addproperty="site.target.folder" defaultvalue="${default.target.folder}" />
+
+        <condition property="_path_missing">
+            <not>
+                <available file="${site.target.folder}" type="dir" />
+            </not>
+        </condition>
+        
+        <fail if="_path_missing">
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The invalid directory path of the site for the builds is entered. "${site.target.folder}" 
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        </fail>
+        <update.site.creator sitedirectory="${site.target.folder}" fastupdatesitexml="${fast.update.site.xml}" />
+    </target>
+
+    <target name="remove-builds" description="Remove the set of RU builds from the reldist site." depends="-load-ant-contrib,-check-version"> 
+        <property name="list_name" value="builds_list.txt" />
+        <available property="_found_features_list" file="${autobuild.dir.release-unit}/${list_name}" type="file" />
+        <if>
+            <not>
+                <isset property="_found_features_list" />
+            </not>
+            <then>
+                <!-- generate the sample builds_list.txt file -->
+                <echo file="${autobuild.dir.release-unit}/default_${list_name}">### each release-unit build has to be put at each line
+com.tibco.aaa.bbb.ccc_1.0.0.001.jar
+com.tibco.xxx.yyy.zzz_1.0.0.001.jar
+com.tibco.xxx.yyy.zzz_1.0.0.002.jar
+</echo>
+                <fail>
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The file "builds_list.txt" for listing the builds to remove is not 
+found! The sample list file default_${list_name} was generated.
+Please view the content of the sample file and follow the format.
+Fail now!
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+</fail>
+            </then>
+        </if>
+
+        <property file="build-artifacts/release-build.properties" />
+        <if>
+            <not>
+                <isset property="publish.target.folder" />
+            </not>
+            <then>
+                <property name="publish.target.folder" location="${autobuild.dir.user}/shared-builds" />
+            </then>
+        </if>
+        <input message="Please enter the directory path of the site (or hit return for the default path):"
+               addproperty="site.target.folder" defaultvalue="${publish.target.folder}" />
+
+        <condition property="_path_missing">
+            <equals arg1="" arg2="${site.target.folder}"/>
+        </condition>
+        
+        <fail if="_path_missing">
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The empty directory path of the site for the builds is entered.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        </fail>
+
+        <loadfile property="list.builds.remove" srcFile="${list_name}"/>
+        <delete file="${autobuild.dir.release-unit}/remove_list.txt" />
+        <foreach list="${list.builds.remove}" param="_build_remove" delimiter="${line.separator}" target="-remove-each-build" inheritall="true" />
+        <if>
+            <istrue value="${echo.list}" />
+            <then>
+                <concat destfile="${autobuild.dir.release-unit}/remove_list.txt" append="true">
+                    <fileset dir="${site.target.folder}" casesensitive="true">
+                        <include name="**/remove_list.txt"/>
+                    </fileset>
+                </concat>
+            </then>
+        </if>
+        <delete file="${site.target.folder}/remove_list.txt" />
+        <delete file="${site.target.folder}/debug/remove_list.txt" />
+        <delete file="${site.target.folder}/release/remove_list.txt" />
+    </target>
+
+    <target name="-remove-each-build" depends="-validate-each-line,-load-build-macro" unless="_invalid_line">
+        <propertyregex property="_feature_name" override="true" input="${_build_remove}" 
+                       regexp="([^_]+)_.*" select="\1" />
+        <propertyregex property="_feature_version" override="true" input="${_build_remove}" 
+                       regexp=".*_([^_]+).jar" select="\1" />
+ 
+        <available property="_found_site" file="${site.target.folder}/features" type="dir" />
+        <available property="_found_debug_site" file="${site.target.folder}/debug/features" type="dir" />
+        <available property="_found_release_site" file="${site.target.folder}/release/features" type="dir" />
+        <condition property="_invalid_sites">
+            <and>
+                <not>
+                <isset property="_found_site" />
+                </not>
+                <not>
+                <isset property="_found_debug_site" />
+                </not>
+                <not>
+                <isset property="_found_release_site" />
+                </not>
+            </and>
+        </condition>
+        <fail if="_invalid_sites">
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+It appears that the site ${site.target.folder} is invalid for
+removing the builds. Please check the directory path correctly.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+</fail>
+        <if>
+            <isset property="_found_site" />
+            <then>
+                <m.really.cancel m.cancel.target="${site.target.folder}" m.feature="${_feature_name}" 
+                                 m.version="${_feature_version}" />
+            </then>
+        </if>
+        <if>
+            <isset property="_found_debug_site" />
+            <then>
+                <m.really.cancel m.cancel.target="${site.target.folder}/debug" m.feature="${_feature_name}" 
+                                 m.version="${_feature_version}" />
+            </then>
+        </if>
+        <if>
+            <isset property="_found_release_site" />
+            <then>
+                <m.really.cancel m.cancel.target="${site.target.folder}/release" m.feature="${_feature_name}" 
+                                 m.version="${_feature_version}" />
+            </then>
+        </if>
+    </target>
+
+    <target name="-validate-each-line">
+        <!-- find whether it is a comment line -->
+        <propertyregex property="_found_comment_line" override="true" input="${_build_remove}" 
+                       regexp="(.*[#])" select="\1" />
+        <if>
+            <isset property="_found_comment_line" />
+            <then>
+                <echo>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+This is a comment line:
+    ${_build_remove}
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                </echo>
+            </then>
+            <else>
+                <!-- find whether there is any invalid mark in the line -->
+                <propertyregex property="_found_colon" override="true" input="${_build_remove}" 
+                               regexp="(\:)" select="\1" />
+                <propertyregex property="_found_semicolon" override="true" input="${_build_remove}" 
+                               regexp="(\;)" select="\1" />
+
+                <condition property="_invalid_mark">
+                    <or>
+                        <isset property="_found_colon" />
+                        <isset property="_found_semicolon" />
+                    </or>
+                </condition>
+                <if>
+                    <isset property="_invalid_mark" />
+                    <then>
+                        <echo>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Warning:
+    Invalid mark is found in the line:
+    ${_build_remove}
+    Only comma "," is allowed to put at the end of each line.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                        </echo>
+                    </then>
+                </if>
+            </else>
+        </if>
+        <condition property="_invalid_line">
+            <or>
+                <isset property="_invalid_mark" />
+                <isset property="_found_comment_line" />
+            </or>
+        </condition>
+    </target>
+
+    <target name="remove-build" description="Remove the build from the reldist site." depends="-load-ant-contrib"> 
+		<delete file="${autobuild.dir.release-unit}/remove_list.txt" />
+        <if>
+            <isset property="official-release-build" />
+            <then>
+                <property file="build-artifacts/release-build.properties" />
+                <antcall target="-or-cancel">
+                    <param name="_m_local_build_site" value="${publish.target.folder}/debug" />
+                </antcall>
+                <antcall target="-or-cancel">
+                    <param name="_m_local_build_site" value="${publish.target.folder}/release" />
+                </antcall>
+                <delete file="${publish.target.folder}/debug/remove_list.txt" />
+                <delete file="${publish.target.folder}/release/remove_list.txt" />
+            </then>
+            <else>
+                <property name="publish.target.folder" location="${autobuild.dir.user}/shared-builds" />
+                <antcall target="-dev-cancel">
+                    <param name="_m_local_build_site" value="${publish.target.folder}/debug" />
+                </antcall>
+                <antcall target="-dev-cancel">
+                    <param name="_m_local_build_site" value="${publish.target.folder}/release" />
+                </antcall>
+                <delete file="${publish.target.folder}/debug/remove_list.txt" />
+                <delete file="${publish.target.folder}/release/remove_list.txt" />
+            </else>
+        </if>
+    </target>
+
+    <target name="cancel" description="Remove the build from the local-build-site." depends="-load-ant-contrib"> 
+        <property name="autobuild.workspace.update-sites.local" location="${autobuild.dir.user}/workspaceInstaller/local-builds-site" />
+        <property name="autobuild.workspace.update-sites.local-debug" location="${autobuild.dir.user}/workspaceInstaller/local-builds-site-debug" />
+        <delete file="${autobuild.dir.release-unit}/remove_list.txt" />
+        <antcall target="-or-cancel">
+            <param name="_m_local_build_site" value="${autobuild.workspace.update-sites.local}" />
+        </antcall>
+        <antcall target="-or-cancel">
+            <param name="_m_local_build_site" value="${autobuild.workspace.update-sites.local-debug}" />
+        </antcall>
+        <antcall target="-dev-cancel">
+            <param name="_m_local_build_site" value="${autobuild.workspace.update-sites.local}" />
+        </antcall>
+        <antcall target="-dev-cancel">
+            <param name="_m_local_build_site" value="${autobuild.workspace.update-sites.local-debug}" />
+        </antcall>
+        <delete file="${autobuild.workspace.update-sites.local}/remove_list.txt" />
+        <delete file="${autobuild.workspace.update-sites.local-debug}/remove_list.txt" />
+    </target>
+
+    <target name="-or-cancel" depends="-check-version, -cancel-fail, -load-build-macro"
+              if="official-release-build">
+        <property file="build-artifacts/release-build.properties" />
+
+        <!-- code feature process -->
+        <m.really.cancel m.cancel.target="${_m_local_build_site}" m.feature="${feature}" 
+                         m.version="${release.code}" />
+
+        <!-- test feature process -->
+        <if>
+            <isset property="release.test" />
+            <then>
+                <m.really.cancel m.cancel.target="${_m_local_build_site}" m.feature="${feature}.test" 
+                                 m.version="${release.test}" />
+            </then>
+        </if>
+
+        <!-- devdocs feature process -->
+        <if>
+            <isset property="release.devdocs" />
+            <then>
+                <m.really.cancel m.cancel.target="${_m_local_build_site}" m.feature="${feature}.devdocs" 
+                                 m.version="${release.devdocs}" />
+            </then>
+        </if>
+        <if>
+            <istrue value="${echo.list}" />
+            <then>
+                <concat destfile="${autobuild.dir.release-unit}/remove_list.txt" append="true">
+                    <fileset file="${_m_local_build_site}/remove_list.txt" />
+                </concat>
+            </then>
+        </if>
+    </target>
+
+    <target name="-dev-cancel" depends="-check-version, -cancel-fail, -load-build-macro"
+            unless="official-release-build">
+        <property name="publish.target.folder" location="${autobuild.dir.user}/shared-builds" />
+
+        <!-- code feature process -->
+        <propertycopy name="m_version" from="feature_${feature}"/>
+        <m.really.cancel m.cancel.target="${_m_local_build_site}" m.feature="${feature}" 
+                         m.version="${m_version}" />
+
+        <!-- test feature process -->
+        <if>
+            <isset property="feature_${feature}.test" />
+            <then>
+                <propertycopy name="m_test_version" from="feature_${feature}.test"/>
+                <m.really.cancel m.cancel.target="${_m_local_build_site}" m.feature="${feature}.test" 
+                                 m.version="${m_test_version}" />
+            </then>
+        </if>
+
+        <!-- devdocs feature process -->
+        <if>
+            <isset property="feature_${feature}.devdocs" />
+            <then>
+                <propertycopy name="m_devdocs_version" from="feature_${feature}.devdocs"/>
+                <m.really.cancel m.cancel.target="${_m_local_build_site}" m.feature="${feature}.devdocs" 
+                                 m.version="${m_devdocs_version}" />
+            </then>
+        </if>
+        <if>
+            <istrue value="${echo.list}" />
+            <then>
+                <concat destfile="${autobuild.dir.release-unit}/remove_list.txt" append="true">
+                    <fileset file="${_m_local_build_site}/remove_list.txt" />
+                </concat>
+            </then>
+        </if>
+    </target>
+
+    <target name="-cancel-fail">
+        <condition property="_build_completed">
+            <or>
+                <isset property="_version_available" />
+                <isset property="_latest_available" />
+            </or>
+        </condition>
+        <fail unless="_build_completed">
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+It appears that there's no successful build to remove! Please make 
+sure the build-artifacts data for the successful build ready there.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+</fail>
+    </target>
+
+    <target name="-load-build-macro" depends="-load-ant-contrib">
+        <macrodef name="m.really.publish">
+            <attribute name="m.publish.target.folder" description="property with directory to check" />
+            <attribute name="m.publish.source" description="source directory" />
+            <attribute name="m.publish.target" description="target directory" />
+            <sequential>
+                <if>
+                    <not>
+                        <available file="@{m.publish.target.folder}" />
+                    </not>
+                    <then>
+                        <fail>
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The target folder for reldist location has not been defined.
+Please create the folder at below and try again.
+${publish.target.folder}
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+</fail>
+                    </then>
+                </if>
+                <mkdir dir="@{m.publish.target}"/>
+
+                <copy todir="@{m.publish.target}" verbose="true">
+                    <fileset dir="@{m.publish.source}">
+                        <exclude name="site*.xml"/>
+                        <exclude name="artifacts.jar"/>
+                        <exclude name="content.jar"/>
+                    </fileset>
+                </copy>
+
+                <update.site.creator sitedirectory="@{m.publish.target}" fastupdatesitexml="${fast.update.site.xml}" />
+            </sequential>
+        </macrodef>
+
+        <macrodef name="m.really.cancel">
+            <attribute name="m.cancel.target" description="property with directory to check" />
+            <attribute name="m.feature" description="local feature" />
+            <attribute name="m.version" description="local version" />
+            <sequential>
+                <if>
+                    <not>
+                        <available file="@{m.cancel.target}" />
+                    </not>
+                    <then>
+                        <fail>
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The target folder for reldist location has not been defined.
+Please define the ant property "publish.target.folder" and try again.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+</fail>
+                    </then>
+                </if>
+                <if>
+                    <available file="@{m.cancel.target}/features/@{m.feature}_@{m.version}.jar" />
+                    <then>
+                        <delete.feature.from.site dir="@{m.cancel.target}" featureid="@{m.feature}" version="@{m.version}" echolist="${echo.list}" />
+                        <if>
+                            <isfalse value="${echo.list}" />
+                            <then>
+                                <echo>
+The build @{m.feature} @{m.version} was removed from 
+@{m.cancel.target}!
+                                </echo>
+                                <update.site.creator sitedirectory="@{m.cancel.target}" fastupdatesitexml="${fast.update.site.xml}" />
+                            </then>
+                            <else>
+                                <echo>
+The build @{m.feature} @{m.version} was removed from 
+@{m.cancel.target}/site-xml-without-features-in-remove-list.xml!
+                                </echo>
+                                <update.site.creator sitedirectory="@{m.cancel.target}" removelist="@{m.cancel.target}/remove_list.txt" 
+                                 fastupdatesitexml="${fast.update.site.xml}" />
+                            </else>
+                        </if>
+                    </then>
+                    <else>
+                        <echo>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Warning: 
+    The build @{m.feature} @{m.version} was NOT found 
+    under @{m.cancel.target}!
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                        </echo>
+                    </else>
+                </if>
+                <if>
+                    <available file="@{m.cancel.target}/features/@{m.feature}.eclipse_@{m.version}.jar" />
+                    <then>
+                        <delete.feature.from.site dir="@{m.cancel.target}" featureid="@{m.feature}.eclipse" version="@{m.version}" echolist="${echo.list}" />
+                        <if>
+                            <isfalse value="${echo.list}" />
+                            <then>
+                                <echo>
+The build @{m.feature}.eclipse @{m.version} was removed from 
+@{m.cancel.target}!
+                                </echo>
+                                <update.site.creator sitedirectory="@{m.cancel.target}" fastupdatesitexml="${fast.update.site.xml}" />
+                            </then>
+                            <else>
+                                <echo>
+The build @{m.feature} @{m.version} was removed from 
+@{m.cancel.target}/site-xml-without-features-in-remove-list.xml!
+                                </echo>
+                                <update.site.creator sitedirectory="@{m.cancel.target}" removelist="@{m.cancel.target}/remove_list.txt" 
+                                 fastupdatesitexml="${fast.update.site.xml}" />
+                            </else>
+                        </if>
+                    </then>
+                </if>
+            </sequential>
+        </macrodef>
+    </target>
+    
+    <!-- compare publish -->
+    <target name="-compare-publish" depends="-load-ant-contrib, -make-temp-dir" if="_publish_exists">   
+        <!-- get all jars .../candidates/... -->
+        <for param="candidates-plugin">
+            <fileset dir="${local.target.location}/jar/debug/plugins" >
+                <include name="*.jar" />
+            </fileset>
+            <sequential>
+                <plugin.compare compare.plugin.file="@{candidates-plugin}"
+                                publish.plugin.dir="${publish.target.folder}/debug/plugins" />
+            </sequential>
+        </for>
+        <!-- detect result -->
+        <available property="_plugin_change_failure" file="pubdiff.txt" />
+        <spew.change.plugin />
+        <available property="_docs_plugin_change_failure" file="pubdiff_docs.txt" />
+        <spew.change.docs.plugin />
+        <compare.clean />
+    </target>
+ 
+    <target name="-check-publish" depends="-load-ant-contrib">
+      <property file="${autobuild.dir.build-artifacts}/release-build.properties" />
+      <if>
+          <and>
+              <available file="${publish.target.folder}/release" type="dir"/>
+              <available file="${autobuild.dir.build-artifacts}" type="dir"/>
+          </and>
+          <then>
+              <property name="_publish_exists" value="true"/>
+          </then>
+      </if>              
+    </target>
+    
+    <target name="-make-temp-dir" if="_publish_exists">
+        <delete file="pubdiff.txt" quiet="true" />
+        <delete file="pubdiff_docs.txt" quiet="true" />
+        <!-- create campare Root dir -->
+        <property name="compare-base" value="${autobuild.dir.release-unit}/compare" />
+        <delete dir="${compare-base}" includeemptydirs="true" quiet="true"/><!--pre clean-->
+        <property name="compare-publish-debug" value="${compare-base}/publish/debug" />
+        <property name="compare-last-debug" value="${compare-base}/last/debug" />
+        <property name="temp" value="${compare-base}/temp/" /> 
+        <mkdir dir="${temp}" />
+        <mkdir dir="${compare-base}" />
+        <mkdir dir="${compare-publish-debug}" />
+        <mkdir dir="${compare-last-debug}" />
+    </target>  
+
+    <target name="-copy-site-provenance-xml">
+        <if>
+            <isset property="official-release-build" />
+            <then>
+                <property name="_local_debug_site" value="${local.debug.update-site}" />
+            </then>
+            <else>
+                <property name="_local_debug_site" value="${autobuild.build.latest.debug-site}" />
+            </else>
+        </if>
+        <if>
+            <and>
+                <available file="${_local_debug_site}/${_site_provenance}" />
+            </and>
+            <then>
+                <if>
+                    <available file="${publish.target.folder}/debug/${_site_provenance}" />
+                    <then>
+                         <merge.site.provenance m.site1="${publish.target.folder}/debug/${_site_provenance}"
+                                                m.site2="${_local_debug_site}/${_site_provenance}"
+                                                m.into="${autobuild.dir.build-artifacts}/merged-${_site_provenance}" />
+                         <move file="${autobuild.dir.build-artifacts}/merged-${_site_provenance}"
+                               tofile="${publish.target.folder}/debug/${_site_provenance}" overwrite="true" />
+                    </then>
+                    <else>
+                         <copy file="${_local_debug_site}/${_site_provenance}" todir="${publish.target.folder}/debug" />
+                    </else>
+                </if>
+                <copy file="${publish.target.folder}/debug/${_site_provenance}" todir="${publish.target.folder}/release" overwrite="true" />
+            </then>
+        </if>
+    </target>
+
+    <macrodef name="plugin.compare">
+        <attribute name="compare.plugin.file" />
+        <attribute name="publish.plugin.dir" />
+        <sequential>  
+            <propertyregex property="this-plugin" override="true" input="@{compare.plugin.file}"
+                           regexp="([^/\\]*$)" select="\1" />
+            <if>
+                <available file="@{publish.plugin.dir}/${this-plugin}" />
+                <then>
+                    <copy file="@{publish.plugin.dir}/${this-plugin}" todir="${compare-publish-debug}" overwrite="true" />
+                    <copy file="@{compare.plugin.file}" todir="${compare-last-debug}" overwrite="true" />
+                    <unjar src="${compare-publish-debug}/${this-plugin}" dest="${compare-publish-debug}/publish" />
+                    <unjar src="${compare-last-debug}/${this-plugin}" dest="${compare-last-debug}/last" /> 
+                    
+                    <detect.doc.jars plugin.file="${this-plugin}" />
+                    <compare.jars publish.jar.dir="${compare-publish-debug}/publish"
+                                  last.jar.dir="${compare-last-debug}/last"
+                                  plugin.file="${this-plugin}" />
+                </then>
+            </if>
+        </sequential>
+    </macrodef>
+     
+    <macrodef name="detect.doc.jars">
+        <attribute name="plugin.file" />
+        <sequential>
+            <if>
+                <isset property="documentation.plugin.list" />
+            <then>
+                <for list="${documentation.plugin.list}" param="a.documentation.plugin">
+                    <sequential>
+                        <propertyregex property="doc-plugin" override="true" input="@{plugin.file}" regexp=".*?(?=_)" select="\0" />
+                        <condition property="this.is.documentation.plugin" >
+                            <equals arg1="${doc-plugin}" arg2="@{a.documentation.plugin}" casesensitive="false"/>
+                        </condition>
+                    </sequential>
+                </for>
+            </then>
+            </if>
+        </sequential>
+    </macrodef>
+     
+    <!-- compare two directories jar -->
+    <macrodef name="compare.jars">
+        <attribute name="publish.jar.dir" />
+        <attribute name="last.jar.dir" />
+        <attribute name="plugin.file" /> 
+        <sequential>
+            <if>
+                <isset property="this.is.documentation.plugin" />
+                <then>
+                    <var name="this.is.documentation.plugin" unset="true" />
+                    <diff source="@{last.jar.dir}"
+                          dest="@{publish.jar.dir}"
+                          outputProperty="_diff_output"
+                          excludes="**/MANIFEST.MF"
+                          outputTypes="different,orphan"
+                          onlyFilePath="false" />
+                    <if>
+                        <not>
+                            <equals arg1="${_diff_output}" arg2="" />
+                        </not>
+                        <then>
+                            <echo file="pubdiff_docs.txt" append="true">
+@{plugin.file} : changes detected!
+The following classes in this plugin show changes:
+${_diff_output}</echo>
+                        </then>
+                    </if>
+                </then>
+                <else>
+                    <diff source="@{last.jar.dir}"
+                          dest="@{publish.jar.dir}"
+                          outputProperty="_diff_output"
+                          includes="**/*.class"
+                          excludes="**/MANIFEST.MF"
+                          outputTypes="different"
+                          onlyFilePath="true" />
+                    <if>
+                        <not>
+                            <equals arg1="${_diff_output}" arg2="" />
+                        </not>
+                        <then>
+                            <echo file="pubdiff.txt" append="true">
+@{plugin.file} : changes detected!
+The following classes in this plugin show changes:
+${_diff_output}</echo>
+                        </then>
+                    </if>
+                </else>
+            </if>
+            <delete dir="@{publish.jar.dir}" includeemptydirs="true" quiet="true"/>
+            <delete dir="@{last.jar.dir}" includeemptydirs="true" quiet="true"/>
+        </sequential>    
+    </macrodef>        
+    
+    <macrodef name="spew.change.plugin">
+        <sequential>
+            <if>
+                <isset property="_plugin_change_failure" />
+            <then>
+                <concat>
+                    <fileset dir="${autobuild.dir.release-unit}" includes="pubdiff.txt" />
+                </concat>
+                   <fail>
+!!!
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The same version of the plugin jar is different at the publish site! 
+See the detail above the line or the file pubdiff.txt in this directory.
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++          
+                   </fail> 
+            </then>    
+            </if>
+        </sequential>  
+    </macrodef>
+
+    <macrodef name="spew.change.docs.plugin">
+        <sequential>
+            <if>
+                <isset property="_docs_plugin_change_failure" />
+            <then>
+                <concat>
+                    <fileset dir="${autobuild.dir.release-unit}" includes="pubdiff_docs.txt" />
+                </concat>
+                   <fail>
+!!!
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The same version of the doc plugin jar is different at the publish site! 
+See the detail above the line or the file pubdiff_docs.txt in this directory.
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++          
+                   </fail>
+                </then>
+            </if>
+        </sequential>  
+    </macrodef>
+     
+    <macrodef name="compare.clean">
+        <sequential>
+            <delete dir="${compare-base}" includeemptydirs="true" quiet="true"/>
+        </sequential>
+    </macrodef>
+
+</project>

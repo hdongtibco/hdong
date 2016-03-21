@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="com.tibco.devtools.mergeru"
+      label="Builder Tool for Merging Release-units"
+      version="1.0.0.001"
+      provider-name="TIBCO Software Inc.">
+
+   <description>
+        Merge two RUs into one RU.
+   </description>
+
+   <copyright >
+      TIBCO Software Inc., all rights reserved.
+   </copyright>
+
+   <license url="license.txt">
+      TIBCO internal use only.
+   </license>
+  
+   <plugin
+         id="com.tibco.devtools.mergeru.ant"
+         download-size="0"
+         install-size="0"
+         version="1.0.0.001"
+		 unpack="true" />
+
+</feature>

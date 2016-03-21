@@ -1,0 +1,540 @@
+<project name="Acquire Version and Build Information for Release" default="usage">
+
+    <!-- called multiple times, once per feature, from buildrelunit, with various props -->
+    <target name="-release-update-feature" if="official-release-build"
+            depends="-release-set-previous-feature-buildno, -release-reset-previous-feature-buildno">
+        <echo level="verbose">Updating feature: ${this-feature}</echo>
+        <if>
+            <not>
+                <isset property="_build.last-built.tag" />
+            </not>
+            <then>
+                <antcall target="-release-reset-feature-buildno" />
+                <!-- note: version-match is not set, when we fall through to generating the tag buildno -->
+            </then>
+            <else>
+                <tempfile property="currentVersion.property.temp.file" />
+                <xslt in="${autobuild.dir.release-unit}/features/${this-feature}/feature.xml"
+                      out="${currentVersion.property.temp.file}"
+                      style="${autobuild.dir.scripts}/private/featureVersion.xsl">
+                    <param name="propname" expression="current-version" />
+                </xslt>
+                <property file="${currentVersion.property.temp.file}" />
+                <delete file="${currentVersion.property.temp.file}" quiet="true"/>
+
+                <tempfile property="lastVersion.temp.file" />
+                <trycatch property="_svn_feature_manifest_load_failure">
+                    <try>
+                        <tempfile property="lastVersion.property.temp.file" />
+                        <exec executable="svn" logerror="on" failonerror="on" outputproperty="remote.content">
+                            <arg line="cat ${autobuild.svn.tagsURL}/${_build.last-built.tag}/${autobuild.svn.tag-pattern}/features/${this-feature}/feature.xml" />
+                        </exec>
+                        <echo file="${lastVersion.temp.file}">${remote.content}</echo>
+                        <xslt in="${lastVersion.temp.file}" out="${lastVersion.property.temp.file}"
+                              style="${autobuild.dir.scripts}/private/featureVersion.xsl">
+                            <param name="propname" expression="last-built-version" />
+                        </xslt>
+                    </try>
+                    <catch>
+                        <echo level="verbose">Couldn't load a plugin manifest:</echo>
+                        <echo level="verbose">${_svn_plugin_manifest_load_failure}</echo>
+                        <echo level="verbose">Ignoring it (it's probably a new plugin)</echo>
+                        <echo file="${lastVersion.property.temp.file}">last-built-version=0.0.0
+</echo>
+                        <property name="remote.content" value="Bundle-Version: 0.0.0" />
+                    </catch>
+                </trycatch>
+                <property file="${lastVersion.property.temp.file}" />
+                <delete file="${lastVersion.temp.file}" quiet="true"/>
+                <delete file="${lastVersion.property.temp.file}" quiet="true"/>
+
+                <condition property="version-match">
+                    <equals arg1="${last-built-version}" arg2="${current-version}" />
+                </condition>
+
+                <if>
+                    <isset property="version-match" />
+                    <then>
+                        <antcall target="-release-increment-feature-buildno" />
+                    </then>
+                    <else>
+                        <antcall target="-release-reset-feature-buildno" />
+                    </else>
+                </if>
+            </else>
+        </if>
+        <if>
+            <equals arg1="${feature}" arg2="${this-feature}" />
+            <then>
+                <antcall target="-release-write-tag-xml" />
+            </then>
+        </if>
+    </target>
+
+    <target name="-release-set-svn-tag-buildno"
+            depends="-release-increment-svn-tag-buildno, -release-reset-svn-tag-buildno" />
+
+    <target name="-release-increment-svn-tag-buildno" if="version-match">
+        <if>
+            <available file="${autobuild.svn.featureVersionProperties.working}" />
+            <then>
+                <property file="featureVersions.properties" prefix="_latest"/>
+                <propertycopy name="_buildno_unformatted" from="_latest.${feature}" />
+            </then>
+            <else>
+                <math result="_buildno_unformatted" operand1="${feature-buildno}" operation="add" operand2="1" />
+            </else>
+        </if>
+        <!-- *sigh*  now write it out and read it in so that it's the proper format, which we
+             can't do, in ant, with i/o.  does this suck, or what? -->
+        <tempfile property="_feature_svn_tag_buildno" />
+        <propertyfile file="${_feature_svn_tag_buildno}">
+            <entry key="autobuild.svn.tag-buildno" type="int" pattern="000" default="${_buildno_unformatted}" />
+        </propertyfile>
+        <property file="${_feature_svn_tag_buildno}" />
+        <delete file="${_feature_svn_tag_buildno}" quiet="true"/>
+    </target>
+
+    <target name="-release-reset-svn-tag-buildno" unless="version-match">
+        <property name="autobuild.svn.tag-buildno" value="001" />
+    </target>
+
+    <target name="-release-write-tag-xml" depends="-release-set-svn-tag-buildno">
+        <echo file="${autobuild.dir.build-artifacts}/tag.xml">
+&lt;project name="Tag: ${feature} : ${autobuild.svn.tagname-base}-${autobuild.svn.tag-version}.${autobuild.svn.tag-buildno}">
+            &lt;property name="autobuild.svn.tag.target" value="${autobuild.svn.tagname-base}-${autobuild.svn.tag-version}.${autobuild.svn.tag-buildno}" />
+            &lt;property name="autobuild.svn.tagsURL" value="${autobuild.svn.tagsURL}" />
+            &lt;property name="autobuild.svn.tag.target.url" value="${autobuild.svn.tagsURL}/${autobuild.svn.tagname-base}-${autobuild.svn.tag-version}.${autobuild.svn.tag-buildno}" />
+            &lt;property name="autobuild.svn.tag.target.revision" value="${autobuild.svn.revision}" />
+            &lt;property name="autobuild.svn.tag.target.source.url" value="${autobuild.svn.revURL}" />
+&lt;/project>
+</echo>
+
+    </target>
+
+    <target name="-release-set-previous-feature-buildno" if="feature.tag.${this-feature}">
+        <propertycopy property="_temp.feature.buildno" from="feature.tag.${this-feature}" />
+        <!-- features may have "-qualifier" following the build number.  remove it -->
+        <propertyregex property="feature-buildno" override="true" input="${_temp.feature.buildno}"
+                       regexp="(^[^-]*)" select="\1" />
+        <echo level="verbose">Previous build number: ${feature-buildno}</echo>
+    </target>
+
+    <target name="-release-reset-previous-feature-buildno" unless="feature.tag.${this-feature}">
+        <property name="feature-buildno" value="000" />
+        <echo level="verbose">Build number reset to ${feature-buildno}</echo>
+    </target>
+
+    <!-- part of update feature -->
+    <target name="-release-increment-feature-buildno" if="version-match">
+        <!-- get latest version from current featureVersions.Properties -->
+        <property file="${autobuild.svn.featureVersionProperties.working}" prefix="_l_feature."/>
+        <propertycopy name="_temp_feature_buildno" from="_l_feature.${this-feature}" override="true" silent="true" />
+        <if>
+            <isset property="_temp_feature_buildno" />
+            <then>
+                <var name="temp_feature_buildno" unset="true" />
+            </then>
+            <else>
+                <echo level="verbose">Incrementing build number for feature ${this-feature}</echo>
+                <math result="feature-buildno" operand1="${feature-buildno}" operation="add" operand2="1" />
+                <propertyfile file="${autobuild.svn.featureVersionProperties.working}">
+                    <entry key="${this-feature}" type="int" pattern="000" default="${feature-buildno}" />
+                    <entry key="${this-feature},0.0.0" type="int" pattern="000" default="${feature-buildno}" />
+                </propertyfile>
+            </else>
+         </if>
+    </target>
+
+    <!-- part of update feature -->
+    <target name="-release-reset-feature-buildno" unless="version-match">
+        <echo level="verbose">Resetting feature ${this-feature} build number to 001</echo>
+        <propertyfile file="${autobuild.svn.featureVersionProperties.working}">
+            <entry key="${this-feature}" type="int" pattern="000" default="001" />
+            <entry key="${this-feature},0.0.0" type="int" pattern="000" default="001" />
+        </propertyfile>
+    </target>
+
+    <!-- called multiple times from buildrelunit, once per plugin -->
+    <target name="-release-update-plugin" if="official-release-build"
+            depends="-release-set-previous-plugin-buildno, -release-reset-previous-plugin-buildno">
+        <echo level="verbose">Updating plugin: ${plugin}</echo>
+        <if>
+            <not>
+                <isset property="_build.last-built.tag" />
+            </not>
+            <then>
+                <antcall target="-release-reset-plugin-buildno" />
+            </then>
+            <else>
+                <if>
+                    <and>
+                        <available file="${autobuild.dir.release-unit}/plugins/${plugin}/MANIFEST.MF" />
+                        <available file="${autobuild.dir.release-unit}/plugins/${plugin}/docs.properties" />
+                    </and>
+                    <then>
+                         <property name="_plugin_meta_inf" value="${plugin}" />
+                    </then>
+                    <else>
+                         <property name="_plugin_meta_inf" value="${plugin}/META-INF" />
+                    </else>
+                </if>
+
+                <loadproperties srcFile="${autobuild.dir.release-unit}/plugins/${plugin}/META-INF/MANIFEST.MF">
+                    <filterchain>
+                        <linecontains>
+                            <contains value="Bundle-Version" />
+                        </linecontains>
+                        <prefixlines prefix="current-" />
+                    </filterchain>
+                </loadproperties>
+
+                <tempfile property="lastVersion.temp.file" />
+                <trycatch property="_svn_plugin_manifest_load_failure">
+                    <try>
+                        <exec executable="svn" logerror="on" failonerror="on" outputproperty="remote.content">
+                            <arg line="cat ${autobuild.svn.tagsURL}/${_build.last-built.tag}/${autobuild.svn.tag-pattern}/plugins/${_plugin_meta_inf}/MANIFEST.MF" />
+                        </exec>
+                    </try>
+                    <catch>
+                        <echo level="verbose">Couldn't load a plugin manifest:</echo>
+                        <echo level="verbose">${_svn_plugin_manifest_load_failure}</echo>
+                        <echo level="verbose">Ignoring it (it's probably a new plugin)</echo>
+                        <property name="remote.content" value="Bundle-Version: 0.0.0" />
+                    </catch>
+                </trycatch>
+                <echo file="${lastVersion.temp.file}">${remote.content}</echo>
+                <loadproperties srcFile="${lastVersion.temp.file}">
+                    <filterchain>
+                        <linecontains>
+                            <contains value="Bundle-Version" />
+                        </linecontains>
+                        <prefixlines prefix="last-" />
+                    </filterchain>
+                </loadproperties>
+                <delete file="${lastVersion.temp.file}" quiet="true"/>
+
+                <echo level="verbose">last-Bundle-Version: ${last-Bundle-Version}</echo>
+                <echo level="verbose">current-Bundle-Version: ${current-Bundle-Version}</echo>
+                <!-- only compare version's x.y.z and ignore qualifier. -->
+                <if>
+                    <istrue value="${skip.verify.qualifier}" />
+                    <then>
+                    <propertyregex property="_current-Bundle-Version" override="true" input="${current-Bundle-Version}"
+                              regexp="^\d{1,3}\.\d{1,3}\.\d{1,}(|\.\w+)$" select="\0" />
+                    <fail unless="_current-Bundle-Version">
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The version in the ${plugin}/META-INF/MANIFEST.MF 
+is set to ${current-Bundle-Version}!
+
+The version must be three/four parts separated by dots, If it has four parts the last part must be word(\w).
+example: 1.2.3.qualifier
+         1.2.3
+         1.2.3.456_word_000
+
+For more details of version and build number, please see the requirement for the 
+vesion under Release Unit Identification.
+http://wiki.tibco.com/FrameworksWiki/Componentization/BestPracticesIndex
+
+For more details of build number overrides, please see 
+http://wiki.tibco.com/FrameworksWiki/BuildTools/Usage/BuildNumbers#Overrides 
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                    </fail>
+                    </then>
+                </if>
+                <propertyregex property="current-Bundle-qualifier" override="true" input="${current-Bundle-Version}"
+                               regexp="(\w+$)" select="\1" /> 
+                <propertyregex property="_last-Bundle-Version" override="true" input="${last-Bundle-Version}"
+                               regexp="(\d{1,3}\.\d{1,3}\.\d{1,})" select="\1" />
+                <propertyregex property="_current-Bundle-Version" override="true" input="${current-Bundle-Version}"
+                               regexp="(\d{1,3}\.\d{1,3}\.\d{1,})" select="\1" />   
+                <condition property="version-match">
+                    <equals arg1="${_last-Bundle-Version}" arg2="${_current-Bundle-Version}" />
+                </condition>
+                
+                <!-- check plugin is major feature's or not -->
+                <tempfile property="check.main.feature" />
+                <xslt in="./features/${feature}/feature.xml"
+                      out="${check.main.feature}"
+                      style="${autobuild.dir.scripts}/private/extractPlugins.xsl" >
+                    <param name="feature_id" expression="@{xsl.expression}"/>
+                </xslt>
+                <property file="${check.main.feature}" prefix="check.main.plugin_"/>
+                <delete file="${check.main.feature}" quiet="true"/>
+                <propertyselector property="_plugin.id.list"
+                                  match="check.main.plugin_\.plugin_[^-]*-(.*)"
+                                  override="true"
+                                  select="\1" />
+                <for param="plugin.id" list="${_plugin.id.list}" trim="true"> 
+                    <sequential>
+                        <if>
+                            <equals arg1="${plugin}" arg2="@{plugin.id}" />
+                            <then>
+                                 <var name="replace.this.plugin.version" value="true" />
+                            </then>
+                        </if>
+                    </sequential>
+                </for>
+
+                <if>
+                    <and>
+                        <isset property="match.build.number" />
+                        <isset property="replace.this.plugin.version" />
+                        <available file="${autobuild.svn.featureVersionProperties.working}" />
+                    </and>
+                    <then>
+                        <property file="${autobuild.svn.featureVersionProperties.working}" prefix="_feature_qualifier." />
+                        <propertycopy name="_feature.qualifier.temp" from="_feature_qualifier.${feature}" />
+                        <!-- will not do it if feature's qualifier same as plugin's -->
+                        <if>
+                            <not>
+                                <equals arg1="${_feature.qualifier.temp}" arg2="${plugin-buildno}" />
+                            </not>
+                            <then>
+                                <replace.qualifier feature.qualifier="${_feature.qualifier.temp}" />
+                            </then>
+                        </if>
+                        <if>
+                            <and>
+                                <equals arg1="${_feature.qualifier.temp}" arg2="001" />
+                                <equals arg1="${plugin-buildno}" arg2="001" />
+                            </and>
+                            <then>
+                                <antcall target="-release-reset-plugin-buildno" />
+                            </then>
+                        </if>
+                        <var name="replace.this.plugin.version" unset="true" />                                
+                    </then>
+                    <elseif>
+                        <isset property="version-match" />
+                        <then>
+                         <antcall target="-release-increment-or-continue-plugin-buildno" />
+                        </then>
+                    </elseif>
+                    <else>
+                        <antcall target="-release-reset-plugin-buildno" />
+                    </else>
+                </if>
+            </else>
+        </if>
+    </target>
+
+    <target name="-release-set-previous-plugin-buildno" if="plugin.tag.${plugin}">
+        <propertycopy property="_temp.plugin.buildno" from="plugin.tag.${plugin}" />
+        <!-- plugins may have "-qualifier" following the build number.  remove it -->
+        <propertyregex property="plugin-buildno" override="true" input="${_temp.plugin.buildno}"
+                       regexp="(^[^-]*)" select="\1" />
+        <echo level="verbose">Previous build number: ${plugin-buildno}</echo>
+    </target>
+
+    <target name="-release-reset-previous-plugin-buildno" unless="plugin.tag.${plugin}">
+        <property name="plugin-buildno" value="000" />
+        <echo level="verbose">Build number reset to ${plugin-buildno}</echo>
+    </target>
+
+    <!-- part of update plugin -->
+    <target name="-release-compare-svn-revisions" if="version-match">
+        <echo level="verbose">Comparing revisions for plugin ${plugin} in workspace and in ${_build.last-built.tag}</echo>
+        <tempfile property="tag.revision.temp.file" />
+        <tempfile property="wc.revision.temp.file" />
+        <tempfile property="tag.revision.property.temp.file" />
+        <tempfile property="wc.revision.property.temp.file" />
+        <!-- isn't that ridiculous?  *sigh* -->
+
+        <exec executable="svn" logerror="on" failonerror="on" outputproperty="svn.revision.wc">
+            <arg line="info --xml ${autobuild.dir.release-unit}/plugins/${plugin}" />
+        </exec>
+        <echo file="${wc.revision.temp.file}">${svn.revision.wc}</echo>
+        <xslt in="${wc.revision.temp.file}" out="${wc.revision.property.temp.file}"
+              style="${autobuild.dir.scripts}/private/lastRevised.xsl">
+            <param name="propname" expression="current-revision" />
+        </xslt>
+        <property file="${wc.revision.property.temp.file}" />
+        <delete file="${wc.revision.temp.file}" quiet="true"/>
+        <delete file="${wc.revision.property.temp.file}" quiet="true"/>
+
+        <trycatch property="_svn_plugin_revision_failure">
+            <try>
+                <exec executable="svn" logerror="on" failonerror="on" outputproperty="svn.revision.tag">
+                    <arg line="info --xml ${autobuild.svn.tagsURL}/${_build.last-built.tag}/${autobuild.svn.tag-pattern}/plugins/${plugin}" />
+                </exec>
+                <echo file="${tag.revision.temp.file}">${svn.revision.tag}</echo>
+                <xslt in="${tag.revision.temp.file}" out="${tag.revision.property.temp.file}"
+                      style="${autobuild.dir.scripts}/private/lastRevised.xsl">
+                    <param name="propname" expression="tagged-revision" />
+                </xslt>
+                <property file="${tag.revision.property.temp.file}" />
+                <delete file="${tag.revision.temp.file}" quiet="true"/>
+                <delete file="${tag.revision.property.temp.file}" quiet="true"/>
+            </try>
+            <catch>
+                <echo level="verbose">Hmm, caught a problem:</echo>
+                <echo level="verbose">${_svn_plugin_revision_failure}</echo>
+                <echo level="verbose">This is probably just a new plugin in the working copy.</echo>
+                <echo level="verbose">Ignoring the error.</echo>
+                <property name="tagged-revision" value="unmatchable" />
+            </catch>
+        </trycatch>
+
+        <echo level="verbose">tagged-revision: ${tagged-revision}</echo>
+        <echo level="verbose">current-revision: ${current-revision}</echo>
+        <!-- all that setup, just for this: -->
+        <condition property="unchanged">
+            <equals arg1="${tagged-revision}" arg2="${current-revision}" />
+        </condition>
+    </target>
+
+    <target name="-release-increment-or-continue-plugin-buildno" depends="-release-compare-svn-revisions">
+        <if>
+            <isset property="unchanged" />
+            <then>
+                <antcall target="-release-continue-plugin-buildno" />
+            </then>
+            <else>
+                <antcall target="-release-increment-plugin-buildno" />
+            </else>
+        </if>
+    </target>
+
+    <!-- part of update plugin -->
+    <target name="-release-increment-plugin-buildno" unless="unchanged">
+        <if>
+            <or>
+                <!--If the fourth group of verison is .qualifier OR the version just has three groups-->
+                <equals arg1="${current-Bundle-qualifier}" arg2="qualifier" />
+                <istrue value="${drop.qualifier}" />
+            </or>
+            <then>
+                <echo level="verbose">Incrementing build number for plugin ${plugin}</echo>
+                <math result="plugin-buildno" operand1="${plugin-buildno}" operation="add" operand2="1" />
+            </then>
+            <else>
+                <propertycopy property="plugin-buildno" from="current-Bundle-qualifier" override="true" />
+            </else>
+        </if>
+        <propertyfile file="${autobuild.svn.pluginVersionProperties.working}">
+            <entry key="${plugin}" type="int" pattern="000" default="${plugin-buildno}" />
+            <entry key="${plugin},0.0.0" type="int" pattern="000" default="${plugin-buildno}" />
+        </propertyfile>
+    </target>
+
+    <!-- part of update plugin -->
+    <target name="-release-continue-plugin-buildno" if="unchanged">
+        <property file="${autobuild.svn.pluginVersionProperties.working}" prefix="_l_plugin."/>
+        <propertycopy name="_temp_plugin_buildno" from="_l_plugin.${plugin}" override="true" silent="true" />
+        <propertyregex property="_temp_plugin_buildno" override="true" input="${_temp_plugin_buildno}" 
+                       regexp="(\d{3})" select="\1" />     
+        <if>
+            <not>
+                <!-- write the current plugin_no to the pluginsVersion.Properties if this file did not have one. -->
+                <isset property="_temp_plugin_buildno" />
+            </not>
+            <then>
+                <if>
+                    <equals arg1="${plugin-buildno}" arg2="000" />
+                    <then>
+                        <echo level="verbose">Setting initial build number 001 for plugin ${plugin}</echo>
+                        <propertyfile file="${autobuild.svn.pluginVersionProperties.working}">
+                            <entry key="${plugin}" type="int" pattern="000" default="001" />
+                            <entry key="${plugin},0.0.0" type="int" pattern="000" default="001" />
+                        </propertyfile>
+                    </then>
+                    <else> <!-- usual case -->
+                        <echo level="verbose">Retaining build number ${plugin-buildno} for plugin ${plugin}</echo>
+                        <propertyfile file="${autobuild.svn.pluginVersionProperties.working}">
+                            <entry key="${plugin}" type="int" pattern="000" default="${plugin-buildno}" />
+                            <entry key="${plugin},0.0.0" type="int" pattern="000" default="${plugin-buildno}" />
+                        </propertyfile>
+                        <propertyregex property="_plugin_short_version" override="true"
+                                       input="${current-Bundle-Version}"
+                                       regexp="^(\d{1,3}\.\d{1,3}\.\d{1,})" select="\1" />
+                        <var name="_plugin_full_version" value="${_plugin_short_version}.${plugin-buildno}" />
+                        <propertyfile file="${autobuild.dir.release-unit}/build-artifacts/continuedVersions.properties">
+                            <entry key="${plugin}" default="${_plugin_full_version}" />
+                        </propertyfile>
+                    </else>
+                </if>
+            </then>
+            <elseif>
+                <equals arg1="${_temp_plugin_buildno}" arg2="${plugin-buildno}" />
+                <then>
+                    <propertyregex property="_plugin_short_version" override="true"
+                                           input="${current-Bundle-Version}"
+                                           regexp="^(\d{1,3}\.\d{1,3}\.\d{1,})" select="\1" />
+                                           
+                    <property file="${autobuild.qualifiers.plugins}" prefix="_plugin_suffix."/>
+                    <propertycopy name="_temp_suffix" from="_plugin_suffix.${plugin}" override="true" silent="true" />   
+                    <if>
+                        <isset property="_temp_suffix" />
+                        <then>
+                        <var name="_plugin_full_version" value="${_plugin_short_version}.${plugin-buildno}-${_temp_suffix}" />
+                        </then>
+                        <else>
+                            <var name="_plugin_full_version" value="${_plugin_short_version}.${plugin-buildno}" />
+                        </else>
+                    </if>                       
+                    <propertyfile file="${autobuild.dir.release-unit}/build-artifacts/continuedVersions.properties">
+                        <entry key="${plugin}" default="${_plugin_full_version}" />
+                    </propertyfile>
+                    <var name="_temp_plugin_buildno" unset="true" />
+                </then>
+            </elseif>
+        </if>
+    </target>
+
+    <!-- part of update plugin -->
+    <target name="-release-reset-plugin-buildno" unless="version-match">
+        <echo level="verbose">Setting plugin ${plugin} build number to 001</echo>
+        <propertyfile file="${autobuild.svn.pluginVersionProperties.working}">
+            <entry key="${plugin}" type="int" pattern="000" default="001" />
+            <entry key="${plugin},0.0.0" type="int" pattern="000" default="001" />
+        </propertyfile>
+    </target>
+    
+    <!-- replace qualifier with feature's qualifier -->
+    <macrodef name="replace.qualifier" description="replace qualifier with feature's qualifier">
+       <attribute name="feature.qualifier" />
+       <sequential>
+             <sortlist property="compare.result" value="${plugin-buildno} , @{feature.qualifier}" delimiter="," />
+             <if>
+                 <or>
+                    <equals arg1="@{feature.qualifier}" arg2="${plugin-buildno}" />
+                    <equals arg1="${compare.result}" arg2="${plugin-buildno},@{feature.qualifier}" />
+                </or>
+                <then>
+                   <fail>!!!
+                     
+The feature's qualifier number has to be greater than exist plugins qualifier number.
+                     
+                   </fail>
+                </then>
+                <elseif>
+                    <not>
+                        <equals arg1="${current-Bundle-qualifier}" arg2="qualifier" />
+                    </not>
+                    <then>
+                        <fail>!!!
+                    
+Please do not specify  plugin qualifier and set feature's qualifier to your plugins in same time.
+                     
+                        </fail>
+                    </then>
+                </elseif>
+                <else>
+                    <propertycopy property="plugin-buildno" from="current-Bundle-qualifier" override="true" />
+                        <propertyfile file="${autobuild.svn.pluginVersionProperties.working}" >
+                        <entry key="${plugin}" value="@{feature.qualifier}" />
+                        <entry key="${plugin},0.0.0" value="@{feature.qualifier}" />
+                    </propertyfile>
+                </else>
+            </if>
+       </sequential>
+    </macrodef>
+
+
+</project>

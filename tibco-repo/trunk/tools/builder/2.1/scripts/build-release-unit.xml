@@ -1,0 +1,774 @@
+<project name="Build and Export Release Unit" default="export-all-features">
+
+    <taskdef resource="net/sf/antcontrib/antlib.xml">
+        <classpath>
+            <fileset dir="${autobuild.dir.builder}" includes="ant-contrib-1.0b3.jar"/>
+        </classpath>
+    </taskdef>
+
+
+    <import file="${autobuild.dir.scripts}/private/release-props.xml" />
+    <import file="${autobuild.dir.scripts}/private/integration-props.xml" />
+
+    <!-- informational target -->
+    <target name="properties" depends="-check-existence"
+              description="dump most of the relevant property values that will be used for an actual run">
+        <echo>Properties defined:</echo>
+        <echoproperties prefix="user." />
+        <echoproperties prefix="autobuild." />
+        <echoproperties prefix="dual." />
+        <echoproperties prefix="match." />
+        <echoproperties prefix="skip." />
+        <echoproperties prefix="bypass." />
+        <echoproperties prefix="full." />
+        <echoproperties>
+            <propertyset>
+                <propertyref name="feature" />
+                <propertyref name="basedir" />
+                <propertyref name="release-unit" />
+                <propertyref name="official-release-build" />
+            </propertyset>
+        </echoproperties>
+        <antcall target="-cleanup-temporaries" />
+    </target>
+
+    <target name="export-all-features"
+        depends="-write-last-build-failed, -check-existence, -generate-build-qualifiers, -write-site-provenance-xml,
+                 -set-javadoc-destination, -set-sources-destination, -export-code-feature, -export-source-feature, -export-test-feature, -export-docs-feature">
+        <antcall target="-cleanup-temporaries" />
+        <antcall target="-compress-logs" />
+        <echo file="${autobuild.dir.build-artifacts}/previous-tag.properties">_old_artifacts_svn_url=${autobuild.svn.tagsURL}/${_build.last-built.tag}/${autobuild.svn.tag-pattern}/build-artifacts</echo>
+    </target>
+
+    <target name="-check-existence">
+        <available file="${autobuild.dir.release-unit}/features/${feature}.source" property="_source_feature_exists" type="dir" />
+        <if>
+            <istrue value="${single.test.feature}" />
+            <then>
+                <propertyregex property="test.feature.name.tail"
+                            input="${feature}"
+                            regexp="(.*)(\.test)"
+                            select="\2"
+                            casesensitive="false" />
+                <fail unless="test.feature.name.tail">!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+This RU has only test feature, but the test feature's name doesn't match *.test
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                </fail>
+            </then>
+        </if>
+        <condition property="_test_feature_exists">
+            <or>
+                <istrue value="${single.test.feature}" />
+                <available file="${autobuild.dir.release-unit}/features/${feature}.test" type="dir" />
+            </or>
+        </condition>
+        <available file="${autobuild.dir.release-unit}/features/${feature}.devdocs" property="_docs_feature_exists" type="dir" />
+        <condition property="_auxiliary_feature_exists">
+            <or>
+                <isset property="_docs_feature_exists" />
+                <isset property="_test_feature_exists" />
+                <isset property="_source_feature_exists" />
+            </or>
+        </condition>
+    </target>
+
+    <target name="-write-site-provenance-xml">
+        <if>
+            <or>
+                <isset property="official-release-build" />
+                <isset property="integration-build" />
+            </or>
+            <then>
+                <property file="${autobuild.dir.release-unit}/featureVersions.properties" prefix="_feature."/>
+                <propertycopy name="__buildno" from="_feature.${feature}"/>
+                <if>
+                    <isset property="dual.build.enable" />
+                    <then>
+                        <echo file="${autobuild.dir.build-artifacts}/site-provenance.xml">&lt;?xml version="1.0" encoding="UTF-8"?>
+&lt;site-provenance>
+    &lt;releaseUnit
+        id="${feature}.eclipse"
+        version="${autobuild.svn.tag-version}.${__buildno}"
+        url="${autobuild.svn.revURL}"
+        revision="${autobuild.svn.revision}" />
+    &lt;releaseUnit
+        id="${feature}"
+        version="${autobuild.svn.tag-version}.${__buildno}"
+        url="${autobuild.svn.revURL}"
+        revision="${autobuild.svn.revision}" />
+&lt;/site-provenance>
+</echo>
+                    </then>
+                    <else>
+                        <echo file="${autobuild.dir.build-artifacts}/site-provenance.xml">&lt;?xml version="1.0" encoding="UTF-8"?>
+&lt;site-provenance>
+    &lt;releaseUnit
+        id="${feature}"
+        version="${autobuild.svn.tag-version}.${__buildno}"
+        url="${autobuild.svn.revURL}"
+        revision="${autobuild.svn.revision}" />
+&lt;/site-provenance>
+</echo>
+                    </else>
+                </if>
+            </then>
+        </if>
+    </target>
+
+    <target name="-export-source-feature" if="_source_feature_exists">
+        <ant antfile="${autobuild.dir.scripts}/build-feature.xml">
+            <property name="autobuild.feature-id" value="${feature}.source"/>
+            <property name="autobuild.feature-folder" value="${feature}.source"/>
+            <property name="autobuild.feature-type" value="source" />
+            <property name="autobuild.feature-javadoc" value="${nonexistent}" />
+            <property name="autobuild.feature-sources" value="${nonexistent}" />
+            <property name="_feature.has-auxiliaries" value="false" />
+        </ant>
+    </target>
+
+    <target name="-export-code-feature" unless="single.test.feature">
+        <ant antfile="${autobuild.dir.scripts}/build-feature.xml">
+            <property name="autobuild.feature-id" value="${feature}"/>
+            <property name="autobuild.feature-folder" value="${feature}"/>
+            <property name="autobuild.feature-type" value="code" />
+            <property name="_feature.has-auxiliaries" value="${_auxiliary_feature_exists}" />
+        </ant>
+    </target>
+
+    <target name="-export-test-feature" if="_test_feature_exists">
+        <condition property="_autobuild.feature-id" value="${feature}" else="${feature}.test">
+            <istrue value="${single.test.feature}" />
+        </condition>
+        <condition property="_autobuild.feature-folder" value="${feature}" else="${feature}.test">
+            <istrue value="${single.test.feature}" />
+        </condition>
+        <if>
+            <istrue value="${single.test.feature}" />
+            <then>
+                <ant antfile="${autobuild.dir.scripts}/build-feature.xml">
+                    <property name="autobuild.feature-id" value="${_autobuild.feature-id}" />
+                    <property name="autobuild.feature-folder" value="${_autobuild.feature-folder}" />
+                    <property name="autobuild.feature-type" value="test" />
+                    <property name="_feature.has-auxiliaries" value="false" />
+                </ant>
+            </then>
+            <else>
+                <ant antfile="${autobuild.dir.scripts}/build-feature.xml">
+                    <property name="autobuild.feature-id" value="${_autobuild.feature-id}" />
+                    <property name="autobuild.feature-folder" value="${_autobuild.feature-folder}" />
+                    <property name="autobuild.feature-type" value="test" />
+                    <property name="autobuild.feature-javadoc" value="${nonexistent}" />
+                    <property name="autobuild.feature-sources" value="${nonexistent}" /> 
+                    <property name="_feature.has-auxiliaries" value="false" />
+                </ant>
+            </else>
+        </if>
+    </target>
+
+    <target name="-export-docs-feature" if="_docs_feature_exists">
+        <ant antfile="${autobuild.dir.scripts}/build-feature.xml">
+            <property name="autobuild.feature-id" value="${feature}.devdocs"/>
+            <property name="autobuild.feature-folder" value="${feature}.devdocs"/>
+            <property name="autobuild.feature-type" value="docs" />
+            <property name="autobuild.feature-javadoc" value="${nonexistent}" />
+            <property name="autobuild.feature-sources" value="${nonexistent}" />
+            <property name="_feature.has-auxiliaries" value="false" />
+        </ant>
+        <antcall target="-cleanup-javadoc-dir" />
+    </target>
+
+    <!-- branch processing depending upon whether this is an official release build
+         or not.  first set up the properties based on that, then generate the
+         qualifiers (in pluginVersions.properties and featureVersions.properties)
+         based on role and the state of the working copy. -->
+    <target name="-generate-build-qualifiers"
+            depends="-start-log, -set-role-specific-properties, -verify-qualifier,
+                     -generate-feature-build-qualifiers, -generate-plugin-build-qualifiers,
+                     -generate-qualifier-suffix, -stop-log">
+    </target>
+
+    <target name="-start-log">
+        <record name="${autobuild.dir.output.logs}/setup-${feature}.log" action="start"
+                loglevel="${autobuild.loglevel}" />
+    </target>
+
+    <target name="-stop-log">
+        <echo level="verbose">Turning off logging in the setup log.</echo>
+        <record name="${autobuild.dir.output.logs}/setup-${feature}.log" action="stop" />
+    </target>
+
+    <target name="-set-role-specific-properties" depends="-release-set-properties, -integration-set-properties, -check-feature-match, -developer-generate-qualifier">
+        <if>
+           <istrue value="${drop.qualifier}" />
+           <then>
+               <var name="skip.verify.qualifier" value="true" />
+           </then>
+        </if>
+    </target>
+
+    <target name="-developer-generate-qualifier" unless="official-release-build">
+        <if>
+            <isset property="eclipse.nature.build" />
+            <then>
+                <condition property="autobuild.developer-qualifier"
+                           value="DEV-test"
+                           else="DEV-test-${touch.time}-${autobuild.user.name}">
+                    <istrue value="${autobuild.qualifier.fixed}" />
+                </condition>
+            </then>
+            <else>
+                <condition property="autobuild.developer-qualifier"
+                           value="DEV"
+                           else="DEV-${touch.time}-${autobuild.user.name}">
+                    <istrue value="${autobuild.qualifier.fixed}" />
+                </condition>
+            </else>
+        </if>
+        <echo level="verbose">Developer qualifier for this build: ${autobuild.developer-qualifier}</echo>
+    </target>
+
+    <!-- iterate over a list of directories in the feature folder.  for each directory
+         found, either call developer-update-propertyfile (passing the feature id and
+         the property file as params), or release-update-feature (which is more complex). -->
+    <target name="-generate-feature-build-qualifiers" depends="-prop-set-macro">
+        <for param="a-feature">
+            <dirset id="autobuild.feature-list" dir="${autobuild.dir.release-unit}/features">
+                <include name="*" />
+            </dirset>
+            <sequential>
+            <propertyregex property="this-feature" override="true" input="@{a-feature}"
+                           regexp="([^/\\]*$)" select="\1" />
+            <if>
+                <isset property="official-release-build" />
+                <then>
+                    <if>
+                        <isset property="release.svn.bypass.flag" />
+                        <then> <!-- do nothing; better hope the files are in place -->
+                            <echo>* WARNING * WARNING * WARNING * WARNING * WARNING *</echo>
+                            <echo />
+                            <echo>* WARNING:  release.svn.bypass.flag set!  WARNING *</echo>
+                            <echo />
+                            <echo>* WARNING * WARNING * WARNING * WARNING * WARNING *</echo>
+                        </then>
+                        <else>
+                            <ant antfile="${autobuild.dir.scripts}/private/release-tasks.xml" target="-release-update-feature">
+                                <!--property name="this-feature" value="${this-feature}" /-->
+                            </ant>
+                        </else>
+                    </if>
+                </then>
+                <else>
+                    <if>
+                        <isset property="integration-build" />
+                        <then>
+                            <ant antfile="${autobuild.dir.scripts}/private/integration-tasks.xml" target="-integration-update-feature" />
+                        </then>
+                        <else>
+                            <update.property.entry target="${this-feature}"
+                                             propertyfile="${autobuild.svn.featureVersionProperties.working}"
+                                             value="${autobuild.developer-qualifier}" />
+                        </else>
+                    </if>
+                </else>
+            </if>
+            </sequential>
+        </for>
+    </target>
+
+    <!-- works just like feature build qualifiers, really, except that different parameters
+         are passed to developer-update-propertyfile and a different ant call (with slightly
+         different logic) is used for an official release build -->
+    <target name="-generate-plugin-build-qualifiers" depends="-prop-set-macro" >
+        <!-- touch the file into place, in case there aren't any plugins.
+             append, so that if it does exist, we don't wipe it out. -->
+        <delete file="${autobuild.dir.release-unit}/build-artifacts/continuedVersions.properties" quiet="true" />
+        <echo file="${autobuild.dir.release-unit}/pluginVersions.properties" append="true"></echo>
+        <for param="a-plugin">
+            <dirset id="autobuild.plugin-list" dir="${autobuild.dir.release-unit}/plugins">
+                <include name="*" />
+            </dirset>
+            <sequential>
+            <propertyregex property="this-plugin" override="true" input="@{a-plugin}"
+                           regexp="([^/\\]*$)" select="\1" />
+            <if>
+                <!-- exclude plugin without MAINIFEST.MF -->
+                <available file="${autobuild.dir.release-unit}/plugins/${this-plugin}/META-INF/MANIFEST.MF" />
+                <then>
+                    <if>
+                        <isset property="official-release-build" />
+                        <then>
+                            <if>
+                                <isset property="release.svn.bypass.flag" />
+                                <then /> <!-- do nothing; better hope the files are in place -->
+                                <else>
+                                    <ant antfile="${autobuild.dir.scripts}/private/release-tasks.xml" target="-release-update-plugin">
+                                        <property name="plugin" value="${this-plugin}" />
+                                    </ant>
+                                </else>
+                            </if>
+                        </then>
+                        <else>
+                            <if>
+                                <isset property="integration-build" />
+                                <then>
+                                    <ant antfile="${autobuild.dir.scripts}/private/integration-tasks.xml" target="-integration-update-plugin" />
+                                </then>
+                                <else>
+                                    <update.property.entry target="${this-plugin}"
+                                                     propertyfile="${autobuild.svn.pluginVersionProperties.working}"
+                                                     value="${autobuild.developer-qualifier}" />
+                                </else>
+                            </if>
+                        </else>
+                    </if>
+                </then>
+            </if> 
+            </sequential>
+        </for>
+    </target>
+
+    <target name="-set-javadoc-destination">
+        <!-- of course, if it's already set to false, we can't change it.  hah! -->
+        <condition property="autobuild.javadoc.generate">
+            <or>
+                <and>
+                    <isset property="javadoc.container" />
+                    <isset property="javadoc.destination" />
+                    <available file="${javadoc.container}/${javadoc.destination}" type="dir" />
+                </and>
+                <and>
+                    <isset property="javadoc.destination" />
+                    <available file="${javadoc.destination}" type="dir" />
+                    <isset property="_docs_feature_exists" />
+                </and>
+            </or>
+        </condition>
+        <echo level="verbose">Javadoc generation is set to: ${autobuild.javadoc.generate}</echo>
+        <!-- double-check, though, in case someone manually set javadoc.generate to true -->
+        <condition property="autobuild.feature-javadoc"
+                   value="${javadoc.container}/${javadoc.destination}">
+            <and>
+                <isset property="autobuild.javadoc.generate" />
+                <isset property="javadoc.container" />
+                <isset property="javadoc.destination" />
+                <available file="${javadoc.container}/${javadoc.destination}" type="dir" />
+            </and>
+        </condition>
+        <if>
+            <isset property="autobuild.feature-javadoc" />
+            <then>
+                <echo level="verbose">Containerized autobuild.feature-javadoc: ${autobuild.feature-javadoc}</echo>
+            </then>
+        </if>
+        <condition property="autobuild.feature-javadoc"
+                   value="${javadoc.destination}">
+            <and>
+                <isset property="autobuild.javadoc.generate" />
+                <not>
+                    <isset property="javadoc.container" />
+                </not>
+                <isset property="javadoc.destination" />
+                <available file="${javadoc.destination}" type="dir" />
+                <isset property="_docs_feature_exists" />
+            </and>
+        </condition>
+        <if>
+            <isset property="autobuild.feature-javadoc" />
+            <then>
+                <echo level="verbose">autobuild.feature-javadoc: ${autobuild.feature-javadoc}</echo>
+            </then>
+            <else>
+                <echo level="verbose">Javadoc will not be generated.</echo>
+            </else>
+        </if>
+    </target>
+
+    <target name="-set-sources-destination">
+        <!-- of course, if it's already set to false, we can't change it.  hah! -->
+        <condition property="autobuild.sources.generate">
+            <and>
+                <isset property="sources.destination" />
+                <available file="${sources.destination}" type="dir" />
+                <isset property="_source_feature_exists" />
+            </and>
+        </condition>
+        <echo level="verbose">Source feature/plugin generation is set to: ${autobuild.sources.generate}</echo>
+        <!-- double-check, though, in case someone manually set sources.generate to true -->
+        <condition property="autobuild.feature-sources"
+                   value="${sources.destination}">
+            <and>
+                <isset property="autobuild.sources.generate" />
+                <isset property="sources.destination" />
+                <available file="${sources.destination}" type="dir" />
+                <isset property="_source_feature_exists" />
+            </and>
+        </condition>
+        <if>
+            <isset property="autobuild.feature-sources" />
+            <then>
+                <echo level="verbose">autobuild.feature-sources: ${autobuild.feature-sources}</echo>
+            </then>
+            <else>
+                <echo level="verbose">A source feature/plugin will not be generated.</echo>
+            </else>
+        </if>
+    </target>
+
+    <target name="-prop-set-macro" >
+        <macrodef name="update.property.entry" description="Updates a property file entry">
+            <attribute name="target" />
+            <attribute name="propertyfile" />
+            <attribute name="value" />
+            <sequential>
+                <echo level="verbose">Setting @{target} to @{value}</echo>
+                <propertyfile file="@{propertyfile}">
+                    <entry key="@{target}" default="@{value}" />
+                    <entry key="@{target},0.0.0" default="@{value}" />
+                </propertyfile>
+            </sequential>
+        </macrodef>
+    </target>
+    
+    <target name="-check-javadoc-dir">
+        <available property="_javadoc_dir_exists" file="${autobuild.feature-javadoc}" type="dir" />
+    </target>
+
+    <!-- if the "clean" property is set, then the _clean property will be set.  -->
+    <condition property="_clean">
+        <equals arg1="${autobuild.clean}" arg2="-clean"/>
+    </condition>
+
+    <target name="deleteDir" if="_clean">
+        <delete dir="${deleteDir.dir}" quiet="true"/>
+    </target>
+
+    <target name="-cleanup-javadoc-dir" if="_javadoc_dir_exists" depends="-check-javadoc-dir">
+        <delete quiet="true" includeemptydirs="true">
+            <fileset dir="${javadoc.destination}" includes="**/*" />
+        </delete>
+    </target>
+
+    <target name="-cleanup-temporaries" unless="official-release-build">
+        <move todir="${autobuild.dir.build-artifacts}">
+            <fileset dir="${autobuild.dir.release-unit}" includes="*Versions.properties" />
+        </move>
+        <delete quiet="true">
+             <fileset dir="${autobuild.dir.release-unit}" includes="null*" />
+             <fileset dir="${autobuild.dir.release-unit}" includes="*.log" />
+        </delete>
+    </target>
+
+    <target name="-compress-logs" unless="autobuild.log-compression.disable">
+        <for param="a-log">
+            <fileset dir="${autobuild.dir.output.logs}">
+                <exclude name="*.gz" />
+                <exclude name="*.zip" />
+            </fileset>
+            <sequential>
+                <gzip src="@{a-log}" destfile="@{a-log}.gz" />
+                <delete file="@{a-log}" quiet="true"/>
+            </sequential>
+        </for>
+    </target>
+
+    <target name="-generate-qualifier-suffix" if="_qualifiers_exist" depends="-define-verify-qualifiers-file">
+        <echo level="verbose">Adding feature- and plugin-specific qualifier suffixes</echo>
+        <!--Verify the qualifiers file-->
+        <verify.qualifiers.file qualifiers.file="${autobuild.qualifiers.features}" qualifiers.type="feature" />
+        <verify.qualifiers.file qualifiers.file="${autobuild.qualifiers.plugins}" qualifiers.type="plugin" />
+        <devtools.qualifierModifier
+                 featureVersions="${autobuild.svn.featureVersionProperties.working}"
+                 pluginVersions="${autobuild.svn.pluginVersionProperties.working}"
+                 featureQualifiers="${autobuild.qualifiers.features}"
+                 pluginQualifiers="${autobuild.qualifiers.plugins}" />
+    </target>
+
+    <target name="-define-verify-qualifiers-file">
+        <macrodef name="verify.qualifiers.file">
+            <attribute name="qualifiers.file" />
+            <attribute name="qualifiers.type" />
+            <sequential>
+                <property file="@{qualifiers.file}" prefix="_qualifiers_@{qualifiers.type}." />
+                <propertyselector property="_qualifiers_property_list" match="_qualifiers_@{qualifiers.type}\.(.*)" override="true"/>
+                <for param="qualifiers.property">
+                    <dirset dir="${autobuild.dir.release-unit}/@{qualifiers.type}s">
+                        <include name="*" />
+                    </dirset>
+                    <sequential>
+              <propertyregex property="_qualifiers_property_name" override="true" input="@{qualifiers.property}" 
+                                       regexp="([^/\\]*$)" select="\1" />
+                        <if>
+                            <isset property="_qualifiers_@{qualifiers.type}.${_qualifiers_property_name}" />
+                            <then>
+                                 <if>
+                                     <not>
+                                         <isset property="_qualifiers_@{qualifiers.type}.${_qualifiers_property_name},0.0.0" />
+                                     </not>
+                                     <then>
+                                         <fail>
+!!!
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The property "${_qualifiers_property_name},0.0.0" is missing in @{qualifiers.file}. 
+
+Please refer to the wiki page about the BuildNumbers to fix this issue.
+http://wiki.tibco.com/FrameworksWiki/Componentization/Builder/Advanced#Build_Qualifiers
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+</fail>
+                                     </then>
+                                 </if>
+                            </then>
+                        </if>
+                    </sequential>
+                </for>
+            </sequential>
+        </macrodef>
+    </target>
+
+    <target name="-write-last-build-failed" unless="official-release-build">
+        <echo file="${autobuild.dir.build-artifacts}/latest-build.xml">&lt;?xml version="1.0" ?>
+&lt;project name="Build ${touch.time}.${autobuild.user.name}">
+    &lt;property name="autobuild.build.latest.success" value="false" />
+&lt;/project>
+</echo>
+    </target>
+
+    <target name="-verify-qualifier" depends="-verify-qualifier-macro" unless="skip.verify.qualifier" >
+        <for param="a-feature">
+            <dirset id="autobuild.feature-list" dir="${autobuild.dir.release-unit}/features">
+                <include name="*" />
+            </dirset>
+            <sequential>
+                <propertyregex property="q-feature" override="true" input="@{a-feature}"
+                               regexp="([^/\\]*$)" select="\1" />  
+                
+                <!-- check this feature -->
+                <ac.feature.version the.feature="@{a-feature}" 
+                                    xsl.expression="${q-feature}" 
+                                    return.property.result="q-current-version" />
+                                    
+                <verify.qualifier qualifier.version="${q-current-version}"
+                                  qualifier.file="@{a-feature}/feature.xml" />
+
+                <!-- check this feature's plugins -->      
+                <ac.feature.plugin.list the.feature="@{a-feature}"
+                                        plugin.prefix="ac.plugin.list"
+                                        xsl.expression="qualifier" 
+                                        return.property.result="qualifier.plugin.id.list" />
+
+                <verify.plugin.qualifier the.feature="@{a-feature}" 
+                                         plugin.prefix="ac.plugin.list"
+                                         xsl.expression="qualifier" 
+                                         plugin.list="${qualifier.plugin.id.list}" />
+                                         
+                <!-- check this feature's plugin MANIFEST.MF -->
+                <for list="${qualifier.plugin.id.list}" param="a-plugin">
+                    <sequential>
+                        <manifest.version manifest.path="${autobuild.dir.release-unit}/plugins/@{a-plugin}/MANIFEST.MF" manifest.plugin="@{a-plugin}" />
+                        <manifest.version manifest.path="${autobuild.dir.release-unit}/plugins/@{a-plugin}/META-INF/MANIFEST.MF" manifest.plugin="@{a-plugin}" />
+                        <manifest.version manifest.path="${autobuild.dir.release-unit}/plugins/@{a-plugin}/MANIFEST.MF.eclipse" manifest.plugin="@{a-plugin}" />
+                    </sequential>  
+                </for>              
+            </sequential>
+        </for>
+    </target>
+
+    <target name="-verify-qualifier-macro" >
+
+        <macrodef name="ac.feature.version">
+            <attribute name="the.feature" />
+            <attribute name="xsl.expression" />
+            <attribute name="return.property.result" />
+            <sequential>
+                <tempfile property="ac.property.temp.file" />
+                <xslt in="@{the.feature}/feature.xml"
+                      out="${ac.property.temp.file}"
+                      style="${autobuild.dir.scripts}/private/featureVersion.xsl">
+                    <param name="propname" expression="@{xsl.expression}" />
+                </xslt>
+                <property file="${ac.property.temp.file}" />
+                <delete file="${ac.property.temp.file}" quiet="true"/>
+                <propertycopy property="@{return.property.result}" from="@{xsl.expression}" override="true" />
+            </sequential>
+        </macrodef>
+        
+        <macrodef name="ac.feature.plugin.list">
+            <attribute name="the.feature" />
+            <attribute name="plugin.prefix" />
+            <attribute name="xsl.expression" />
+            <attribute name="return.property.result" />
+            <sequential>  
+                <tempfile property="ac.property.temp.file" />
+                <xslt in="@{the.feature}/feature.xml"
+                      out="${ac.property.temp.file}"
+                      style="${autobuild.dir.scripts}/private/extractPlugins.xsl" >
+                    <param name="feature_id" expression="@{xsl.expression}"/>
+                </xslt>
+                <property file="${ac.property.temp.file}" prefix="@{plugin.prefix}"/>
+                <delete file="${ac.property.temp.file}" quiet="true"/>
+
+                <propertyselector property="@{return.property.result}"
+                                  match="@{plugin.prefix}\.plugin_[^-]*-(.*)"
+                                  override="true"
+                                  select="\1" />
+            </sequential>
+        </macrodef>
+       
+        <macrodef name="verify.plugin.qualifier">
+            <attribute name="the.feature" />
+            <attribute name="plugin.list" />
+            <attribute name="plugin.prefix" />
+            <attribute name="xsl.expression" />
+            <sequential>
+                <if>
+                    <isset property="qualifier.plugin.id.list" />
+                    <then>  
+                        <for list="@{plugin.list}" param="plugin-id">
+                            <sequential>
+                                <propertycopy property="_qualifier_version" 
+                                              from="@{plugin.prefix}.plugin_@{xsl.expression}-@{plugin-id}" override="true" />
+                                <verify.qualifier qualifier.version="${_qualifier_version}" 
+                                                  qualifier.file="@{the.feature}\feature.xml" />
+                            </sequential>
+                        </for>
+                    </then>
+                </if>
+            </sequential>    
+        </macrodef>
+        
+        <macrodef name="manifest.version">
+            <attribute name="manifest.path" />
+            <attribute name="manifest.plugin" />
+            <sequential>
+                <if>
+                    <available file="@{manifest.path}" />
+                    <then>
+                        <loadproperties srcFile="@{manifest.path}">
+                            <filterchain>
+                                <linecontains>
+                                    <contains value="Bundle-SymbolicName" />
+                                </linecontains>
+                                <prefixlines prefix="@{manifest.plugin}-" />
+                            </filterchain>
+                        </loadproperties>
+                        <if>
+                            <not><isset property="@{manifest.plugin}-Bundle-SymbolicName" /></not>
+                            <then>
+<fail>!!!
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The required attribute Bundle-SymbolicName is missing in the file! Fail now.
+@{manifest.path}
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+</fail>
+                            </then>
+                        </if>
+
+                        <loadproperties srcFile="@{manifest.path}">
+                            <filterchain>
+                                <linecontains>
+                                    <contains value="Bundle-Version" />
+                                </linecontains>
+                                <prefixlines prefix="@{manifest.plugin}-" />
+                            </filterchain>
+                        </loadproperties>
+                        <if>
+                            <not><isset property="@{manifest.plugin}-Bundle-Version" /></not>
+                            <then>
+<fail>!!!
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The required attribute Bundle-Version is missing in the file! Fail now.
+@{manifest.path}
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+</fail>
+                            </then>
+                        </if>
+                        <propertycopy property="Manifest-Bundle-Version" from="@{manifest.plugin}-Bundle-Version" override="true" />
+                        <verify.qualifier qualifier.version="${Manifest-Bundle-Version}" qualifier.file="@{manifest.path}" />
+                    </then>
+                </if>
+            </sequential>
+        </macrodef>
+
+        <macrodef name="verify.qualifier">
+            <attribute name="qualifier.version"/>
+            <attribute name="qualifier.file"/>
+            <sequential>
+                <propertyregex property="_qualifier" override="true" input="@{qualifier.version}"
+                               regexp="(.[a-z]+).*" select="\1" defaultValue="failed" />
+                <if>
+                    <not>
+                        <equals arg1="${_qualifier}" arg2=".qualifier" />
+                    </not>
+                    <then>
+                        <fail>
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Found the version string @{qualifier.version} in
+@{qualifier.file}.
+However, the version must be four parts separated by dots with the last part being 
+the word "qualifier". 
+
+For more details of version and build number, please see the requirement for the 
+vesion under Release Unit Identification.
+http://wiki.tibco.com/FrameworksWiki/Componentization/BestPracticesIndex
+
+For more details of build number overrides, please see 
+http://wiki.tibco.com/FrameworksWiki/BuildTools/Usage/BuildNumbers#Overrides 
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++          
+                        </fail>
+                    </then>
+                </if>      
+            </sequential>
+        </macrodef>
+        
+    </target>
+    
+    <!-- If can not get feature.xml by useing ${feature}, it means Feature ID different from before. -->
+    <target name="-check-feature-match" if="_build.last-built.tag">
+        <if>
+            <or>
+                <istrue value="${official-release-build}" />
+                <istrue value="${integration-build}" />
+            </or>
+            <then>
+                <trycatch property="_svn_feature_name_load_failure">
+                    <try>
+                        <exec executable="svn" logerror="on" failonerror="on" >
+                            <arg line="ls ${autobuild.svn.tagsURL}/${_build.last-built.tag}/${autobuild.svn.tag-pattern}/features/${feature}/feature.xml" />
+                        </exec>
+                    </try>
+                    <catch>
+                        <fail>
+
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The feature ID of this release-unit is different from the one of its previous tag,
+which is not allowed. Please check the property "feature" in the build-override.xml. 
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+                        </fail>
+                    </catch>
+                </trycatch>
+            </then>
+        </if> 
+    </target>
+   
+</project>

@@ -1,0 +1,49 @@
+<project name="antRunner macro def">
+
+    <macrodef name="autobuild.antrunner">
+
+        <!-- required attributes -->
+        <attribute name="buildFile"/>
+        <attribute name="propertyFile"/>
+
+        <!-- optional but seldom required, if the corresponding properties are set -->
+        <attribute name="antArguments" default="${autobuild.antrunner.arguments}"/>
+        <attribute name="clean" default="${autobuild.clean}" />
+        <attribute name="consoleLog" default="${autobuild.log.console}" />
+
+        <attribute name="eclipse" default="${autobuild.dir.eclipse.install}"/>
+        <attribute name="config" default="${autobuild.dir.eclipse.config}"/>
+        <attribute name="workspace" default="${autobuild.dir.temp}/antrunner-workspace"/>
+
+        <sequential>
+            <java classname="org.eclipse.core.launcher.Main"
+                maxMemory="256m" fork="true" failonerror="on" logerror="on">
+                <syspropertyset>
+                    <propertyset>
+                        <propertyset>
+                            <propertyref prefix="javac" />
+                            <propertyref name="bootclasspath" />
+                        </propertyset>
+                    </propertyset>
+                </syspropertyset>
+                <classpath>
+                    <pathelement
+                        location="${autobuild.dir.eclipse.install}/startup.jar" />
+                </classpath>
+                <assertions/>
+                <jvmarg
+                    value="-Dosgi.bundles=org.eclipse.equinox.common@2:start, org.eclipse.update.configurator@3:start, org.eclipse.core.runtime@start" />
+                <arg line='@{clean}
+                    @{consoleLog}
+                    -install "@{eclipse}" -configuration "@{config}" -data "@{workspace}"
+                    -application org.eclipse.ant.core.antRunner
+                    -buildfile "@{buildFile}"
+                    -propertyfile "@{propertyFile}"
+                    @{antArguments}
+                    '/>
+            </java>
+        </sequential>
+    </macrodef>
+
+
+</project>

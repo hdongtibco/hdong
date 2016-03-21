@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="dependencies">
+
+    <!-- define property defaults.  most of these can be overridden, and
+         perhaps ought to be. -->
+    <target name="-set-workspace-properties">
+        <property name="autobuild.workspace.project" value="${release-unit}" />
+        <property name="autobuild.workspace.project.dir" location="${autobuild.dir.release-unit}" />
+        <property name="autobuild.workspace.eclipse" location="${autobuild.dir.eclipse.install}" />
+        <property name="autobuild.workspace.output" location="${autobuild.dir.release-unit.configuration}" />
+
+        <property name="autobuild.workspace.workspace" location="${autobuild.workspace.output}/workspace" />
+        <property name="autobuild.workspace.configuration" location="${autobuild.workspace.output}/configuration" />
+        <property name="autobuild.workspace.extension" location="${autobuild.workspace.output}/extensionLoc/eclipse" />
+
+        <property name="autobuild.workspace.local-cache" location="${autobuild.dir.user}/workspaceInstaller/local-cache-site" />
+
+        <property name="autobuild.workspace.use-remote-sites" value="true" />
+        <property name="autobuild.workspace.force-equivalent" value="false" />
+
+        <property name="autobuild.workspace.debug" value="false" />
+
+        <property name="autobuild.workspace.log" location="${autobuild.workspace.project.dir}/dependencies-${autobuild.workspace.project}.log" />
+
+        <condition property="autobuild.workspace.restricted-dependencies">
+            <isreference refid="autobuild.workspace.restricted-dependencies.list" />
+        </condition>
+    </target>
+
+    <target name="gather-dependencies"
+            depends="-check-properties, -set-workspace-properties,
+                     lgpl, -display-parameters"
+            unless="_bypass_gather_dependencies"
+            description="Invoke workspace installer to collect the required features and plugins for a build.">
+
+        <record name="${autobuild.workspace.log}" action="start" loglevel="${autobuild.loglevel}" />
+        <workspace.installer
+               baseEclipse="${autobuild.workspace.eclipse}"
+               projectName="${autobuild.workspace.project}"
+               destDir="${autobuild.workspace.output}"
+               workspace="${autobuild.workspace.workspace}"
+               configuration="${autobuild.workspace.configuration}"
+               extensionLocation="${autobuild.workspace.extension}"
+               toolsExtensionLocation="${autobuild.dir.tools}"
+               localSiteCache="${autobuild.workspace.local-cache}"
+               useRemoteSites="${autobuild.workspace.use-remote-sites}"
+               forceEquivalentMatchForBuildFeatures="${autobuild.workspace.force-equivalent}"
+               featureOrderOutput="${autobuild.workspace.feature-order-output}"
+               internalDebug="${autobuild.workspace.debug}"
+               debugOutputLocation="${autobuild.workspace.debug.output}">
+            <featureSearchPath refid="autobuild.workspace.path.search.features" />
+            <projectSearchPath refid="autobuild.workspace.path.search.projects" />
+            <otherFeature path="${autobuild.workspace.extra-feature}" />
+            <updatesites id="autobuild.workspace.update-sites.default">
+                <updatesite url="http://spin.tibco.com/milestones/release" />
+                <updatesite url="http://spin.tibco.com/milestones/thirdparty" />
+                <updatesite url="http://spin.tibco.com/eclipse-3.2/thirdparty" />
+            </updatesites>
+            <updatesites refid="autobuild.workspace.update-sites.list" />
+            <excludedfeatures refid="autobuild.workspace.excluded-features.list" />
+        </workspace.installer>
+        <antcall target="-create-lgpl-indicator" />
+        <antcall target="-generate-dependencies-list" />
+        <record name="${autobuild.workspace.log}" action="stop" />
+    </target>
+
+    <target name="lgpl" if="autobuild.workspace.restricted-dependencies"
+            unless="autobuild.workspace.restricted-dependencies-installed"
+            depends="-check-properties, -set-workspace-properties,
+                     -check-lgpl-installed, -display-parameters"
+            description="Move restricted-license applications from their installation location to the cache.">
+        <fail unless="autobuild.workspace.restricted-dependencies.location">
+The property autobuild.workspace.restricted-dependencies.location is not set,
+but the workspace indicates that this project has restricted dependencies
+(the property autobuild.workspace.restricted-dependencies.list has been defined).
+To resolve this, install the LGPL/other restrictive license materials
+and point the autobuild.workspace.restricted-dependencies.location property at the
+installed materials, then try the build again.</fail>
+        <!-- make sure that the target directories exist -->
+        <mkdir dir="${autobuild.workspace.local-cache}/features" />
+        <mkdir dir="${autobuild.workspace.local-cache}/plugins" />
+        <lgpl.updater
+              installedlocation="${autobuild.workspace.restricted-dependencies.location}"
+              targetlocation="${autobuild.workspace.local-cache}">
+            <features refid="autobuild.workspace.restricted-dependencies.list" />
+        </lgpl.updater>
+        <property name="_create_lgpl_indicator" value="true" />
+    </target>
+
+    <target name="remove-configuration"
+            depends="-check-properties, -set-workspace-properties, -display-parameters"
+            description="Remove the configuration created by gather-dependencies">
+        <delete dir="${autobuild.workspace.output}" />
+    </target>
+
+    <target name="-create-lgpl-indicator" if="_create_lgpl_indicator">
+        <echo file="${autobuild.workspace.extension}/.lgpl-installed">LGPL installed</echo>
+        <echo>Restricted dependencies have been installed!</echo>
+    </target>
+
+    <target name="-check-configuration" if="_output_is_configured">
+        <echo level="verbose">Found ${autobuild.workspace.feature-order-output}</echo>
+        <!--  this is only set if called from the build target;
+              calling gather-dependencies directly is unconditional -->
+        <available file="${autobuild.workspace.feature-order-output}" property="_bypass_gather_dependencies" value="true" type="file" />
+    </target>
+
+    <target name="-check-lgpl-installed" if="autobuild.workspace.restricted-dependencies">
+        <available file="${autobuild.workspace.extension}/.lgpl-installed"
+                   property="autobuild.workspace.lgpl-installed" type="file" />
+    </target>
+
+    <target name="-generate-dependencies-list">
+        <taskdef name="featurexml.creator"
+                 classname="com.tibco.devtools.workspace.installer.tasks.FeatureXmlCreatorTask"
+                 classpath="${autobuild.dir.workspace.installer}" />
+        <featurexml.creator
+            sitedirectory="${autobuild.workspace.extension}"
+            filename="dependenciesFeature.xml"
+            featurelabel="${autobuild.workspace.project} Dependencies Feature"
+            featureid="${autobuild.workspace.project}.extension.site"
+            featureversion="${autobuild.version.builder}.${touch.time}" />
+    </target>
+
+</project>

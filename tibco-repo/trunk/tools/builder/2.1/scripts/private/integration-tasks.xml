@@ -1,0 +1,208 @@
+<project name="Acquire Version and Build Information for Integration">
+
+    <target name="-integration-update-feature" if="integration-build">
+        <sequential>
+            
+            <var name="_this_qualifier" value="000-${integration.build.suffix}" />   
+            <!-- use integration.build.number instead of last.built number -->
+            <if>
+                <isset property="integration.build.number"/>
+                <then> 
+                     <var name="_this_qualifier" value="${integration.build.number}-${integration.build.suffix}" />
+                </then>
+            </if>
+            <!-- detect wheaher we need to cauculate last-built.tag number -->
+            <condition property="_use.last-built.tag">
+                <and>
+                    <isset property="_build.last-built.tag" />
+                    <not>
+                        <isset property="integration.build.number" />
+                    </not>
+                </and>
+            </condition>
+          
+            <if>
+                <isset property="_use.last-built.tag" />
+                <then>
+                    <if>
+                        <isset property="feature.tag.${this-feature}" />
+                        <then>
+                            <!--compare the current-version with last-built-version-->
+                            <tempfile property="currentVersion.property.temp.file" />
+                            <xslt in="${autobuild.dir.release-unit}/features/${this-feature}/feature.xml"
+                                  out="${currentVersion.property.temp.file}"
+                                  style="${autobuild.dir.scripts}/private/featureVersion.xsl">
+                                <param name="propname" expression="current-version" />
+                            </xslt>
+                            <property file="${currentVersion.property.temp.file}" />
+                            <delete file="${currentVersion.property.temp.file}" quiet="true"/>
+                            <tempfile property="lastVersion.temp.file" />
+                            <trycatch property="_svn_feature_xml_load_failure">
+                                <try>
+                                    <tempfile property="lastVersion.property.temp.file" />
+                                    <exec executable="svn" logerror="on" failonerror="on" outputproperty="remote.content">
+                                        <arg line="cat ${autobuild.svn.tagsURL}/${_build.last-built.tag}/${autobuild.svn.tag-pattern}/features/${this-feature}/feature.xml" />
+                                    </exec>
+                                    <echo file="${lastVersion.temp.file}">${remote.content}</echo>
+                                    <xslt in="${lastVersion.temp.file}" out="${lastVersion.property.temp.file}"
+                                          style="${autobuild.dir.scripts}/private/featureVersion.xsl">
+                                        <param name="propname" expression="last-built-version" />
+                                    </xslt>
+                                </try>
+                                <catch>
+                                    <echo level="verbose">Couldn't load a feature xml:</echo>
+                                    <echo level="verbose">${_svn_feature_xml_load_failure}</echo>
+                                    <echo level="verbose">Ignoring it (it's probably a new feature)</echo>
+                                    <echo file="${lastVersion.property.temp.file}">last-built-version=0.0.0</echo>
+                                </catch>
+                            </trycatch>
+                            <property file="${lastVersion.property.temp.file}" />
+                            <delete file="${lastVersion.temp.file}" quiet="true"/>
+                            <delete file="${lastVersion.property.temp.file}" quiet="true"/>
+
+                            <condition property="version-match">
+                                <equals arg1="${last-built-version}" arg2="${current-version}" />
+                            </condition>
+
+                            <if>
+                                <isset property="version-match" />
+                                <then>
+                                    <propertycopy property="_this_feature_buildno" from="feature.tag.${this-feature}" override="true" />
+                                    <!-- features may have "-qualifier" following the build number.  remove it -->
+                                    <propertyregex property="_this_feature_buildno" override="true" input="${_this_feature_buildno}" regexp="(^[^-]*)" select="\1" />
+                                    <var name="_this_qualifier" value="${_this_feature_buildno}-${integration.build.suffix}" />
+                                </then>
+                            </if>
+                        </then>
+                    </if>
+                </then>
+            </if>
+            <update.property.entry target="${this-feature}"
+                                             propertyfile="${autobuild.svn.featureVersionProperties.working}"
+                                             value="${_this_qualifier}" />
+        </sequential>
+    </target>
+
+    <target name="-integration-update-plugin" if="integration-build">
+        <sequential>
+            <var name="_this_qualifier" value="000-${integration.build.suffix}" />
+            <!-- use integration.build.number instead of last.built number -->
+            <if>
+                <isset property="integration.build.number"/>
+                <then> 
+                     <var name="_this_qualifier" value="${integration.build.number}-${integration.build.suffix}" />
+                </then>
+            </if>
+            
+            <!-- detect wheaher we need to cauculate last-built.tag number -->
+            <condition property="_use.last-built.tag">
+                <and>
+                    <isset property="_build.last-built.tag" />
+                    <not>
+                        <isset property="integration.build.number" />
+                    </not>
+                </and>
+            </condition>
+          
+            <if>
+                <isset property="_use.last-built.tag" />
+                <then>
+                    <if>
+                        <isset property="plugin.tag.${this-plugin}" />
+                        <then>
+                            <loadproperties srcFile="${autobuild.dir.release-unit}/plugins/${this-plugin}/META-INF/MANIFEST.MF">
+                                <filterchain>
+                                    <linecontains>
+                                        <contains value="Bundle-Version" />
+                                    </linecontains>
+                                    <prefixlines prefix="current-" />
+                                </filterchain>
+                            </loadproperties>
+
+                            <tempfile property="lastVersion.temp.file" />
+                            <trycatch property="_svn_plugin_manifest_load_failure">
+                                <try>
+                                    <exec executable="svn" logerror="on" failonerror="on" outputproperty="remote.content">
+                                        <arg line="cat ${autobuild.svn.tagsURL}/${_build.last-built.tag}/${autobuild.svn.tag-pattern}/plugins/${this-plugin}/META-INF/MANIFEST.MF" />
+                                    </exec>
+                                </try>
+                                <catch>
+                                    <echo level="verbose">Couldn't load a plugin manifest:</echo>
+                                    <echo level="verbose">${_svn_plugin_manifest_load_failure}</echo>
+                                    <echo level="verbose">Ignoring it (it's probably a new plugin)</echo>
+                                    <property name="remote.content" value="Bundle-Version: 0.0.0" />
+                                </catch>
+                            </trycatch>
+                            <echo file="${lastVersion.temp.file}">${remote.content}</echo>
+                            <loadproperties srcFile="${lastVersion.temp.file}">
+                                <filterchain>
+                                    <linecontains>
+                                        <contains value="Bundle-Version" />
+                                    </linecontains>
+                                    <prefixlines prefix="last-" />
+                                </filterchain>
+                            </loadproperties>
+                            <delete file="${lastVersion.temp.file}" quiet="true"/>
+
+                            <echo level="verbose">last-Bundle-Version: ${last-Bundle-Version}</echo>
+                            <echo level="verbose">current-Bundle-Version: ${current-Bundle-Version}</echo>
+   <!-- only compare version's x.y.z and ignore qualifier. -->
+                            <if>
+                                <istrue value="${skip.verify.qualifier}" />
+                                <then>
+                                <propertyregex property="_current-Bundle-Version" override="true" input="${current-Bundle-Version}"
+                                               regexp="^\d{1,3}\.\d{1,3}\.\d{1,}(|\.\w+)$" select="\0" />
+                                <fail unless="_current-Bundle-Version">
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The version in the ${this-plugin}/META-INF/MANIFEST.MF 
+is set to ${current-Bundle-Version}!
+
+The version must be three/four parts separated by dots, If it has four parts the last part must be word(\w).
+example: 1.2.3.qualifier
+         1.2.3
+         1.2.3.456_word_000
+
+For more details of version and build number, please see the requirement for the 
+vesion under Release Unit Identification.
+http://wiki.tibco.com/FrameworksWiki/Componentization/BestPracticesIndex
+
+For more details of build number overrides, please see 
+http://wiki.tibco.com/FrameworksWiki/BuildTools/Usage/BuildNumbers#Overrides 
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                                </fail>
+                                </then>
+                            </if>
+                            <propertyregex property="current-Bundle-qualifier" override="true" input="${current-Bundle-Version}"
+                                           regexp="(\w+$)" select="\1" /> 
+                            <propertyregex property="_last-Bundle-Version" override="true" input="${last-Bundle-Version}"
+                                           regexp="(\d{1,3}\.\d{1,3}\.\d{1,})" select="\1" />
+                            <propertyregex property="_current-Bundle-Version" override="true" input="${current-Bundle-Version}"
+                                           regexp="(\d{1,3}\.\d{1,3}\.\d{1,})" select="\1" />   
+                            <condition property="version-match">
+                                <equals arg1="${_last-Bundle-Version}" arg2="${_current-Bundle-Version}" />
+                            </condition>
+
+                            <if>
+                                <isset property="version-match" />
+                                <then>
+                                    <propertycopy property="_this_plugin_buildno" from="plugin.tag.${this-plugin}" override="true" />
+                                    <!-- plugins may have "-qualifier" following the build number.  remove it -->
+                                    <propertyregex property="_this_plugin_buildno" override="true" input="${_this_plugin_buildno}" regexp="(^[^-]*)" select="\1" />
+                                    <var name="_this_qualifier" value="${_this_plugin_buildno}-${integration.build.suffix}" />
+                                </then>
+                            </if>
+                        </then>
+                    </if>
+                </then>
+            </if>
+            <update.property.entry target="${this-plugin}"
+                                             propertyfile="${autobuild.svn.pluginVersionProperties.working}"
+                                             value="${_this_qualifier}" />
+        </sequential>
+    </target>
+</project>

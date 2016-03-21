@@ -1,0 +1,119 @@
+<project name="Acquire Version and Build Information for Release" default="-release-set-properties">
+
+    <target name="-release-set-properties"
+            depends="-release-discover-tagsURL, -release-get-svn-tags, -release-get-last-built-version,
+                     -release-load-last-built-buildnos"
+            if="official-release-build">
+    </target>
+
+    <target name="-release-discover-tagsURL" if="official-release-build" unless="release.svn.bypass.flag">
+        <exec executable="svn" logerror="on" failonerror="on" outputproperty="wc.info">
+            <arg line="info --xml ${autobuild.dir.release-unit}"/>
+        </exec>
+
+        <echo level="verbose">Got SVN info from working copy:
+${wc.info}</echo>
+
+        <tempfile property="svninfo.temp.file" />
+        <tempfile property="svninfo.property.temp.file" />
+        <echo file="${svninfo.temp.file}">${wc.info}</echo>
+        <xslt in="${svninfo.temp.file}" out="${svninfo.property.temp.file}"
+              style="${autobuild.dir.scripts}/private/svnInfo.xsl">
+            <param name="tags-prefix" expression="${autobuild.svn.tags-prefix}" />
+            <param name="tags-suffix" expression="${autobuild.svn.tags-suffix}" />
+        </xslt>
+        <property file="${svninfo.property.temp.file}" />
+        <echo level="verbose">Loaded svn.repoURL: ${svn.repoURL}</echo>
+        <echo level="verbose">Loaded svn.tagsURL: ${svn.tagsURL}</echo>
+        <echo level="verbose">Loaded svn.revURL: ${svn.revURL}</echo>
+        <echo level="verbose">Loaded svn.revsion: ${svn.revision}</echo>
+        <delete file="${svninfo.temp.file}" quiet="true"/>
+        <delete file="${svninfo.property.temp.file}" quiet="true"/>
+
+        <!-- this uses default property names assigned in the stylesheet;
+             better would be to pass parameter names -->
+        <property name="autobuild.svn.repoURL" value="${svn.repoURL}" />
+        <property name="autobuild.svn.tagsURL" value="${svn.tagsURL}" />
+        <property name="autobuild.svn.revURL" value="${svn.revURL}" />
+        <property name="autobuild.svn.revision" value="${svn.revision}" />
+    </target>
+
+    <target name="-release-get-svn-tags" if="official-release-build" unless="release.svn.bypass.flag">
+        <trycatch property="_integration.get.svn.tags.failure">
+            <try>
+                <exec executable="svn" logerror="on" failonerror="on" outputproperty="autobuild.svn.tags">
+                    <arg line="ls ${autobuild.svn.tagsURL}"/>
+                </exec>
+            </try>
+            <catch>
+                <echo>!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Warning Now!
+For the integration build and official release build, the tag url 
+${autobuild.svn.tagsURL} 
+must exist first. Please contact the release team to create it.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                </echo>
+            </catch>
+        </trycatch>
+    </target>
+
+    <target name="-release-get-last-built-version" if="official-release-build" unless="release.svn.bypass.flag">
+
+        <tempfile property="featureVersion.current.temp.file" />
+        <xslt in="${autobuild.dir.release-unit}/features/${feature}/feature.xml" out="${featureVersion.current.temp.file}"
+              style="${autobuild.dir.scripts}/private/featureVersion.xsl">
+              <param name="propname" expression="_version.number.target" />
+        </xslt>
+        <property file="${featureVersion.current.temp.file}" />
+        <delete file="${featureVersion.current.temp.file}" quiet="true"/>
+        <echo level="verbose">_version.number.target: ${_version.number.target}</echo>
+
+        <tempfile property="versionMatcher.temp.file" />
+        <devtools.tagMatcher releaseUnitName="${autobuild.svn.tagname-base}"
+            versionNumber="${_version.number.target}"
+            tags="${autobuild.svn.tags}"
+            propertyFile="${versionMatcher.temp.file}"
+        />
+        <property file="${versionMatcher.temp.file}" prefix="_build"/>
+        <delete file="${versionMatcher.temp.file}" quiet="true"/>
+        <!-- we now also have the property _build.target.number and _build.last-built.tag -->
+        <echo level="verbose">_build.target.number: ${_build.target.number}</echo>
+        <echo level="verbose">Previous successful build found in tag: ${_build.last-built.tag}</echo>
+        <propertyregex property="autobuild.svn.tag-version" override="true" input="${_version.number.target}"
+                       regexp="(.*)\.qualifier.*" select="\1" />
+    </target>
+
+    <target name="-release-load-last-built-buildnos" if="_build.last-built.tag" unless="release.svn.bypass.flag">
+        <echo level="verbose">Loading properties from: ${autobuild.svn.tagsURL}/${_build.last-built.tag}/${autobuild.svn.tag-pattern}</echo>
+        <trycatch property="_release.tag.load.failure">
+            <try>
+                <tempfile property="featuretag.temp.file" />
+                <exec executable="svn" logerror="on" failonerror="on" outputproperty="featuretags">
+                    <arg line="cat ${autobuild.svn.tagsURL}/${_build.last-built.tag}/${autobuild.svn.tag-pattern}/featureVersions.properties" />
+                </exec>
+                <echo file="${featuretag.temp.file}">${featuretags}</echo>
+                <property prefix="feature.tag" file="${featuretag.temp.file}" />
+                <delete file="${featuretag.temp.file}" quiet="true"/>
+
+                <tempfile property="plugintag.temp.file" />
+                <exec executable="svn" logerror="on" failonerror="on" outputproperty="plugintags">
+                    <arg line="cat ${autobuild.svn.tagsURL}/${_build.last-built.tag}/${autobuild.svn.tag-pattern}/pluginVersions.properties" />
+                </exec>
+                <echo file="${plugintag.temp.file}">${plugintags}</echo>
+                <property prefix="plugin.tag" file="${plugintag.temp.file}" />
+                <delete file="${plugintag.temp.file}" quiet="true"/>
+            </try>
+            <catch>
+                <echo>ERROR: failed to load required properties from last-built tag.</echo>
+                <echo>${_release.tag.load.failure}</echo>
+                <fail>NO RELEASE BUILD POSSIBLE without featureVersions.properties and pluginVersions.properties inside the previous tag.</fail>
+            </catch>
+        </trycatch>
+    </target>
+
+</project>

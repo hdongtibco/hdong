@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+    <extension point="org.eclipse.ant.core.antTasks">
+          <antTask
+                class="com.tibco.devtools.archivist.tools.tasks.FeatureDependencyClosureTask"
+                library="archivist-ant.jar"
+                name="archivist.featureDependencyClosure"/>
+    </extension>
+    <extension point="org.eclipse.ant.core.antTasks">
+          <antTask
+                class="com.tibco.devtools.archivist.tools.tasks.FindTask"
+                library="archivist-ant.jar"
+                name="archivist.find"/>
+    </extension>
+    <extension point="org.eclipse.ant.core.antTasks">
+          <antTask
+                class="com.tibco.devtools.archivist.tools.tasks.InfoTask"
+                library="archivist-ant.jar"
+                name="archivist.info"/>
+    </extension>
+    <extension point="org.eclipse.ant.core.antTasks">
+          <antTask
+                class="com.tibco.devtools.archivist.tools.tasks.InverseFeatureDependenciesTask"
+                library="archivist-ant.jar"
+                name="archivist.inverseFeatureDependencies"/>
+    </extension>
+    <extension point="org.eclipse.ant.core.antTasks">
+          <antTask
+                class="com.tibco.devtools.archivist.tools.tasks.InverseManifestDependenciesTask"
+                library="archivist-ant.jar"
+                name="archivist.inverseManifestDependencies"/>
+    </extension>
+    <extension point="org.eclipse.ant.core.antTasks">
+          <antTask
+                class="com.tibco.devtools.archivist.tools.tasks.MakeFeatureTask"
+                library="archivist-ant.jar"
+                name="archivist.makeFeature"/>
+    </extension>
+    <extension point="org.eclipse.ant.core.antTasks">
+          <antTask
+                class="com.tibco.devtools.archivist.tools.tasks.MakeManifestTask"
+                library="archivist-ant.jar"
+                name="archivist.makeManifest"/>
+    </extension>
+    <extension point="org.eclipse.ant.core.antTasks">
+          <antTask
+                class="com.tibco.devtools.archivist.tools.tasks.ManifestDependencyClosureTask"
+                library="archivist-ant.jar"
+                name="archivist.manifestDependencyClosure"/>
+    </extension>
+    <extension point="org.eclipse.ant.core.antTasks">
+          <antTask
+                class="com.tibco.devtools.archivist.tools.tasks.PackageDependenciesTask"
+                library="archivist-ant.jar"
+                name="archivist.packageDependencies"/>
+    </extension>
+    <extension point="org.eclipse.ant.core.antTasks">
+          <antTask
+                class="com.tibco.devtools.archivist.tools.tasks.VerifyFeatureTask"
+                library="archivist-ant.jar"
+                name="archivist.verifyFeature"/>
+    </extension>
+    <extension point="org.eclipse.ant.core.antTasks">
+          <antTask
+                class="com.tibco.devtools.archivist.tools.tasks.VerifyManifestTask"
+                library="archivist-ant.jar"
+                name="archivist.verifyManifest"/>
+    </extension>
+</plugin>

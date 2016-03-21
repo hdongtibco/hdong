@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="archivist" basedir="." default="verify-feature">
+
+    <property name="autobuild.archivist.overrides"
+              location="${autobuild.dir.archivist.root}/archivist-overrides.xml" />
+    <import file="${autobuild.archivist.overrides}" />
+    <import file="${autobuild.dir.archivist.scripts}/archivist.xml" />
+    
+    <target name="-common-dependencies" depends="build, -load-archivist-libs">
+        <condition property="archivist.dir.output"
+                   else="${autobuild.dir.candidates}/${autobuild.repository}${autobuild.svn.tags-prefix}${autobuild.svn.tags-suffix}/${release-unit}/${touch.time}.${autobuild.user.name}"
+                   value="${autobuild.dir.candidates}">
+            <and>
+                <not>
+                    <isset property="official-release-build" />
+                </not>
+                <isset property="autobuild.qualifier.fixed" />
+            </and>
+        </condition>
+    </target>
+
+    <target name="verify-feature" depends="-common-dependencies"
+            description="verify feature and plugin metadata for a release unit">
+        <archivist.verifyFeature>
+            <analyzedFiles name="${archivist.dir.output}/debug"/>
+            <dependencies name="${autobuild.dir.eclipse.extensions}"/>
+        </archivist.verifyFeature>
+    </target>
+    
+    <target name="verify-manifest" depends="-common-dependencies">
+        <archivist.verifyManifest>
+            <analyzedFiles name="${archivist.dir.output}/debug" />
+            <dependentComponents name="${autobuild.dir.eclipse.extensions}" />
+        </archivist.verifyManifest>
+    </target>
+    
+    <target name="feature-dependency-closure" depends="-common-dependencies">
+        <archivist.featureDependencyClosure>
+            <analyzedFiles name="${archivist.dir.output}/debug" />
+            <dependentFeatures name="${autobuild.dir.eclipse.extensions}" />
+        </archivist.featureDependencyClosure>
+    </target>
+    
+    <target name="manifest-dependency-closure" depends="-common-dependencies">
+        <archivist.manifestDependencyClosure>
+            <analyzedFiles name="${archivist.dir.output}/debug" />
+            <dependentComponents name="${autobuild.dir.eclipse.extensions}" />
+        </archivist.manifestDependencyClosure>
+    </target>
+    
+    <target name="inverse-feature-dependencies" depends="-common-dependencies">
+        <archivist.inverseFeatureDependencies>
+            <analyzedFiles name="${archivist.dir.output}/debug" />
+            <dependentFeatures name="${autobuild.dir.eclipse.extensions}" />
+        </archivist.inverseFeatureDependencies>
+    </target>
+    
+    <target name="inverse-manifest-dependencies" depends="-common-dependencies">
+        <archivist.inverseManifestDependencies>
+            <analyzedFiles name="${archivist.dir.output}/debug" />
+            <dependentComponents name="${autobuild.dir.eclipse.extensions}" />
+        </archivist.inverseManifestDependencies>
+    </target>
+
+    <target name="package-dependencies" depends="-common-dependencies">
+        <archivist.packageDependencies>
+            <analyzedFiles name="${archivist.dir.output}/debug" />
+            <dependentComponents name="${autobuild.dir.eclipse.extensions}" />
+        </archivist.packageDependencies>
+    </target>
+
+    <!-- target name="find" depends="-common-dependencies">
+        <archivist.find entry="" package="" class="">
+            <inputs name="${autobuild.dir.release-unit}" />
+        </archivist.find>
+    </target-->
+    
+    <!-- target name="info" depends="-common-dependencies">
+        <archivist.info>
+            <inputs name="${autobuild.dir.release-unit}" />
+        </archivist.info>
+    </target-->
+    
+    <!-- target name="make-feature" depends="-common-dependencies">
+        <archivist.makeFeature id="" version="" outputFile="">
+            <featureMembers name="" />
+            <featureDependencies name="" />
+        </archivist.makeFeature>
+    </target-->
+    
+    <!-- target name="make-manifest" depends="-common-dependencies">
+        <archivist.makeManifest name="" symbolicName=""
+                                version="" manifestFile=""
+                                bundleFile="" checkSoftDependencies="">
+            <importPackage name="" />
+            <dependentComponents name="" />
+        </archivist.makeManifest>
+    </target-->
+    
+</project>

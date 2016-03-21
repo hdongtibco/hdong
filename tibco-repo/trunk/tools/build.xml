@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="builder-configuration" default="configure" basedir=".">
+
+    <property name="autobuild.boilerplate.version" value="1.5" />
+    <import file="${user.home}/tibco-build/user-overrides.xml" optional="true" />
+
+    <property name="mylocation" location="." />
+    <property name="autobuild.user.name" value="${user.name}" />
+    
+    <target name="update" description="Update the working copy of builder">
+        <exec executable="svn" logerror="on" failonerror="off" outputproperty="svn.info">
+            <arg line="up"/>
+        </exec>
+        <echo>Release notes:</echo>
+        <echo>http://wiki.tibco.com/FrameworksWiki/BuildTools</echo>
+    </target>
+    
+    <target name="up" depends="update" />
+    
+    <target name="release-engineer">
+        <property name="shared-tibbuild" location="${mylocation}/.." />
+        <available file="${user.home}/tibco-build" property="_tibbuild_exists" />
+        <antcall target="-relocate-tibbuild" />
+        <exec executable="ln" failonerror="true" dir="${user.home}">
+            <arg line="-s ${shared-tibbuild} tibco-build" />
+        </exec>
+    </target>
+    
+    <target name="configure" description="Configure builder for the logged-in user" >
+
+        <available file="${user.home}/tibco-build" type="dir" property="_tibco_build_exists" />
+        <antcall target="-create-tibco-build" />
+        
+        <property name="autobuild.user.overrides" location="${user.home}/tibco-build/user-overrides.xml" />
+        <available file="${autobuild.user.overrides}" type="file" property="_user_overrides_exists" />
+        <antcall target="-create-user-overrides" />
+        
+        <property name="autobuild.dir.user" location="${user.home}/tibco-build" />
+        
+        <property name="toolslocation" location="${autobuild.dir.user}/tools" />
+        <available file="${toolslocation}" type="dir" property="_tools_exists" />
+        <antcall target="-relocate-tools" />
+    </target>
+    
+    <target name="properties" description="Display configuration information">
+        <echoproperties prefix="autobuild." />
+    </target>
+    
+    <target name="pristine" description="Checks for local modifications">
+        <exec executable="svn" logerror="on" failonerror="on" outputproperty="wc.info">
+            <arg line="st -u --xml"/>
+        </exec>
+        <!-- then we parse the silly thing, somehow, to see whether there are changes -->
+    </target>
+    
+    <target name="-create-tibco-build" unless="_tibco_build_exists">
+        <echo>The required directory ${user.home}/tibco-build does not exist.</echo>
+        <echo>Creating it.</echo>
+        <mkdir dir="${user.home}/tibco-build" />
+    </target>
+    
+    <target name="-create-user-overrides" unless="_user_overrides_exists">
+        <echo>Per-user (or per-machine) overrides do not seem to exist.</echo>
+        <echo>Creating the file:</echo>
+        <echo>${autobuild.user.overrides}</echo>
+        <copy file="${mylocation}/builder/1.5/scripts/boilerplate/user-overrides.xml"
+              todir="${user.home}/tibco-build" >
+            <filterset>
+                <filter token="USERNAME" value="${autobuild.user.name}" />
+            </filterset>
+        </copy>
+        <echo>Please examine this file, reading the comments and modifying the properties.</echo>
+        <echo>In particular, make certain that the Java and Eclipse properties are correct.</echo>
+    </target>
+    
+    <target name="-verify-tools-location" if="_tools_exists">
+        <!-- can't handle symlinks.  need ant task for complicated stuff -->
+        <echo>The 'tools' directory exists in the proper location.</echo>
+        <echo>If the following two paths match, then this directory is in the right location.</echo>
+        <echo>Canonical path of this directory: '${mylocation}'</echo>
+        <echo>Canonical path needed: '${toolslocation}'</echo>
+        <condition property="_tools_location_correct">
+            <equals arg1="${mylocation}" arg2="${toolslocation}" casesensitive="false" trim="true"/>
+        </condition>
+    </target>
+    
+    <target name="-relocate-tools" unless="_tools_location_correct" 
+            depends="-verify-tools-location, -move-old-tools">
+        <echo>This directory is not in the proper location for proper operation.</echo>
+        <echo>It is currently: ${mylocation}</echo>
+        <echo>It should be: ${toolslocation}</echo>
+        <echo>Copying this location to that one.</echo>
+        <copy todir="${toolslocation}">
+            <fileset dir="${mylocation}" defaultexcludes="no" />
+        </copy>
+    </target>
+    
+    <target name="-move-old-tools" if="_tools_exists" unless="_tools_location_correct">
+        <echo>Found a version of the 'tools' directory which isn't this directory.</echo>
+        <echo>Moving it aside.</echo>
+        <move file="${toolslocation}" tofile="${toolslocation}-saved" />
+        <echo>The old directory may be found at ${toolslocation}-saved</echo>
+    </target>
+    
+    <target name="-relocate-tibbuild" if="_tibbuild_exists">
+        <move file="${user.home}/tibco-build" tofile="${user.home}/tibco-build.saved" />
+    </target>
+
+</project>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="archivist-load" basedir=".">
+
+    <target name="-load-archivist-libs">
+        <taskdef name="archivist.featureDependencyClosure" 
+                 classname="com.tibco.devtools.archivist.tools.tasks.FeatureDependencyClosureTask" 
+                 classpathref="autobuild.path.archivist"/>
+        <taskdef name="archivist.find" 
+                 classname="com.tibco.devtools.archivist.tools.tasks.FindTask" 
+                 classpathref="autobuild.path.archivist"/>
+        <taskdef name="archivist.info" classname="com.tibco.devtools.archivist.tools.tasks.InfoTask" 
+                 classpathref="autobuild.path.archivist"/>
+        <taskdef name="archivist.inverseFeatureDependencies" 
+                 classname="com.tibco.devtools.archivist.tools.tasks.InverseFeatureDependenciesTask"
+                 classpathref="autobuild.path.archivist"/>
+        <taskdef name="archivist.inverseManifestDependencies" 
+                 classname="com.tibco.devtools.archivist.tools.tasks.InverseManifestDependenciesTask"
+                 classpathref="autobuild.path.archivist"/>
+        <taskdef name="archivist.makeFeature" 
+                 classname="com.tibco.devtools.archivist.tools.tasks.MakeFeatureTask"
+                 classpathref="autobuild.path.archivist"/>
+        <taskdef name="archivist.makeManifest" 
+                 classname="com.tibco.devtools.archivist.tools.tasks.MakeManifestTask"
+                 classpathref="autobuild.path.archivist"/>
+        <taskdef name="archivist.manifestDependencyClosure" 
+                 classname="com.tibco.devtools.archivist.tools.tasks.ManifestDependencyClosureTask" 
+                 classpathref="autobuild.path.archivist"/>
+        <taskdef name="archivist.packageDependencies" 
+                 classname="com.tibco.devtools.archivist.tools.tasks.PackageDependenciesTask"
+                 classpathref="autobuild.path.archivist"/>
+        <taskdef name="archivist.verifyManifest" 
+                 classname="com.tibco.devtools.archivist.tools.tasks.VerifyManifestTask"
+                 classpathref="autobuild.path.archivist"/>
+        <taskdef name="archivist.verifyFeature" 
+                 classname="com.tibco.devtools.archivist.tools.tasks.VerifyFeatureTask"
+                 classpathref="autobuild.path.archivist"/>
+         <taskdef name="archivist.modify" 
+                 classname="com.tibco.devtools.archivist.tools.tasks.ArchivistModifyTask"
+                 classpathref="autobuild.path.archivist"/>
+    </target>
+
+</project>

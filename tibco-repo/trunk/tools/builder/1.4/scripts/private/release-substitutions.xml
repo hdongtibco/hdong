@@ -1,0 +1,154 @@
+<?xml version="1.0"?>
+<project name="Release Substitutions" default="perform-substitutions">
+
+    <target name="perform-substitutions" unless="_bypass_substitutions"
+            depends="-check-for-substitutions, -load-continued-versions,
+                     -make-temp-directory, -get-old-build-artifacts">
+        <condition property="_extension_sites_list"
+                   value="${autobuild.dir.output.release}/plugins"
+                   else="${autobuild.dir.output.release}/plugins,${autobuild.dir.output.input}/plugins">
+            <equals arg1="${autobuild.dir.output.release}" arg2="${autobuild.dir.output.input}" />
+        </condition>
+        <propertyselector property="_continued_versions_list"
+                          match="continued_plugin\.(.*)"
+                          select="\1" />
+        <foreach list="${_continued_versions_list}" param="_continued_plugin"
+                 target="-perform-substitution" inheritall="true"/>
+        <antcall target="-substitutions-cleanup" />
+    </target>
+
+    <target name="-check-for-substitutions">
+        <condition property="_bypass_substitutions">
+            <or>
+                <!-- if this is not a release build, or -->
+                <not>
+                    <isset property="official-release-build" />
+                </not>
+                <!-- there aren't any plugins to continue, or -->
+                <not>
+                    <available file="${autobuild.dir.release-unit}/build-artifacts/continuedVersions.properties" type="file" />
+                </not>
+                <!-- the bypass has been set manually or because of build number overrides, then -->
+                <istrue value="${autobuild.release.substitutions-bypass}" />
+            </or>
+        </condition>
+        <!-- set the bypass, and bypass the substitutions -->
+    </target>
+
+    <target name="-load-continued-versions" unless="_bypass_substitutions">
+        <property file="${autobuild.dir.release-unit}/build-artifacts/continuedVersions.properties"
+                  prefix="continued_plugin." />
+    </target>
+
+    <target name="-make-temp-directory" unless="_bypass_substitutions">
+        <property name="_subs_temp_dir" location="${autobuild.dir.release-unit}/substitutions" />
+        <property name="_old_artifacts" value="old-artifacts" />
+        <property name="_old_artifacts_dir" location="${autobuild.dir.release-unit}/${_old_artifacts}" />
+        <property name="_old_artifacts_svn_url"
+                  value="${autobuild.svn.tagsURL}/${_build.last-built.tag}/${autobuild.svn.tag-pattern}/build-artifacts" />
+        <mkdir dir="${_subs_temp_dir}" />
+    </target>
+
+    <target name="-get-old-build-artifacts" unless="_bypass_substitutions">
+        <!-- use an svn export to get the content of the directory, without the subversion
+             metadata.  it makes cleanup afterward slightly less error-prone. -->
+        <exec executable="svn" logerror="on" failonerror="false">
+            <arg line="export ${_old_artifacts_svn_url} ${_old_artifacts}" />
+        </exec>
+    </target>
+
+    <target name="-find-map">
+        <propertycopy property="_ver_no" override="true" from="continued_plugin.${_continued_plugin}" />
+        <var name="_this_continued_plugin" value="${_continued_plugin}_${_ver_no}" />
+        <condition property="_found_map">
+                <or>
+                    <available file="${_old_artifacts_dir}/yguard2-${_this_continued_plugin}.map.gz" type="file" />
+                    <available file="${_old_artifacts_dir}/proguard-${_this_continued_plugin}.map.gz" type="file" />
+                </or>
+        </condition>
+        <condition property="_found_map_display" else="false">
+            <isset property="_found_map" />
+        </condition>
+        <echo>${_this_continued_plugin} has a map : ${_found_map_display}</echo>
+    </target>
+
+    <target name="-download-from-url" if="_found_map">
+        <get src="${_target_url}/${_this_continued_plugin}.jar"
+             dest="${_subs_temp_dir}/${_this_continued_plugin}.jar"
+             ignoreerrors="true" verbose="true" />
+    </target>
+
+    <target name="-download-plugin-jar" if="_found_map">
+        <echo>Attempting to download ${_this_continued_plugin}</echo>
+        <foreach list="${autobuild.url.update-sites.target.list}" param="_target_url"
+                 target="-download-from-url" inheritall="true"/>
+
+        <available property="_found_this_plugin" file="${_subs_temp_dir}/${_this_continued_plugin}.jar" type="file" />
+        <condition property="_found_plugin_display" else="false">
+            <isset property="_found_this_plugin" />
+        </condition>
+        <echo>Downloaded ${_this_continued_plugin} : ${_found_plugin_display}</echo>
+        <condition property="_unpack_this_plugin">
+            <and>
+                <isset property="_found_this_plugin" />
+                <available file="${autobuild.dir.output.release}/plugins/${_this_continued_plugin}" type="dir" />
+            </and>
+        </condition>
+        <condition property="_unpack_plugin_display" else="false">
+            <isset property="_unpack_this_plugin" />
+        </condition>
+        <echo>Unpack this plugin : ${_unpack_plugin_display}</echo>
+    </target>
+
+    <target name="-substitute-in-update-site" if="_found_this_plugin">
+        <copy file="${_subs_temp_dir}/${_this_continued_plugin}.jar"
+              todir="${autobuild.dir.output.jars.release}/plugins"
+              overwrite="true" />
+    </target>
+
+    <target name="-copy-update-to-extension" if="_found_this_plugin" unless="_unpack_this_plugin">
+        <copy file="${_subs_temp_dir}/${_this_continued_plugin}.jar"
+              todir="${_target_site}"
+              overwrite="true" />
+    </target>
+
+    <target name="-unjar-update-to-extension" if="_unpack_this_plugin">
+        <delete  quiet="true" includeemptydirs="true">
+            <fileset dir="${_target_site}/${_this_continued_plugin}" includes="**/*" defaultexcludes="no"/>
+        </delete>
+        <mkdir dir="${_target_site}/${_this_continued_plugin}" />
+        <unjar src="${_subs_temp_dir}/${_this_continued_plugin}.jar"
+               dest="${_target_site}/${_this_continued_plugin}" />
+    </target>
+
+    <target name="-substitute-in-extension-sites">
+        <if>
+            <isset property="_unpack_this_plugin" />
+            <then>
+                <foreach list="${_extension_sites_list}" param="_target_site"
+                         target="-unjar-update-to-extension" inheritall="true"/>
+            </then>
+            <else>
+                <foreach list="${_extension_sites_list}" param="_target_site"
+                         target="-copy-update-to-extension" inheritall="true"/>
+            </else>
+        </if>
+    </target>
+
+    <target name="-substitute-map" if="_found_this_plugin">
+        <copy todir="${autobuild.dir.release-unit}/build-artifacts" overwrite="true">
+            <fileset dir="${_old_artifacts_dir}" includes="*-${_this_continued_plugin}.map.gz" />
+        </copy>
+    </target>
+
+    <target name="-perform-substitution"
+            depends="-find-map, -download-plugin-jar, -substitute-in-update-site,
+                     -substitute-in-extension-sites, -substitute-map">
+    </target>
+
+    <target name="-substitutions-cleanup">
+        <delete failonerror="false" dir="${_subs_temp_dir}" />
+        <delete failonerror="false" dir="${_old_artifacts_dir}" />
+    </target>
+
+</project>

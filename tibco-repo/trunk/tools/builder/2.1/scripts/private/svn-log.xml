@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="svn-log" default="-run-svn-log">
+
+    <!-- have to import some properties from tag.xml -->
+    <import file="${autobuild.dir.release-unit}/tag.xml" optional="true" />
+
+    <target name="-run-svn-log">
+        <if>
+            <isset property="build.number" />
+            <then>
+                <property name="revision.entry" value="${autobuild.svn.revision}:${autobuild.svn.tag.target.revision}" />
+
+                <!-- have to unset those variables first -->
+                <var name="vc.info" unset="true"/>
+                <var name="svn.revision" unset="true"/>
+                <var name="svn.date" unset="true"/>
+                <exec executable="svn" logerror="on" failonerror="on" outputproperty="vc.info">
+                     <arg line="info --xml ${tag.path}/${release-unit}-${release.version}.${build.number}"/>
+                </exec>
+                <tempfile property="svninfo.temp.file" />
+                <tempfile property="svninfo.property.temp.file" />
+                <echo file="${svninfo.temp.file}">${vc.info}</echo>
+                <xslt in="${svninfo.temp.file}" out="${svninfo.property.temp.file}"
+                      style="${autobuild.dir.scripts}/private/svnInfo.xsl">
+                    <param name="tags-prefix" expression="${autobuild.svn.tags-prefix}" />
+                    <param name="tags-suffix" expression="${autobuild.svn.tags-suffix}" />
+                </xslt>
+                <property file="${svninfo.property.temp.file}" />
+                <delete file="${svninfo.temp.file}" quiet="true"/>
+                <delete file="${svninfo.property.temp.file}" quiet="true"/>
+                <delete file="${autobuild.dir.release-unit}/tag.xml" quiet="true"/>
+                <echo>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The latest tag info of this release version:
+ tag creating from: ${autobuild.svn.tag.target.source.url}
+ tag url:           ${tag.path}/${release-unit}-${release.version}.${build.number}
+ tag creating date: ${svn.date}
+ tag revision#:     ${autobuild.svn.tag.target.revision}
+ current revision#: ${autobuild.svn.revision}
+-----------------------------------------------------------------------------------------
+Revision History: (svn log -v -r${autobuild.svn.revision}:${autobuild.svn.tag.target.revision} .)
+</echo>
+            </then>
+            <else>
+                <property name="revision.entry" value="${autobuild.svn.revision}" />
+                <echo>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+There is no tag found for this release version:
+ current revision#: ${autobuild.svn.revision}
+-----------------------------------------------------------------------------------------
+Revision History: (svn log -v -r${autobuild.svn.revision} .)
+</echo>
+
+            </else>
+        </if>
+        <exec executable="svn"
+              logerror="on"
+              failonerror="on" 
+              outputproperty="result.svn.log">
+            <arg line='log -v -r${revision.entry} ${autobuild.dir.release-unit}' />
+        </exec>
+                <for param="result.svn.line" list="${result.svn.log}" delimiter="${line.separator}" >
+                    <sequential>
+                        <echo>
+@{result.svn.line}
+</echo>
+                    </sequential>
+                </for>
+                <echo>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+</echo>
+    </target>
+</project>

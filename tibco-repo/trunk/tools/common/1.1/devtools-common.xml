@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="devtools-common">
+<!-- contains common targets and properties useful in all tools. -->
+
+<!--
+	This is an attempt to define a more tool-agnostic property environment than is currently
+	defined in ${autobuild.dir.builder.root}/scripts/private/autobuild-common.xml.
+-->
+
+    <dirname property="devtools.dir.common" file="${ant.file.devtools-common}"/>
+
+    <!-- default username for various purposes, most importantly developer build qualifiers -->
+    <property name="devtools.user.name" value="${user.name}"/>
+
+
+    <!-- These lines establish a default property environment for autobuild-main.xml.
+        They will replaced by a more generic mechanism for common property, target, and macrodef settings,
+        so that devtools-common is NOT dependent on autubuild-main.xml or builder-overrides.xml.
+    -->
+    <property name="autobuild.user.overrides" location="${user.home}/tibco-build/user-overrides.xml" />
+    <property name="autobuild.dir.builder.root" location="${devtools.dir.base}/tools/builder/2.1" />
+    <property name="autobuild.builder.overrides" location="${autobuild.dir.builder.root}/builder-overrides.xml" />
+    <import file="${autobuild.dir.builder.root}/builder-overrides.xml" />
+    
+
+    <property name="devtools.user-project.overrides" location="${basedir}/${devtools.user.name}.xml" />
+    <import file="${devtools.user-project.overrides}" optional="true" />
+
+    <!-- This is important to define some types needed in ${devtools.tool}-overrides.xml.
+        It, too, will be made more generic.  Note that Workspace Installer will probably always
+        be necessary to "bootstrap" any tool environment, so it is OK for devtools-common to depend on it,
+        though we might decouple that as much as possible... some tools could conceivably be pure Ant and
+        AntContrib, and wouldn't need to download any support code.
+    -->
+    <import file="${autobuild.dir.scripts}/private/workspace-load.xml" />
+    
+    <!-- Now the per-tool, per-project customization, the analogue of build-overrides.xml -->
+    <import file="${basedir}/${devtools.tool}-overrides.xml" />
+
+    <property name="autobuild.version.eclipse" value="${devtools.version.eclipse.target}" />
+
+
+    <!-- Finally, the generic definitions: targets, properties, macrodefs useful for any tool's
+        verb definitions.
+    
+        Unfortunately, the rest of the generic stuff is wedded to autobuild-main.xml at the moment.
+        The generic bits will be factored out in a future rev of devtools-common and builder.
+    -->
+    <import file="${autobuild.dir.scripts}/autobuild-main.xml" />
+
+</project>

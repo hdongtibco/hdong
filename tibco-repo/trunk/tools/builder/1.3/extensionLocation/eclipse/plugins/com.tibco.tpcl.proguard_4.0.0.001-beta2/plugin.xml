@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+   <extension
+         point="org.eclipse.ant.core.antTasks">
+      <antTask
+            class="proguard.ant.ProGuardTask"
+            library="proguard.jar"
+            name="proguard"/>
+   </extension>
+   <extension
+         point="org.eclipse.ant.core.antTasks">
+      <antTask
+            class="proguard.ant.ConfigurationTask"
+            library="proguard.jar"
+            name="proguardconfiguration"/>
+   </extension>
+</plugin>

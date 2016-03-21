@@ -1,0 +1,133 @@
+<project name="Single-Feature Builder" default="export-one-feature">
+
+    <!-- TODO: add descriptions of things that should be visible via ant -projecthelp -->
+    <!-- NOTE: however, in general this script is never invoked directly, i think. -->
+
+    <!-- CALL SEQUENCE (target "export-one-feature"):
+         3. _pre-clean
+         4. clean
+         5. invoke the build script generator (creates build.xml for each plugin and feature,
+            and assemble.xml for the whole mess)
+         6. invoke build.xml in the feature folder, targets clean and build.jars
+         7. invoke assemble.xml in the root folder (containing features and plugins)
+            (assemble.xml was created by the build script generator)
+         8. clean
+     -->
+
+    <target name="export-one-feature"
+         description="build and export a single Eclipse feature project">
+
+        <echo>"        ********************************************&#10;
+        BUILDING ${autobuild.feature-id}&#10;
+        Using:&#10; ${autobuild.dir.eclipse.extensions}&#10;
+        ************************************************************"</echo>
+
+        <available file="${autobuild.dir.release-unit}/features/${autobuild.feature-folder}/build.xml"
+            property="_build_xml_available" type="file" />
+        <antcall target="_pre-clean"/>
+
+        <trycatch property="error_message">
+            <try>
+                <devtools.buildscripts featureName="${autobuild.feature-id}"
+                    featureType="${autobuild.feature-type}"
+                    hasAuxiliaries="${_feature.has-auxiliaries}"
+                    eclipseDir="${autobuild.dir.eclipse.target}"
+                    extensionLocation="${autobuild.dir.eclipse.extensions}"
+                    localUpdateSiteLocation="${autobuild.workspace.update-sites.local}"
+                    localDebugUpdateSiteLocation="${autobuild.workspace.update-sites.local-debug}"
+                    srcDir="${autobuild.dir.release-unit}"
+                    destDir="${autobuild.dir.output.release}"
+                    debugDestDir="${autobuild.dir.output.debug}"
+                    jarDestDir="${autobuild.dir.output.jars.release}"
+                    debugJarDestDir="${autobuild.dir.output.jars.debug}"
+                    testResultsFolder="${autobuild.dir.output.test-results}"
+                    javadocDestination="${autobuild.feature-javadoc}"
+                    sourcesDestination="${autobuild.feature-sources}"
+                    logLocation="${autobuild.dir.output.logs}"
+                    logLevel="${autobuild.loglevel}"
+                    obfuscationStyle="${autobuild.obfuscator.style}"
+                    obfuscatorType="${autobuild.obfuscator.type}"
+                    buildTimestamp="${touch.time}"
+                />
+            </try>
+            <catch>
+                <property name="candidates.http.mapping" value="http://reldist.na.tibco.com/candidates" />
+                <property name="release.candidates.path" value="/tsi/root/tibco/builder/tibco-build.linux/candidates" />
+                <propertyregex property="error_message" override="true" input="${error_message}"
+                               regexp="${release.candidates.path}" replace="${candidates.http.mapping}" />
+                <fail>!!!
+${error_message}
+                </fail>
+            </catch>
+        </trycatch>
+
+        <!-- a workaround for an eclipse bug which occured in using jdk 1.7 on MacOS -->
+        <if>
+            <and>
+                <istrue value="${_is_OS_X}" />
+                <not>
+                    <available file="${_dir.java-classes}/classes.jar" type="file" />
+                </not>
+            </and>
+            <then>
+                <for param="a-plugin">
+                    <dirset id="autobuild.plugin-list" dir="${autobuild.dir.release-unit}/plugins">
+                        <include name="*" />
+                    </dirset>
+                    <sequential>
+                        <devtools.replaceFileContent filePath="@{a-plugin}/build.xml" keyword="{java.home}/../Classes" skipLines="2" />
+                    </sequential>
+                </for>
+            </then>
+        </if>
+
+        <zip destfile="${autobuild.dir.build-artifacts}/build-${autobuild.feature-id}.zip"
+             basedir="${autobuild.dir.release-unit}"
+             includes="assemble.xml, obfuscation.xml, javadoc.xml, **/build.xml" />
+
+        <record name="${autobuild.dir.output.logs}/feature-${autobuild.feature-id}.log"
+            action="start" loglevel="${autobuild.loglevel}" />
+
+        <ant antfile="build.xml"
+             dir="${autobuild.dir.release-unit}/features/${autobuild.feature-folder}">
+             <target name="clean"/>
+             <target name="build.jars"/>
+        </ant>
+
+        <ant antfile="assemble.xml" dir="${autobuild.dir.release-unit}" />
+
+        <antcall target="clean"/>
+        <record name="${autobuild.dir.output.logs}/feature-${autobuild.feature-id}.log"
+            action="stop" />
+    </target>
+
+    <target name="_pre-clean" if="_build_xml_available">
+        <!-- available if past build failed; we don't want 'clean' to fail-->
+        <antcall target="clean">
+            <param name="_clean" value="true" />
+        </antcall>
+    </target>
+
+    <condition property="_clean">
+        <equals arg1="${autobuild.clean}" arg2="-clean"/>
+    </condition>
+
+    <target name="clean" if="_clean">
+        <trycatch property="_clean_errors">
+            <try>
+                <ant antfile="build.xml" target="clean"
+                     dir="${autobuild.dir.release-unit}/features/${autobuild.feature-folder}" />
+                <ant antfile="assemble.xml" target="clean" dir="${autobuild.dir.release-unit}/" />
+                <delete file="${autobuild.dir.release-unit}/features/${autobuild.feature-folder}/build.xml" quiet="true"/>
+                <delete file="${autobuild.dir.release-unit}/assemble.xml" quiet="true"/>
+            </try>
+            <catch>
+                <echo level="verbose">Caught a problem running the "clean" target:</echo>
+                <echo level="verbose">${_clean_errors}</echo>
+                <echo level="verbose">Ignoring it.</echo>
+            </catch>
+        </trycatch>
+    </target>
+
+
+</project>

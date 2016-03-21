@@ -1,0 +1,1712 @@
+Buildfile: D:\work\repo\builder\devtools\trunk\tools\sample\build.xml
+
+-load-ant-contrib:
+
+-pre-custom-actions:
+
+download-release-units:
+
+generate-feature-xml:
+
+-set-timestamp:
+
+-set-pdehost:
+
+-set-express-build-properties:
+
+-set-build-properties:
+
+-feature-set:
+
+-release-unit-set:
+
+-release-discover-tagsURL:
+     [echo] ------> svn info --xml D:\work\repo\builder\devtools\trunk\tools\sample
+     [echo] ------> Got SVN info from working copy:
+     [echo]     		<?xml version="1.0" encoding="UTF-8"?>
+     [echo] <info>
+     [echo] <entry
+     [echo]    path="."
+     [echo]    revision="9065"
+     [echo]    kind="dir">
+     [echo] <url>https://svn.tibco.com:8443/svn/devtools/trunk/tools/sample</url>
+     [echo] <relative-url>^/trunk/tools/sample</relative-url>
+     [echo] <repository>
+     [echo] <root>https://svn.tibco.com:8443/svn/devtools</root>
+     [echo] <uuid>594592ff-7b02-0410-a8bb-846e1f26e343</uuid>
+     [echo] </repository>
+     [echo] <wc-info>
+     [echo] <wcroot-abspath>D:/work/repo/builder/devtools</wcroot-abspath>
+     [echo] <schedule>normal</schedule>
+     [echo] <depth>infinity</depth>
+     [echo] </wc-info>
+     [echo] <commit
+     [echo]    revision="9047">
+     [echo] <author>mqian</author>
+     [echo] <date>2015-07-23T22:20:43.159701Z</date>
+     [echo] </commit>
+     [echo] </entry>
+     [echo] </info>
+     [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\null1136270897 to D:\work\repo\builder\devtools\trunk\tools\sample\null679118961
+     [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\svnInfo.xsl
+     [echo]  ------> Loaded svn.repoURL: https://svn.tibco.com:8443/svn/devtools
+     [echo]  ------> Loaded svn.tagsURL: https://svn.tibco.com:8443/svn/devtools/branches/huaweiSandbox/tags/tools
+     [echo]  ------> Loaded svn.revURL: https://svn.tibco.com:8443/svn/devtools/trunk/tools/sample
+     [echo]  ------> Loaded svn.revsion: 9065
+   [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1136270897
+   [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null679118961
+
+-check-svn-props-new:
+
+-check-user-overrides:
+
+-create-overrides:
+
+-switch-jdk-version:
+
+-get-platform:
+
+-set-osx-classpath:
+
+-set-windows-classpath:
+
+-set-bootclasspath:
+
+-check-eclipse-macro:
+
+-check-eclipse-vers:
+
+-set-and-spin:
+
+-set-eclipse-targets:
+
+-set-osgi-debug-options:
+
+-check-eclipse:
+
+-set-startup-property:
+
+-check-others:
+     [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+   [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.test\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+   [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.source\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+   [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.devdocs\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+   [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+
+-check-properties:
+
+-print.basedir:
+     [echo] basedir = [.]
+
+dual.build.enable:
+     [echo] 
+     [echo] Checking if dual.build.enable is set
+     [echo] 
+     [echo] dual.build.enable = [UNDEFINED]
+
+autobuild.p2.packaging:
+     [echo] 
+     [echo] Checking if autobuild.p2.packaging is set
+     [echo] 
+     [echo] autobuild.p2.packaging = [true]
+
+autobuild.boilerplate.version:
+     [echo] 
+     [echo] Checking if autobuild.boilerplate.version is set
+     [echo] 
+     [echo] autobuild.boilerplate.version = [2.1]
+
+autobuild.svn.tagsURL:
+     [echo] 
+     [echo] Checking if autobuild.svn.tagsURL is set
+     [echo] 
+     [echo] autobuild.svn.tagsURL = [https://svn.tibco.com:8443/svn/devtools/branches/huaweiSandbox/tags/tools]
+
+javacSource:
+     [echo] 
+     [echo] Checking if javacSource is set
+     [echo] 
+     [echo] javacSource = [1.7]
+
+autobuild.jdk.force-15:
+     [echo] 
+     [echo] Checking if autobuild.jdk.force-15 is set
+     [echo] 
+     [echo] autobuild.jdk.force-15 = [UNDEFINED]
+
+autobuild.jdk.force-16:
+     [echo] 
+     [echo] Checking if autobuild.jdk.force-16 is set
+     [echo] 
+     [echo] autobuild.jdk.force-16 = [UNDEFINED]
+
+autobuild.jdk.force-17:
+     [echo] 
+     [echo] Checking if autobuild.jdk.force-17 is set
+     [echo] 
+     [echo] autobuild.jdk.force-17 = [true]
+
+autobuild.dir.java-classes:
+     [echo] 
+     [echo] Checking if autobuild.dir.java-classes is set
+     [echo] 
+     [echo] autobuild.dir.java-classes = [D:\lang\java\vm\jdk1.8.0_20\jre\lib]
+
+autobuild.dir.java15-classes:
+     [echo] 
+     [echo] Checking if autobuild.dir.java15-classes is set
+     [echo] 
+     [echo] autobuild.dir.java15-classes = [D:\work\repo\builder\devtools\trunk\tools\sample]
+
+autobuild.dir.java16-classes:
+     [echo] 
+     [echo] Checking if autobuild.dir.java16-classes is set
+     [echo] 
+     [echo] autobuild.dir.java16-classes = [D:\work\repo\builder\devtools\trunk\tools\sample]
+
+autobuild.dir.java17-classes:
+     [echo] 
+     [echo] Checking if autobuild.dir.java17-classes is set
+     [echo] 
+     [echo] autobuild.dir.java17-classes = [D:\lang\java\vm\jdk1.8.0_20\jre\lib]
+
+showprop:
+
+-display-parameters:
+     [echo] Release Unit: common.tools.sample
+     [echo] Feature: com.tibco.sample.feature
+     [echo] Eclipse host: D:\work\repo\builder\tt\tools\eclipse-sdk-4.4.1
+     [echo] Eclipse target: D:\work\repo\builder\tt\tools\eclipse-sdk-3.7.2
+     [echo] Configuration: D:\work\repo\builder\tt\output\tbuild\configurations\lblm\devtools\branches\huaweiSandbox\tools\common.tools.sample\extensionLoc\eclipse
+     [echo] Java: D:\lang\java\vm\jdk1.8.0_20\jre\lib
+     [echo] Scripts: D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts
+     [echo] User Overrides: D:/work/repo/builder/tt/user-overrides.xml
+     [echo] Per-User Release Unit Overrides: not in use
+     [echo] Output base: D:\work\repo\builder\tt\output\tbuild\candidates
+     [echo] Tags look like: [repository root url]/branches/huaweiSandbox/tags/tools/common.tools.sample-x.y.z.nnn/tools.sample
+
+-make-artifacts-dir:
+
+-copy-user-ru-overrides:
+
+-check-configuration:
+
+-set-workspace-properties:
+
+-create-debug-builds-site:
+
+-check-builds-site:
+
+-which-features-are-needed:
+
+-dual-build-and-substitutions-sites:
+
+-local-update-site-check:
+
+-create-local-update-site:
+
+gather-dependencies:
+
+-collect-dependencies-site-xml:
+
+-set-fixed-output-location:
+
+-set-stamped-output-location:
+
+-set-generic-properties:
+
+-set-role-dependent-properties:
+
+-make-logs-dir:
+    [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\logs
+
+-collect-logs:
+
+-acquire-doc-plugins:
+
+-prebuild:
+
+-get-release-unit-plugin-ids:
+
+-create-fake-manifests:
+
+-do-ant-runner:
+     [java] Buildfile: D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts/build-release-unit.xml
+     [java] 
+     [java] -write-last-build-failed:
+     [java] 
+     [java] -check-existence:
+     [java] 
+     [java] -start-log:
+     [java] 
+     [java] -release-discover-tagsURL:
+     [java]      [echo] ------> svn info --xml D:\work\repo\builder\devtools\trunk\tools\sample
+     [java]      [echo] ------> Got SVN info from working copy:
+     [java]      [echo]     		<?xml version="1.0" encoding="UTF-8"?>
+     [java]      [echo] <info>
+     [java]      [echo] <entry
+     [java]      [echo]    path="."
+     [java]      [echo]    revision="9065"
+     [java]      [echo]    kind="dir">
+     [java]      [echo] <url>https://svn.tibco.com:8443/svn/devtools/trunk/tools/sample</url>
+     [java]      [echo] <relative-url>^/trunk/tools/sample</relative-url>
+     [java]      [echo] <repository>
+     [java]      [echo] <root>https://svn.tibco.com:8443/svn/devtools</root>
+     [java]      [echo] <uuid>594592ff-7b02-0410-a8bb-846e1f26e343</uuid>
+     [java]      [echo] </repository>
+     [java]      [echo] <wc-info>
+     [java]      [echo] <wcroot-abspath>D:/work/repo/builder/devtools</wcroot-abspath>
+     [java]      [echo] <schedule>normal</schedule>
+     [java]      [echo] <depth>infinity</depth>
+     [java]      [echo] </wc-info>
+     [java]      [echo] <commit
+     [java]      [echo]    revision="9047">
+     [java]      [echo] <author>mqian</author>
+     [java]      [echo] <date>2015-07-23T22:20:43.159701Z</date>
+     [java]      [echo] </commit>
+     [java]      [echo] </entry>
+     [java]      [echo] </info>
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\null1136270897 to D:\work\repo\builder\devtools\trunk\tools\sample\null679118961
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\svnInfo.xsl
+     [java]      [echo]  ------> Loaded svn.repoURL: https://svn.tibco.com:8443/svn/devtools
+     [java]      [echo]  ------> Loaded svn.tagsURL: https://svn.tibco.com:8443/svn/devtools/branches/huaweiSandbox/tags/tools
+     [java]      [echo]  ------> Loaded svn.revURL: https://svn.tibco.com:8443/svn/devtools/trunk/tools/sample
+     [java]      [echo]  ------> Loaded svn.revsion: 9065
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1136270897
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null679118961
+     [java] 
+     [java] -release-get-svn-tags:
+     [java] 
+     [java] -release-get-last-built-version:
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1068171079
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\featureVersion.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1068171079
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null634018859
+     [java] 
+     [java] -release-load-last-built-buildnos:
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null757251411
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1571001379
+     [java] 
+     [java] -release-set-properties:
+     [java] 
+     [java] -integration-check-official-release:
+     [java] 
+     [java] -integration-discover-tagsURL:
+     [java] 
+     [java] -integration-get-svn-tags:
+     [java] 
+     [java] -integration-get-last-built-version:
+     [java] 
+     [java] -integration-load-last-built-buildnos:
+     [java] 
+     [java] -integration-set-properties:
+     [java] 
+     [java] -check-feature-match:
+     [java]      [exec] feature.xml
+     [java] 
+     [java] -developer-generate-qualifier:
+     [java] 
+     [java] -set-role-specific-properties:
+     [java] 
+     [java] -verify-qualifier-macro:
+     [java] 
+     [java] -verify-qualifier:
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null678442929
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\featureVersion.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null678442929
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null678442929
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null678442929
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.devdocs\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null678442929
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\featureVersion.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null678442929
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.devdocs\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null678442929
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null678442929
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.source\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null678442929
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\featureVersion.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null678442929
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.source\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null678442929
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null678442929
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.test\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null678442929
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\featureVersion.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null678442929
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.test\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null678442929
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null678442929
+     [java] 
+     [java] -prop-set-macro:
+     [java] 
+     [java] -generate-feature-build-qualifiers:
+     [java] 
+     [java] -release-set-previous-feature-buildno:
+     [java]      [echo]  ------> feature.tag.this-feature: 002
+     [java]      [echo]  ------> Previous build number: 002
+     [java] 
+     [java] -release-reset-previous-feature-buildno:
+     [java] 
+     [java] -release-update-feature:
+     [java]      [echo]  -----> Updating feature: com.tibco.sample.feature
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null235981746
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\featureVersion.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null235981746
+     [java]      [echo] ------> cat https://svn.tibco.com:8443/svn/devtools/branches/huaweiSandbox/tags/tools/common.tools.sample-1.0.0.002/tools.sample/features/com.tibco.sample.feature/feature.xml 
+     [java]      [echo] ------> <?xml version="1.0" encoding="UTF-8"?>
+     [java]      [echo] <feature
+     [java]      [echo]       id="com.tibco.sample.feature"
+     [java]      [echo]       label="Simple Sample Feature"
+     [java]      [echo]       version="1.0.0.qualifier"
+     [java]      [echo]       provider-name="TIBCO Software Inc.">
+     [java]      [echo] <requires>
+     [java]      [echo] <import feature="org.eclipse.emf" version="2.7.2" match="compatible"/>
+     [java]      [echo] </requires>
+     [java]      [echo] 
+     [java]      [echo]    <plugin
+     [java]      [echo]          id="com.tibco.sample.plugin"
+     [java]      [echo]          download-size="0"
+     [java]      [echo]          install-size="0"
+     [java]      [echo]          version="1.0.0.qualifier"
+     [java]      [echo]          unpack="false"/>
+     [java]      [echo] 
+     [java]      [echo] </feature>
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\null1048528552 to D:\work\repo\builder\devtools\trunk\tools\sample\null528974289
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\featureVersion.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1048528552
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null528974289
+     [java]      [echo] ------> current-version 1.0.0.qualifier
+     [java]      [echo] ------> last-built-version 1.0.0.qualifier
+     [java] 
+     [java] -release-increment-feature-buildno:
+     [java]      [echo] D:\work\repo\builder\devtools\trunk\tools\sample\featureVersions.properties
+     [java] 
+     [java] -release-increment-svn-tag-buildno:
+     [java] [propertyfile] Creating new property file: D:\work\repo\builder\devtools\trunk\tools\sample\null1608124357
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1608124357
+     [java] 
+     [java] -release-reset-svn-tag-buildno:
+     [java] 
+     [java] -release-set-svn-tag-buildno:
+     [java] 
+     [java] -release-write-tag-xml:
+     [java] 
+     [java] -release-set-previous-feature-buildno:
+     [java]      [echo]  ------> feature.tag.this-feature: 002
+     [java]      [echo]  ------> Previous build number: 002
+     [java] 
+     [java] -release-reset-previous-feature-buildno:
+     [java] 
+     [java] -release-update-feature:
+     [java]      [echo]  -----> Updating feature: com.tibco.sample.feature.devdocs
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.devdocs\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null494482586
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\featureVersion.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null494482586
+     [java]      [echo] ------> cat https://svn.tibco.com:8443/svn/devtools/branches/huaweiSandbox/tags/tools/common.tools.sample-1.0.0.002/tools.sample/features/com.tibco.sample.feature.devdocs/feature.xml 
+     [java]      [echo] ------> <?xml version='1.0' encoding='UTF-8'?>
+     [java]      [echo] <feature
+     [java]      [echo]     id="com.tibco.sample.feature.devdocs"
+     [java]      [echo]     version="1.0.0.qualifier"
+     [java]      [echo]     label="%featureName"
+     [java]      [echo]     provider-name="%providerName">
+     [java]      [echo] 
+     [java]      [echo]     <description>%description</description>
+     [java]      [echo]     <copyright>%copyright</copyright>
+     [java]      [echo]     <license>%license</license>
+     [java]      [echo] 
+     [java]      [echo]     <requires>
+     [java]      [echo]         <import feature="com.tibco.sample.feature" version="1.0.0"/>
+     [java]      [echo]     </requires>
+     [java]      [echo] 
+     [java]      [echo]     <plugin
+     [java]      [echo]         id="docs.com.tibco.sample"
+     [java]      [echo]         download-size="0"
+     [java]      [echo]         install-size="0"
+     [java]      [echo]         version="1.0.0.qualifier"
+     [java]      [echo]         unpack="false"/>
+     [java]      [echo] 
+     [java]      [echo] </feature>
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\null1796485921 to D:\work\repo\builder\devtools\trunk\tools\sample\null137858251
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\featureVersion.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1796485921
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null137858251
+     [java]      [echo] ------> current-version 1.0.0.qualifier
+     [java]      [echo] ------> last-built-version 1.0.0.qualifier
+     [java] 
+     [java] -release-increment-feature-buildno:
+     [java]      [echo] D:\work\repo\builder\devtools\trunk\tools\sample\featureVersions.properties
+     [java] 
+     [java] -release-set-previous-feature-buildno:
+     [java]      [echo]  ------> feature.tag.this-feature: 002
+     [java]      [echo]  ------> Previous build number: 002
+     [java] 
+     [java] -release-reset-previous-feature-buildno:
+     [java] 
+     [java] -release-update-feature:
+     [java]      [echo]  -----> Updating feature: com.tibco.sample.feature.source
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.source\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1130751500
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\featureVersion.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1130751500
+     [java]      [echo] ------> cat https://svn.tibco.com:8443/svn/devtools/branches/huaweiSandbox/tags/tools/common.tools.sample-1.0.0.002/tools.sample/features/com.tibco.sample.feature.source/feature.xml 
+     [java]      [echo] ------> <?xml version='1.0' encoding='UTF-8'?>
+     [java]      [echo] <feature
+     [java]      [echo]     id="com.tibco.sample.feature.source"
+     [java]      [echo]     version="1.0.0.qualifier"
+     [java]      [echo]     label="%featureName"
+     [java]      [echo]     provider-name="%providerName">
+     [java]      [echo] 
+     [java]      [echo]     <description>%description</description>
+     [java]      [echo]     <copyright>%copyright</copyright>
+     [java]      [echo]     <license>%license</license>
+     [java]      [echo] 
+     [java]      [echo]     <requires>
+     [java]      [echo]         <import feature="com.tibco.sample.feature" version="1.0.0"/>
+     [java]      [echo]     </requires>
+     [java]      [echo] 
+     [java]      [echo]     <plugin
+     [java]      [echo]         id="sources.com.tibco.sample"
+     [java]      [echo]         download-size="0"
+     [java]      [echo]         install-size="0"
+     [java]      [echo]         version="1.0.0.qualifier"
+     [java]      [echo]         unpack="true"/>
+     [java]      [echo] 
+     [java]      [echo] </feature>
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\null1611971924 to D:\work\repo\builder\devtools\trunk\tools\sample\null206892387
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\featureVersion.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1611971924
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null206892387
+     [java]      [echo] ------> current-version 1.0.0.qualifier
+     [java]      [echo] ------> last-built-version 1.0.0.qualifier
+     [java] 
+     [java] -release-increment-feature-buildno:
+     [java]      [echo] D:\work\repo\builder\devtools\trunk\tools\sample\featureVersions.properties
+     [java] 
+     [java] -release-set-previous-feature-buildno:
+     [java]      [echo]  ------> feature.tag.this-feature: 002
+     [java]      [echo]  ------> Previous build number: 002
+     [java] 
+     [java] -release-reset-previous-feature-buildno:
+     [java] 
+     [java] -release-update-feature:
+     [java]      [echo]  -----> Updating feature: com.tibco.sample.feature.test
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.test\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1368356878
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\featureVersion.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1368356878
+     [java]      [echo] ------> cat https://svn.tibco.com:8443/svn/devtools/branches/huaweiSandbox/tags/tools/common.tools.sample-1.0.0.002/tools.sample/features/com.tibco.sample.feature.test/feature.xml 
+     [java]      [echo] ------> <?xml version='1.0' encoding='UTF-8'?>
+     [java]      [echo] <feature
+     [java]      [echo]     id="com.tibco.sample.feature.test"
+     [java]      [echo]     version="1.0.0.qualifier"
+     [java]      [echo]     label="%featureName"
+     [java]      [echo]     provider-name="%providerName">
+     [java]      [echo] 
+     [java]      [echo]     <description>%description</description>
+     [java]      [echo]     <copyright>%copyright</copyright>
+     [java]      [echo]     <license>%license</license>
+     [java]      [echo] 
+     [java]      [echo]     <requires>
+     [java]      [echo]         <import feature="com.tibco.sample.feature" version="1.0.0"/>
+     [java]      [echo]     </requires>
+     [java]      [echo] 
+     [java]      [echo]     <plugin
+     [java]      [echo]         id="tests.com.tibco.sample.plugin"
+     [java]      [echo]         download-size="0"
+     [java]      [echo]         install-size="0"
+     [java]      [echo]         version="1.0.0.qualifier"
+     [java]      [echo]         unpack="true"/>
+     [java]      [echo] 
+     [java]      [echo] </feature>
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\null385511348 to D:\work\repo\builder\devtools\trunk\tools\sample\null1040131412
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\featureVersion.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null385511348
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1040131412
+     [java]      [echo] ------> current-version 1.0.0.qualifier
+     [java]      [echo] ------> last-built-version 1.0.0.qualifier
+     [java] 
+     [java] -release-increment-feature-buildno:
+     [java]      [echo] D:\work\repo\builder\devtools\trunk\tools\sample\featureVersions.properties
+     [java] 
+     [java] -generate-plugin-build-qualifiers:
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\build-artifacts\continuedVersions.properties
+     [java] 
+     [java] -release-set-previous-plugin-buildno:
+     [java] 
+     [java] -release-reset-previous-plugin-buildno:
+     [java] 
+     [java] -release-update-plugin:
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1889073050
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1416170018
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1416170018
+     [java] 
+     [java] -release-compare-svn-revisions:
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\null585096646 to D:\work\repo\builder\devtools\trunk\tools\sample\null2096574193
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\lastRevised.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null585096646
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null2096574193
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\null823950746 to D:\work\repo\builder\devtools\trunk\tools\sample\null1514063290
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\lastRevised.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null823950746
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1514063290
+     [java]      [echo] ------> D:\work\repo\builder\devtools\trunk\tools\sample/plugins/com.tibco.sample.plugin
+     [java]      [echo] ------> https://svn.tibco.com:8443/svn/devtools/branches/huaweiSandbox/tags/tools/common.tools.sample-1.0.0.002/tools.sample/plugins/com.tibco.sample.plugin
+     [java]      [echo] ------> com.tibco.sample.plugin tagged-revision: 8889
+     [java]      [echo] ------> com.tibco.sample.plugin current-revision: 8889
+     [java] 
+     [java] -release-increment-or-continue-plugin-buildno:
+     [java] 
+     [java] -release-continue-plugin-buildno:
+     [java] [propertyfile] Creating new property file: D:\work\repo\builder\devtools\trunk\tools\sample\build-artifacts\continuedVersions.properties
+     [java] 
+     [java] -release-set-previous-plugin-buildno:
+     [java] 
+     [java] -release-reset-previous-plugin-buildno:
+     [java] 
+     [java] -release-update-plugin:
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1518858078
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1122011019
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1122011019
+     [java] 
+     [java] -release-compare-svn-revisions:
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\null982214479 to D:\work\repo\builder\devtools\trunk\tools\sample\null79894225
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\lastRevised.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null982214479
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null79894225
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\null1078328563 to D:\work\repo\builder\devtools\trunk\tools\sample\null1185817886
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\lastRevised.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1078328563
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1185817886
+     [java]      [echo] ------> D:\work\repo\builder\devtools\trunk\tools\sample/plugins/docs.com.tibco.sample
+     [java]      [echo] ------> https://svn.tibco.com:8443/svn/devtools/branches/huaweiSandbox/tags/tools/common.tools.sample-1.0.0.002/tools.sample/plugins/docs.com.tibco.sample
+     [java]      [echo] ------> docs.com.tibco.sample tagged-revision: 8889
+     [java]      [echo] ------> docs.com.tibco.sample current-revision: 8889
+     [java] 
+     [java] -release-increment-or-continue-plugin-buildno:
+     [java] 
+     [java] -release-continue-plugin-buildno:
+     [java] [propertyfile] Updating property file: D:\work\repo\builder\devtools\trunk\tools\sample\build-artifacts\continuedVersions.properties
+     [java] 
+     [java] -release-set-previous-plugin-buildno:
+     [java] 
+     [java] -release-reset-previous-plugin-buildno:
+     [java] 
+     [java] -release-update-plugin:
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1001453635
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null30304043
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null30304043
+     [java] 
+     [java] -release-compare-svn-revisions:
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\null2030589517 to D:\work\repo\builder\devtools\trunk\tools\sample\null711732305
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\lastRevised.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null2030589517
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null711732305
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\null514003802 to D:\work\repo\builder\devtools\trunk\tools\sample\null575194149
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\lastRevised.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null514003802
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null575194149
+     [java]      [echo] ------> D:\work\repo\builder\devtools\trunk\tools\sample/plugins/sources.com.tibco.sample
+     [java]      [echo] ------> https://svn.tibco.com:8443/svn/devtools/branches/huaweiSandbox/tags/tools/common.tools.sample-1.0.0.002/tools.sample/plugins/sources.com.tibco.sample
+     [java]      [echo] ------> sources.com.tibco.sample tagged-revision: 8889
+     [java]      [echo] ------> sources.com.tibco.sample current-revision: 8889
+     [java] 
+     [java] -release-increment-or-continue-plugin-buildno:
+     [java] 
+     [java] -release-continue-plugin-buildno:
+     [java] [propertyfile] Updating property file: D:\work\repo\builder\devtools\trunk\tools\sample\build-artifacts\continuedVersions.properties
+     [java] 
+     [java] -release-set-previous-plugin-buildno:
+     [java] 
+     [java] -release-reset-previous-plugin-buildno:
+     [java] 
+     [java] -release-update-plugin:
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null773092087
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null304686104
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null304686104
+     [java] 
+     [java] -release-compare-svn-revisions:
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\null1420720090 to D:\work\repo\builder\devtools\trunk\tools\sample\null1768972835
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\lastRevised.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1420720090
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1768972835
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\null144696167 to D:\work\repo\builder\devtools\trunk\tools\sample\null1222422367
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\lastRevised.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null144696167
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1222422367
+     [java]      [echo] ------> D:\work\repo\builder\devtools\trunk\tools\sample/plugins/tests.com.tibco.sample.plugin
+     [java]      [echo] ------> https://svn.tibco.com:8443/svn/devtools/branches/huaweiSandbox/tags/tools/common.tools.sample-1.0.0.002/tools.sample/plugins/tests.com.tibco.sample.plugin
+     [java]      [echo] ------> tests.com.tibco.sample.plugin tagged-revision: 8889
+     [java]      [echo] ------> tests.com.tibco.sample.plugin current-revision: 8889
+     [java] 
+     [java] -release-increment-or-continue-plugin-buildno:
+     [java] 
+     [java] -release-continue-plugin-buildno:
+     [java] [propertyfile] Updating property file: D:\work\repo\builder\devtools\trunk\tools\sample\build-artifacts\continuedVersions.properties
+     [java] 
+     [java] -define-verify-qualifiers-file:
+     [java] 
+     [java] -generate-qualifier-suffix:
+     [java] 
+     [java] -stop-log:
+     [java] 
+     [java] -generate-build-qualifiers:
+     [java] 
+     [java] -write-site-provenance-xml:
+     [java] 
+     [java] -set-javadoc-destination:
+     [java] 
+     [java] -set-sources-destination:
+     [java] 
+     [java] -export-code-feature:
+     [java] 
+     [java] -verify-manifest:
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.test\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.source\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.devdocs\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java] 
+     [java] export-one-feature:
+     [java]      [echo] "        ********************************************
+     [java]      [echo] 
+     [java]      [echo]         BUILDING com.tibco.sample.feature
+     [java]      [echo] 
+     [java]      [echo]         Using:
+     [java]      [echo]  D:\work\repo\builder\tt\output\tbuild\configurations\lblm\devtools\branches\huaweiSandbox\tools\common.tools.sample\extensionLoc\eclipse
+     [java]      [echo] 
+     [java]      [echo]         ************************************************************"
+     [java] 
+     [java] _pre-clean:
+     [java]       [zip] Building zip: D:\work\repo\builder\devtools\trunk\tools\sample\build-artifacts\build-com.tibco.sample.feature.zip
+     [java] 
+     [java] init:
+     [java] 
+     [java] clean:
+     [java] 
+     [java] init:
+     [java] 
+     [java] all.features:
+     [java] 
+     [java] all.plugins:
+     [java] 
+     [java] properties:
+     [java] 
+     [java] init:
+     [java] 
+     [java] clean:
+     [java] 
+     [java] update.feature:
+     [java] 
+     [java] all.children:
+     [java] 
+     [java] build.jars:
+     [java] 
+     [java] init:
+     [java] 
+     [java] all.features:
+     [java] 
+     [java] all.plugins:
+     [java] 
+     [java] properties:
+     [java] 
+     [java] init:
+     [java] 
+     [java] build.jars:
+     [java] 
+     [java] properties:
+     [java] 
+     [java] init:
+     [java] 
+     [java] @dot.nestedJars:
+     [java]     [mkdir] Created dir: D:\work\repo\builder\devtools\trunk\tools\sample\plugins\com.tibco.sample.plugin\${buildDirectory}\nestedJars\org.eclipse.equinox.registry_3.5.101.R37x_v20110810-1611
+     [java]     [unzip] Expanding: D:\work\repo\builder\tt\tools\eclipse-sdk-3.7.2\plugins\org.eclipse.equinox.registry_3.5.101.R37x_v20110810-1611.jar into D:\work\repo\builder\devtools\trunk\tools\sample\plugins\com.tibco.sample.plugin\${buildDirectory}\nestedJars\org.eclipse.equinox.registry_3.5.101.R37x_v20110810-1611
+     [java]     [mkdir] Created dir: D:\work\repo\builder\devtools\trunk\tools\sample\plugins\com.tibco.sample.plugin\${buildDirectory}\nestedJars\org.eclipse.ui.workbench_3.7.1.v20120104-1859
+     [java]     [unzip] Expanding: D:\work\repo\builder\tt\tools\eclipse-sdk-3.7.2\plugins\org.eclipse.ui.workbench_3.7.1.v20120104-1859.jar into D:\work\repo\builder\devtools\trunk\tools\sample\plugins\com.tibco.sample.plugin\${buildDirectory}\nestedJars\org.eclipse.ui.workbench_3.7.1.v20120104-1859
+     [java]     [unzip] Expanding: D:\work\repo\builder\tt\tools\eclipse-sdk-3.7.2\plugins\org.eclipse.ui.workbench_3.7.1.v20120104-1859.jar into D:\work\repo\builder\devtools\trunk\tools\sample\plugins\com.tibco.sample.plugin\${buildDirectory}\nestedJars\org.eclipse.ui.workbench_3.7.1.v20120104-1859
+     [java]     [mkdir] Created dir: D:\work\repo\builder\devtools\trunk\tools\sample\plugins\com.tibco.sample.plugin\${buildDirectory}\nestedJars\com.ibm.icu_4.4.2.v20110823
+     [java]     [unzip] Expanding: D:\work\repo\builder\tt\tools\eclipse-sdk-3.7.2\plugins\com.ibm.icu_4.4.2.v20110823.jar into D:\work\repo\builder\devtools\trunk\tools\sample\plugins\com.tibco.sample.plugin\${buildDirectory}\nestedJars\com.ibm.icu_4.4.2.v20110823
+     [java] 
+     [java] @dot:
+     [java]     [mkdir] Created dir: D:\work\repo\builder\devtools\trunk\tools\sample\plugins\com.tibco.sample.plugin\@dot
+     [java]     [javac] Compiling 3 source files to D:\work\repo\builder\devtools\trunk\tools\sample\plugins\com.tibco.sample.plugin\@dot
+     [java] 
+     [java] checkCompilationResults:
+     [java] 
+     [java] update.feature:
+     [java] 
+     [java] all.children:
+     [java] 
+     [java] -make-output-directories:
+     [java]     [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\features
+     [java]     [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\plugins
+     [java]     [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\release\eclipse\features
+     [java]     [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\release\eclipse\plugins
+     [java]     [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\debug\features
+     [java]     [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\debug\plugins
+     [java]     [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\release\features
+     [java]     [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\release\plugins
+     [java] 
+     [java] -assemble-features-*_*_*:
+     [java] 
+     [java] init:
+     [java] 
+     [java] gather.bin.parts:
+     [java]     [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\features\com.tibco.sample.feature_1.0.0.003
+     [java] 
+     [java] children:
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\features\com.tibco.sample.feature_1.0.0.003
+     [java] 
+     [java] rootFiles:
+     [java] 
+     [java] rootFiles*_*_*:
+     [java]       [zip] Building zip: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\debug\features\com.tibco.sample.feature_1.0.0.003.jar
+     [java] 
+     [java] -copy-and-zip-feature:
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\release\eclipse\features\com.tibco.sample.feature_1.0.0.003
+     [java]       [zip] Building zip: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\release\features\com.tibco.sample.feature_1.0.0.003.jar
+     [java] 
+     [java] gather-sources-com.tibco.sample.plugin:
+     [java] 
+     [java] -gather-bin-parts-com.tibco.sample.plugin-debug-extension:
+     [java] 
+     [java] properties:
+     [java] 
+     [java] init:
+     [java] 
+     [java] gather.bin.parts:
+     [java]     [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\plugins\com.tibco.sample.plugin_1.0.0.001
+     [java]      [copy] Copying 3 files to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\plugins\com.tibco.sample.plugin_1.0.0.001
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\plugins\com.tibco.sample.plugin_1.0.0.001
+     [java] 
+     [java] apitools.generation:
+     [java]       [zip] Building zip: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\plugins\com.tibco.sample.plugin_1.0.0.001.jar
+     [java]    [delete] Deleting directory D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\plugins\com.tibco.sample.plugin_1.0.0.001
+     [java] 
+     [java] -gather-bin-parts-com.tibco.sample.plugin-debug-update:
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\debug\plugins
+     [java] 
+     [java] -gather-bin-parts-com.tibco.sample.plugin-release-update-obfuscate:
+     [java]    [rename] yGuard Obfuscator v2.5.2 - http://www.yworks.com/products/yguard
+     [java] Parsing jar D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\debug\plugins\com.tibco.sample.plugin_1.0.0.001.jar
+     [java] Obfuscating Jar D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\debug\plugins\com.tibco.sample.plugin_1.0.0.001.jar to com.tibco.sample.plugin_1.0.0.001.jar
+     [java] 
+     [java] -gather-bin-parts-com.tibco.sample.plugin-release-update:
+     [java] 
+     [java] -gather-bin-parts-com.tibco.sample.plugin-release-extension:
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\release\eclipse\plugins
+     [java] 
+     [java] -gather-bin-parts-com.tibco.sample.plugin:
+     [java] 
+     [java] gather.bin.parts-*_*_*:
+     [java] 
+     [java] assemble-*_*_*:
+     [java] 
+     [java] -copy-feature-to-local-site-release:
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\workspaceInstaller\local-builds-site\features
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\workspaceInstaller\local-builds-site\plugins
+     [java] 
+     [java] -copy-feature-to-local-site-debug:
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\workspaceInstaller\local-builds-site-debug\features
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\workspaceInstaller\local-builds-site-debug\plugins
+     [java] 
+     [java] javadoc-clean:
+     [java] 
+     [java] javadoc:
+     [java]   [javadoc] Generating Javadoc
+     [java]   [javadoc] Javadoc execution
+     [java]   [javadoc] Loading source files for package com.tibco.sample.plugin...
+     [java]   [javadoc] Constructing Javadoc information...
+     [java]   [javadoc] Standard Doclet version 1.8.0_20
+     [java]   [javadoc] Building tree for all the packages and classes...
+     [java]   [javadoc] Building index for all the packages and classes...
+     [java]   [javadoc] Building index for all classes...
+     [java] 
+     [java] assemble:
+     [java] 
+     [java] clean:
+     [java] 
+     [java] init:
+     [java] 
+     [java] clean:
+     [java] 
+     [java] init:
+     [java] 
+     [java] all.features:
+     [java] 
+     [java] all.plugins:
+     [java] 
+     [java] properties:
+     [java] 
+     [java] init:
+     [java] 
+     [java] clean:
+     [java]    [delete] Deleting directory D:\work\repo\builder\devtools\trunk\tools\sample\plugins\com.tibco.sample.plugin\@dot
+     [java] 
+     [java] update.feature:
+     [java] 
+     [java] all.children:
+     [java] 
+     [java] clean:
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\assemble.xml
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\gather-sources.xml
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\obfuscation.xml
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\javadoc.xml
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature\build.xml
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\plugins\com.tibco.sample.plugin\@dot.log
+     [java]    [delete] Deleting directory D:\work\repo\builder\devtools\trunk\tools\sample\plugins\com.tibco.sample.plugin\${buildDirectory}
+     [java] 
+     [java] -export-source-feature:
+     [java] 
+     [java] -verify-manifest:
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.test\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.source\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.devdocs\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java] 
+     [java] export-one-feature:
+     [java]      [echo] "        ********************************************
+     [java]      [echo] 
+     [java]      [echo]         BUILDING com.tibco.sample.feature.source
+     [java]      [echo] 
+     [java]      [echo]         Using:
+     [java]      [echo]  D:\work\repo\builder\tt\output\tbuild\configurations\lblm\devtools\branches\huaweiSandbox\tools\common.tools.sample\extensionLoc\eclipse
+     [java]      [echo] 
+     [java]      [echo]         ************************************************************"
+     [java] 
+     [java] _pre-clean:
+     [java]       [zip] Building zip: D:\work\repo\builder\devtools\trunk\tools\sample\build-artifacts\build-com.tibco.sample.feature.source.zip
+     [java] 
+     [java] init:
+     [java] 
+     [java] clean:
+     [java] 
+     [java] init:
+     [java] 
+     [java] all.features:
+     [java] 
+     [java] all.plugins:
+     [java] 
+     [java] properties:
+     [java] 
+     [java] init:
+     [java] 
+     [java] clean:
+     [java] 
+     [java] update.feature:
+     [java] 
+     [java] all.children:
+     [java] 
+     [java] build.jars:
+     [java] 
+     [java] init:
+     [java] 
+     [java] all.features:
+     [java] 
+     [java] all.plugins:
+     [java] 
+     [java] properties:
+     [java] 
+     [java] init:
+     [java] 
+     [java] build.jars:
+     [java] 
+     [java] update.feature:
+     [java] 
+     [java] all.children:
+     [java] 
+     [java] -make-output-directories:
+     [java] 
+     [java] -assemble-features-*_*_*:
+     [java] 
+     [java] init:
+     [java] 
+     [java] gather.bin.parts:
+     [java]     [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\features\com.tibco.sample.feature.source_1.0.0.003
+     [java] 
+     [java] children:
+     [java]      [copy] Copying 2 files to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\features\com.tibco.sample.feature.source_1.0.0.003
+     [java] 
+     [java] rootFiles:
+     [java] 
+     [java] rootFiles*_*_*:
+     [java]       [zip] Building zip: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\debug\features\com.tibco.sample.feature.source_1.0.0.003.jar
+     [java] 
+     [java] -copy-and-zip-feature:
+     [java]      [copy] Copying 2 files to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\release\eclipse\features\com.tibco.sample.feature.source_1.0.0.003
+     [java]       [zip] Building zip: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\release\features\com.tibco.sample.feature.source_1.0.0.003.jar
+     [java] 
+     [java] -gather-bin-parts-sources.com.tibco.sample-debug-extension:
+     [java] 
+     [java] properties:
+     [java] 
+     [java] init:
+     [java] 
+     [java] gather.bin.parts:
+     [java]     [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\plugins\sources.com.tibco.sample_1.0.0.001
+     [java]      [copy] Copying 4 files to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\plugins\sources.com.tibco.sample_1.0.0.001
+     [java] 
+     [java] apitools.generation:
+     [java] 
+     [java] -gather-bin-parts-sources.com.tibco.sample-debug-update:
+     [java]       [zip] Building zip: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\debug\plugins\sources.com.tibco.sample_1.0.0.001.jar
+     [java] 
+     [java] -gather-bin-parts-sources.com.tibco.sample-release-update:
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\release\plugins
+     [java] 
+     [java] -gather-bin-parts-sources.com.tibco.sample-release-extension:
+     [java]      [copy] Copying 4 files to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\release\eclipse\plugins\sources.com.tibco.sample_1.0.0.001
+     [java] 
+     [java] -gather-bin-parts-sources.com.tibco.sample:
+     [java] 
+     [java] gather.bin.parts-*_*_*:
+     [java] 
+     [java] assemble-*_*_*:
+     [java] 
+     [java] -copy-feature-to-local-site-release:
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\workspaceInstaller\local-builds-site\features
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\workspaceInstaller\local-builds-site\plugins
+     [java] 
+     [java] -copy-feature-to-local-site-debug:
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\workspaceInstaller\local-builds-site-debug\features
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\workspaceInstaller\local-builds-site-debug\plugins
+     [java] 
+     [java] assemble:
+     [java] 
+     [java] clean:
+     [java] 
+     [java] init:
+     [java] 
+     [java] clean:
+     [java] 
+     [java] init:
+     [java] 
+     [java] all.features:
+     [java] 
+     [java] all.plugins:
+     [java] 
+     [java] properties:
+     [java] 
+     [java] init:
+     [java] 
+     [java] clean:
+     [java] 
+     [java] update.feature:
+     [java] 
+     [java] all.children:
+     [java] 
+     [java] clean:
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\assemble.xml
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.source\build.xml
+     [java] 
+     [java] -export-test-feature:
+     [java] 
+     [java] -verify-manifest:
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.test\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.source\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.devdocs\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java] 
+     [java] export-one-feature:
+     [java]      [echo] "        ********************************************
+     [java]      [echo] 
+     [java]      [echo]         BUILDING com.tibco.sample.feature.test
+     [java]      [echo] 
+     [java]      [echo]         Using:
+     [java]      [echo]  D:\work\repo\builder\tt\output\tbuild\configurations\lblm\devtools\branches\huaweiSandbox\tools\common.tools.sample\extensionLoc\eclipse
+     [java]      [echo] 
+     [java]      [echo]         ************************************************************"
+     [java] 
+     [java] _pre-clean:
+     [java]       [zip] Building zip: D:\work\repo\builder\devtools\trunk\tools\sample\build-artifacts\build-com.tibco.sample.feature.test.zip
+     [java] 
+     [java] init:
+     [java] 
+     [java] clean:
+     [java] 
+     [java] init:
+     [java] 
+     [java] all.features:
+     [java] 
+     [java] all.plugins:
+     [java] 
+     [java] properties:
+     [java] 
+     [java] init:
+     [java] 
+     [java] clean:
+     [java] 
+     [java] update.feature:
+     [java] 
+     [java] all.children:
+     [java] 
+     [java] build.jars:
+     [java] 
+     [java] init:
+     [java] 
+     [java] all.features:
+     [java] 
+     [java] all.plugins:
+     [java] 
+     [java] properties:
+     [java] 
+     [java] init:
+     [java] 
+     [java] build.jars:
+     [java] 
+     [java] properties:
+     [java] 
+     [java] init:
+     [java] 
+     [java] @dot.nestedJars:
+     [java]     [mkdir] Created dir: D:\work\repo\builder\devtools\trunk\tools\sample\plugins\tests.com.tibco.sample.plugin\${buildDirectory}\nestedJars\org.eclipse.equinox.registry_3.5.101.R37x_v20110810-1611
+     [java]     [unzip] Expanding: D:\work\repo\builder\tt\tools\eclipse-sdk-3.7.2\plugins\org.eclipse.equinox.registry_3.5.101.R37x_v20110810-1611.jar into D:\work\repo\builder\devtools\trunk\tools\sample\plugins\tests.com.tibco.sample.plugin\${buildDirectory}\nestedJars\org.eclipse.equinox.registry_3.5.101.R37x_v20110810-1611
+     [java]     [mkdir] Created dir: D:\work\repo\builder\devtools\trunk\tools\sample\plugins\tests.com.tibco.sample.plugin\${buildDirectory}\nestedJars\org.eclipse.ui.workbench_3.7.1.v20120104-1859
+     [java]     [unzip] Expanding: D:\work\repo\builder\tt\tools\eclipse-sdk-3.7.2\plugins\org.eclipse.ui.workbench_3.7.1.v20120104-1859.jar into D:\work\repo\builder\devtools\trunk\tools\sample\plugins\tests.com.tibco.sample.plugin\${buildDirectory}\nestedJars\org.eclipse.ui.workbench_3.7.1.v20120104-1859
+     [java]     [unzip] Expanding: D:\work\repo\builder\tt\tools\eclipse-sdk-3.7.2\plugins\org.eclipse.ui.workbench_3.7.1.v20120104-1859.jar into D:\work\repo\builder\devtools\trunk\tools\sample\plugins\tests.com.tibco.sample.plugin\${buildDirectory}\nestedJars\org.eclipse.ui.workbench_3.7.1.v20120104-1859
+     [java]     [mkdir] Created dir: D:\work\repo\builder\devtools\trunk\tools\sample\plugins\tests.com.tibco.sample.plugin\${buildDirectory}\nestedJars\com.ibm.icu_4.4.2.v20110823
+     [java]     [unzip] Expanding: D:\work\repo\builder\tt\tools\eclipse-sdk-3.7.2\plugins\com.ibm.icu_4.4.2.v20110823.jar into D:\work\repo\builder\devtools\trunk\tools\sample\plugins\tests.com.tibco.sample.plugin\${buildDirectory}\nestedJars\com.ibm.icu_4.4.2.v20110823
+     [java] 
+     [java] @dot:
+     [java]     [mkdir] Created dir: D:\work\repo\builder\devtools\trunk\tools\sample\plugins\tests.com.tibco.sample.plugin\@dot
+     [java]     [javac] Compiling 1 source file to D:\work\repo\builder\devtools\trunk\tools\sample\plugins\tests.com.tibco.sample.plugin\@dot
+     [java] 
+     [java] checkCompilationResults:
+     [java] 
+     [java] update.feature:
+     [java] 
+     [java] all.children:
+     [java] 
+     [java] -make-test-results-dir:
+     [java]     [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\junit
+     [java] 
+     [java] -make-output-directories:
+     [java] 
+     [java] -assemble-features-*_*_*:
+     [java] 
+     [java] init:
+     [java] 
+     [java] gather.bin.parts:
+     [java]     [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\features\com.tibco.sample.feature.test_1.0.0.003
+     [java] 
+     [java] children:
+     [java]      [copy] Copying 2 files to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\features\com.tibco.sample.feature.test_1.0.0.003
+     [java] 
+     [java] rootFiles:
+     [java] 
+     [java] rootFiles*_*_*:
+     [java]       [zip] Building zip: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\debug\features\com.tibco.sample.feature.test_1.0.0.003.jar
+     [java] 
+     [java] -copy-and-zip-feature:
+     [java]      [copy] Copying 2 files to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\release\eclipse\features\com.tibco.sample.feature.test_1.0.0.003
+     [java]       [zip] Building zip: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\release\features\com.tibco.sample.feature.test_1.0.0.003.jar
+     [java] 
+     [java] -gather-bin-parts-tests.com.tibco.sample.plugin-debug-extension:
+     [java] 
+     [java] properties:
+     [java] 
+     [java] init:
+     [java] 
+     [java] gather.bin.parts:
+     [java]     [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\plugins\tests.com.tibco.sample.plugin_1.0.0.001
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\plugins\tests.com.tibco.sample.plugin_1.0.0.001
+     [java]      [copy] Copying 2 files to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\plugins\tests.com.tibco.sample.plugin_1.0.0.001
+     [java] 
+     [java] apitools.generation:
+     [java] 
+     [java] -gather-bin-parts-tests.com.tibco.sample.plugin-debug-update:
+     [java]       [zip] Building zip: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\debug\plugins\tests.com.tibco.sample.plugin_1.0.0.001.jar
+     [java] 
+     [java] -gather-bin-parts-tests.com.tibco.sample.plugin-release-update:
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\release\plugins
+     [java] 
+     [java] -gather-bin-parts-tests.com.tibco.sample.plugin-release-extension:
+     [java]      [copy] Copying 3 files to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\release\eclipse\plugins\tests.com.tibco.sample.plugin_1.0.0.001
+     [java] 
+     [java] -gather-bin-parts-tests.com.tibco.sample.plugin:
+     [java] 
+     [java] gather.bin.parts-*_*_*:
+     [java] 
+     [java] assemble-*_*_*:
+     [java] 
+     [java] -copy-feature-to-local-site-release:
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\workspaceInstaller\local-builds-site\features
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\workspaceInstaller\local-builds-site\plugins
+     [java] 
+     [java] -copy-feature-to-local-site-debug:
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\workspaceInstaller\local-builds-site-debug\features
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\workspaceInstaller\local-builds-site-debug\plugins
+     [java] 
+     [java] assemble:
+     [java] 
+     [java] clean:
+     [java] 
+     [java] init:
+     [java] 
+     [java] clean:
+     [java] 
+     [java] init:
+     [java] 
+     [java] all.features:
+     [java] 
+     [java] all.plugins:
+     [java] 
+     [java] properties:
+     [java] 
+     [java] init:
+     [java] 
+     [java] clean:
+     [java]    [delete] Deleting directory D:\work\repo\builder\devtools\trunk\tools\sample\plugins\tests.com.tibco.sample.plugin\@dot
+     [java] 
+     [java] update.feature:
+     [java] 
+     [java] all.children:
+     [java] 
+     [java] clean:
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\assemble.xml
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.test\build.xml
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\plugins\tests.com.tibco.sample.plugin\@dot.log
+     [java]    [delete] Deleting directory D:\work\repo\builder\devtools\trunk\tools\sample\plugins\tests.com.tibco.sample.plugin\${buildDirectory}
+     [java] 
+     [java] -export-docs-feature:
+     [java] 
+     [java] -verify-manifest:
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.test\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.source\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.devdocs\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java]      [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1891167898
+     [java] 
+     [java] export-one-feature:
+     [java]      [echo] "        ********************************************
+     [java]      [echo] 
+     [java]      [echo]         BUILDING com.tibco.sample.feature.devdocs
+     [java]      [echo] 
+     [java]      [echo]         Using:
+     [java]      [echo]  D:\work\repo\builder\tt\output\tbuild\configurations\lblm\devtools\branches\huaweiSandbox\tools\common.tools.sample\extensionLoc\eclipse
+     [java]      [echo] 
+     [java]      [echo]         ************************************************************"
+     [java] 
+     [java] _pre-clean:
+     [java]       [zip] Building zip: D:\work\repo\builder\devtools\trunk\tools\sample\build-artifacts\build-com.tibco.sample.feature.devdocs.zip
+     [java] 
+     [java] init:
+     [java] 
+     [java] clean:
+     [java] 
+     [java] init:
+     [java] 
+     [java] all.features:
+     [java] 
+     [java] all.plugins:
+     [java] 
+     [java] properties:
+     [java] 
+     [java] init:
+     [java] 
+     [java] clean:
+     [java] 
+     [java] update.feature:
+     [java] 
+     [java] all.children:
+     [java] 
+     [java] build.jars:
+     [java] 
+     [java] init:
+     [java] 
+     [java] all.features:
+     [java] 
+     [java] all.plugins:
+     [java] 
+     [java] properties:
+     [java] 
+     [java] init:
+     [java] 
+     [java] build.jars:
+     [java] 
+     [java] update.feature:
+     [java] 
+     [java] all.children:
+     [java] 
+     [java] -make-output-directories:
+     [java] 
+     [java] -assemble-features-*_*_*:
+     [java] 
+     [java] init:
+     [java] 
+     [java] gather.bin.parts:
+     [java]     [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\features\com.tibco.sample.feature.devdocs_1.0.0.003
+     [java] 
+     [java] children:
+     [java]      [copy] Copying 2 files to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\features\com.tibco.sample.feature.devdocs_1.0.0.003
+     [java] 
+     [java] rootFiles:
+     [java] 
+     [java] rootFiles*_*_*:
+     [java]       [zip] Building zip: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\debug\features\com.tibco.sample.feature.devdocs_1.0.0.003.jar
+     [java] 
+     [java] -copy-and-zip-feature:
+     [java]      [copy] Copying 2 files to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\release\eclipse\features\com.tibco.sample.feature.devdocs_1.0.0.003
+     [java]       [zip] Building zip: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\release\features\com.tibco.sample.feature.devdocs_1.0.0.003.jar
+     [java] 
+     [java] -gather-bin-parts-docs.com.tibco.sample-debug-extension:
+     [java] 
+     [java] properties:
+     [java] 
+     [java] init:
+     [java] 
+     [java] gather.bin.parts:
+     [java]     [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\plugins\docs.com.tibco.sample_1.0.0.001
+     [java]      [copy] Copying 30 files to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\plugins\docs.com.tibco.sample_1.0.0.001
+     [java] 
+     [java] apitools.generation:
+     [java]       [zip] Building zip: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\plugins\docs.com.tibco.sample_1.0.0.001.jar
+     [java]    [delete] Deleting directory D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\plugins\docs.com.tibco.sample_1.0.0.001
+     [java] 
+     [java] -gather-bin-parts-docs.com.tibco.sample-debug-update:
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\debug\plugins
+     [java] 
+     [java] -gather-bin-parts-docs.com.tibco.sample-release-update:
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\release\plugins
+     [java] 
+     [java] -gather-bin-parts-docs.com.tibco.sample-release-extension:
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\release\eclipse\plugins
+     [java] 
+     [java] -gather-bin-parts-docs.com.tibco.sample:
+     [java] 
+     [java] gather.bin.parts-*_*_*:
+     [java] 
+     [java] assemble-*_*_*:
+     [java] 
+     [java] -copy-feature-to-local-site-release:
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\workspaceInstaller\local-builds-site\features
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\workspaceInstaller\local-builds-site\plugins
+     [java] 
+     [java] -copy-feature-to-local-site-debug:
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\workspaceInstaller\local-builds-site-debug\features
+     [java]      [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\workspaceInstaller\local-builds-site-debug\plugins
+     [java] 
+     [java] assemble:
+     [java] 
+     [java] clean:
+     [java] 
+     [java] init:
+     [java] 
+     [java] clean:
+     [java] 
+     [java] init:
+     [java] 
+     [java] all.features:
+     [java] 
+     [java] all.plugins:
+     [java] 
+     [java] properties:
+     [java] 
+     [java] init:
+     [java] 
+     [java] clean:
+     [java] 
+     [java] update.feature:
+     [java] 
+     [java] all.children:
+     [java] 
+     [java] clean:
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\assemble.xml
+     [java]    [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\features\com.tibco.sample.feature.devdocs\build.xml
+     [java] 
+     [java] -check-javadoc-dir:
+     [java] 
+     [java] -cleanup-javadoc-dir:
+     [java] 
+     [java] export-all-features:
+     [java] 
+     [java] -cleanup-temporaries:
+     [java] 
+     [java] -compress-logs:
+     [java]      [gzip] Building: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\logs\feature-com.tibco.sample.feature.devdocs.log.gz
+     [java]    [delete] Deleting: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\logs\feature-com.tibco.sample.feature.devdocs.log
+     [java]      [gzip] Building: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\logs\feature-com.tibco.sample.feature.log.gz
+     [java]    [delete] Deleting: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\logs\feature-com.tibco.sample.feature.log
+     [java]      [gzip] Building: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\logs\feature-com.tibco.sample.feature.source.log.gz
+     [java]    [delete] Deleting: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\logs\feature-com.tibco.sample.feature.source.log
+     [java]      [gzip] Building: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\logs\feature-com.tibco.sample.feature.test.log.gz
+     [java]    [delete] Deleting: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\logs\feature-com.tibco.sample.feature.test.log
+     [java]      [gzip] Building: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\logs\generator-assemble.xml-com.tibco.sample.feature.devdocs.log.gz
+     [java]    [delete] Deleting: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\logs\generator-assemble.xml-com.tibco.sample.feature.devdocs.log
+     [java]      [gzip] Building: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\logs\generator-assemble.xml-com.tibco.sample.feature.log.gz
+     [java]    [delete] Deleting: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\logs\generator-assemble.xml-com.tibco.sample.feature.log
+     [java]      [gzip] Building: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\logs\generator-assemble.xml-com.tibco.sample.feature.source.log.gz
+     [java]    [delete] Deleting: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\logs\generator-assemble.xml-com.tibco.sample.feature.source.log
+     [java]      [gzip] Building: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\logs\generator-assemble.xml-com.tibco.sample.feature.test.log.gz
+     [java]    [delete] Deleting: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\logs\generator-assemble.xml-com.tibco.sample.feature.test.log
+     [java]      [gzip] Building: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\logs\generator-tests-com.tibco.sample.feature.test.log.gz
+     [java]    [delete] Deleting: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\logs\generator-tests-com.tibco.sample.feature.test.log
+     [java]      [gzip] Building: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\logs\setup-com.tibco.sample.feature.log.gz
+     [java]    [delete] Deleting: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\logs\setup-com.tibco.sample.feature.log
+     [java] BUILD SUCCESSFUL
+     [java] 
+     [java] BUILD SUCCESSFUL
+     [java] Total time: 26 seconds
+     [java] Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
+     [java] Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=128m; support was removed in 8.0
+   [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1087036054
+
+-get-release-unit-plugin-ids:
+
+-restore-release-unit-plugins:
+
+-get-candidate-plugins:
+
+-restore-candidate-plugins:
+
+-restore-fake-manifests:
+
+-generate-sites:
+[update.site.creator] (Ignoring) Unable to delete file D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\release\site.xml
+[update.site.creator] (Ignoring) Unable to delete file D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\debug\site.xml
+
+-relocate-fixed-release:
+
+-developer-write-last-build-succeeded:
+
+-release-write-last-build-succeeded:
+   [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\build-artifacts\release-build.properties
+[propertyfile] Creating new property file: D:\work\repo\builder\devtools\trunk\tools\sample\build-artifacts\release-build.properties
+     [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\logs
+
+-write-last-build-succeeded:
+
+-postbuild:
+
+-decease-doc-plugins:
+
+-merge-features:
+
+-merge-plugins:
+
+-generate-merged-jar:
+
+-merge-release-units:
+
+-check-for-substitutions:
+
+perform-substitutions-wrapper:
+
+-pre-design-release-unit:
+
+-verify-dual-meta:
+
+-build-design-release-unit:
+
+-generate-release-build-list:
+    [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\export
+
+-run-generate-release-build-list:
+    [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\p2\release\features
+    [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\p2\release\plugins
+    [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\p2\debug\features
+    [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\p2\debug\plugins
+     [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\p2\release\features
+     [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\p2\debug\features
+     [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\export\debug\features
+     [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\export\release\features
+
+-read-feature:
+     [xslt] Processing D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\features\com.tibco.sample.feature.devdocs_1.0.0.003\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null2019019339
+     [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+   [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null2019019339
+
+-read-plugin:
+
+-read-feature:
+     [xslt] Processing D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\features\com.tibco.sample.feature.test_1.0.0.003\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null2126458473
+     [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+   [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null2126458473
+
+-read-plugin:
+
+-read-feature:
+     [xslt] Processing D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\features\com.tibco.sample.feature_1.0.0.003\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null1718911689
+     [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+   [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null1718911689
+
+-read-plugin:
+     [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\p2\release\plugins
+     [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\p2\debug\plugins
+     [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\export\debug\plugins
+     [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\export\release\plugins
+
+-read-feature:
+     [xslt] Processing D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\debug\features\com.tibco.sample.feature.source_1.0.0.003\feature.xml to D:\work\repo\builder\devtools\trunk\tools\sample\null416240139
+     [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\extractPlugins.xsl
+   [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null416240139
+
+-read-plugin:
+
+-check-plugin-unpacked:
+
+-merge-site-provenance-xml:
+     [xslt] Processing D:\work\repo\builder\tt\output\tbuild\workspaceInstaller\local-builds-site\site-provenance.xml to D:\work\repo\builder\devtools\trunk\tools\sample\build-artifacts\merged-2015-08-10-2315-site-provenance.xml
+     [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\siteProvenanceMerge.xsl
+     [move] Moving 1 file to D:\work\repo\builder\tt\output\tbuild\workspaceInstaller\local-builds-site
+     [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\debug
+     [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\release
+   [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\build-artifacts\site-provenance.xml
+
+-dual-build-autorun:
+
+-load-archivist-libs:
+
+archivist-diff:
+
+-set-env-version:
+
+-zip-assembly-package:
+    [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\debug
+    [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\release
+    [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\temp
+
+setzipfilename:
+
+zipfile:
+   [delete] Deleting directory D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\temp
+    [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\temp
+     [echo] "Calling to zip the file"...
+     [java] ################## Arguments Passed ##############################
+     [java] EXPORT_DIR: 'D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\export\debug'
+     [java] ASSEMBLY NAME: 'com_tibco_sample_feature'
+     [java] PERMISSIONS: '664'
+     [java] PLATFORM: '${env.PORT}'
+     [java] ASSEMBLY TYPE PREFIX: 'assembly_tibco_com_tibco_sample_feature'
+     [java] VERSION: '1.0.0.003'
+     [java] XML FILE NAME: 'registry_file.xml'
+     [java] BUILDTYPE : 'test'
+     [java] CURRENTTIME : '2015-08-10-2315'
+     [java] PRODUCTZIPREGFILE : 'com.tibco.sample.feature'
+     [java] ##################################################################
+     [java] path: null
+     [java] No data file
+     [java] Total size of assembly source: '3845'
+     [java] Adding file D:/work/repo/builder/tt/output/tbuild/candidates/devtools/branches/huaweiSandbox/tools/common.tools.sample/2015-08-10-2315.huawei/assembly/export/debug
+     [java] Adding file D:/work/repo/builder/tt/output/tbuild/candidates/devtools/branches/huaweiSandbox/tools/common.tools.sample/2015-08-10-2315.huawei/assembly/export/debug/features
+     [java] Adding file D:/work/repo/builder/tt/output/tbuild/candidates/devtools/branches/huaweiSandbox/tools/common.tools.sample/2015-08-10-2315.huawei/assembly/export/debug/features/com.tibco.sample.feature_1.0.0.003
+     [java] Adding file D:/work/repo/builder/tt/output/tbuild/candidates/devtools/branches/huaweiSandbox/tools/common.tools.sample/2015-08-10-2315.huawei/assembly/export/debug/features/com.tibco.sample.feature_1.0.0.003/feature.xml
+     [java] XXX - md5sum of 'D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\export\debug\features\com.tibco.sample.feature_1.0.0.003\feature.xml': d2875e34b2207ef56fa551bcb9e63ca5
+     [java] Adding file D:/work/repo/builder/tt/output/tbuild/candidates/devtools/branches/huaweiSandbox/tools/common.tools.sample/2015-08-10-2315.huawei/assembly/export/debug/plugins
+     [java] Adding file D:/work/repo/builder/tt/output/tbuild/candidates/devtools/branches/huaweiSandbox/tools/common.tools.sample/2015-08-10-2315.huawei/assembly/export/debug/plugins/com.tibco.sample.plugin_1.0.0.001.jar
+     [java] XXX - md5sum of 'D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\export\debug\plugins\com.tibco.sample.plugin_1.0.0.001.jar': 5de1f8a56fb1429bca5a18f0f84860b5
+     [java] D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\export\debug/com_tibco_sample_feature is not a directory or a file
+     [java] Creating registry_file.xml
+     [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\temp
+     [copy] Copying 2 files to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\temp\source
+
+zip-new-assembly:
+     [echo] Archiving assembly...
+      [zip] Building zip: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\debug\assembly_tibco_com_tibco_sample_feature_1.0.0.003.zip
+     [echo] Checking if D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei/assembly/debug/assembly_tibco_com_tibco_sample_feature_1.0.0.003.zip exists...
+
+zip-assembly-contents:
+   [delete] Deleting directory D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\temp
+    [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\temp
+
+setzipfilename:
+
+zipfile:
+   [delete] Deleting directory D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\temp
+    [mkdir] Created dir: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\temp
+     [echo] "Calling to zip the file"...
+     [java] ################## Arguments Passed ##############################
+     [java] EXPORT_DIR: 'D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\export\release'
+     [java] ASSEMBLY NAME: 'com_tibco_sample_feature'
+     [java] PERMISSIONS: '664'
+     [java] PLATFORM: '${env.PORT}'
+     [java] ASSEMBLY TYPE PREFIX: 'assembly_tibco_com_tibco_sample_feature'
+     [java] VERSION: '1.0.0.003'
+     [java] XML FILE NAME: 'registry_file.xml'
+     [java] BUILDTYPE : 'test'
+     [java] CURRENTTIME : '2015-08-10-2315'
+     [java] PRODUCTZIPREGFILE : 'com.tibco.sample.feature'
+     [java] ##################################################################
+     [java] path: null
+     [java] No data file
+     [java] Total size of assembly source: '3583'
+     [java] Adding file D:/work/repo/builder/tt/output/tbuild/candidates/devtools/branches/huaweiSandbox/tools/common.tools.sample/2015-08-10-2315.huawei/assembly/export/release
+     [java] Adding file D:/work/repo/builder/tt/output/tbuild/candidates/devtools/branches/huaweiSandbox/tools/common.tools.sample/2015-08-10-2315.huawei/assembly/export/release/features
+     [java] Adding file D:/work/repo/builder/tt/output/tbuild/candidates/devtools/branches/huaweiSandbox/tools/common.tools.sample/2015-08-10-2315.huawei/assembly/export/release/features/com.tibco.sample.feature_1.0.0.003
+     [java] Adding file D:/work/repo/builder/tt/output/tbuild/candidates/devtools/branches/huaweiSandbox/tools/common.tools.sample/2015-08-10-2315.huawei/assembly/export/release/features/com.tibco.sample.feature_1.0.0.003/feature.xml
+     [java] XXX - md5sum of 'D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\export\release\features\com.tibco.sample.feature_1.0.0.003\feature.xml': d2875e34b2207ef56fa551bcb9e63ca5
+     [java] Adding file D:/work/repo/builder/tt/output/tbuild/candidates/devtools/branches/huaweiSandbox/tools/common.tools.sample/2015-08-10-2315.huawei/assembly/export/release/plugins
+     [java] Adding file D:/work/repo/builder/tt/output/tbuild/candidates/devtools/branches/huaweiSandbox/tools/common.tools.sample/2015-08-10-2315.huawei/assembly/export/release/plugins/com.tibco.sample.plugin_1.0.0.001.jar
+     [java] XXX - md5sum of 'D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\export\release\plugins\com.tibco.sample.plugin_1.0.0.001.jar': 672d927c47689b970619d9db8bf38355
+     [java] D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\export\release/com_tibco_sample_feature is not a directory or a file
+     [java] Creating registry_file.xml
+     [copy] Copying 1 file to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\temp
+     [copy] Copying 2 files to D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\temp\source
+
+zip-new-assembly:
+     [echo] Archiving assembly...
+      [zip] Building zip: D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\release\assembly_tibco_com_tibco_sample_feature_1.0.0.003.zip
+     [echo] Checking if D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei/assembly/release/assembly_tibco_com_tibco_sample_feature_1.0.0.003.zip exists...
+
+zip-assembly-contents:
+   [delete] Deleting directory D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\temp
+   [delete] Deleting directory D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\assembly\export
+
+check.version.conformance:
+[check.version.conformance] Scanning update sites.
+[check.version.conformance]   Using cached copy of http://spin.tibco.com:8008/GA/release/site.xml
+[check.version.conformance]   Scanning http://spin.tibco.com:8008/GA/release/site.xml
+[check.version.conformance]   Using cached copy of http://spin.tibco.com:8008/GA/thirdparty/site.xml
+[check.version.conformance]   Scanning http://spin.tibco.com:8008/GA/thirdparty/site.xml
+[check.version.conformance]   Using cached copy of http://spin.tibco.com:8008/GA/devtools/site.xml
+[check.version.conformance]   Scanning http://spin.tibco.com:8008/GA/devtools/site.xml
+
+-generate-p2-jars:
+     [echo] =============================================================================================
+     [echo] Eclipse startup jar: D:\work\repo\builder\tt\tools\eclipse-sdk-4.4.1\plugins\org.eclipse.equinox.launcher_1.3.0.v20140415-2008.jar
+     [echo] =============================================================================================
+     [echo] Generating p2 jar files at D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\release.
+     [java] Install location:
+     [java]     file:/d:/work/repo/builder/tt/tools/eclipse-sdk-4.4.1/
+     [java] Configuration file:
+     [java]     file:/d:/work/repo/builder/tt/tools/eclipse-sdk-4.4.1/configuration/config.ini loaded
+     [java] Configuration location:
+     [java]     file:/d:/work/repo/builder/tt/tools/eclipse-sdk-4.4.1/configuration/
+     [java] Framework located:
+     [java]     file:/d:/work/repo/builder/tt/tools/eclipse-sdk-4.4.1/plugins/org.eclipse.osgi_3.10.1.v20140909-1633.jar
+     [java] Loading extension: reference:file:org.eclipse.osgi.compatibility.state_1.0.1.v20140709-1414.jar
+     [java] 	eclipse.properties not found
+     [java] Framework classpath:
+     [java]     file:/d:/work/repo/builder/tt/tools/eclipse-sdk-4.4.1/plugins/org.eclipse.osgi_3.10.1.v20140909-1633.jar
+     [java]     file:/d:/work/repo/builder/tt/tools/eclipse-sdk-4.4.1/plugins/
+     [java]     file:/d:/work/repo/builder/tt/tools/eclipse-sdk-4.4.1/plugins/org.eclipse.osgi.compatibility.state_1.0.1.v20140709-1414.jar
+     [java] Debug options:
+     [java]     file:/D:/work/repo/builder/devtools/trunk/tools/sample/.options not found
+     [java] Time to load bundles: 7
+     [java] Starting application: 1659
+     [java] Generating metadata for ..
+     [java] Artifact repository out of sync. Overwriting D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\release\features\com.tibco.sample.feature_1.0.0.003.jar
+     [java] Artifact repository out of sync. Overwriting D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\release\plugins\com.tibco.sample.plugin_1.0.0.001.jar
+     [java] Generation completed with success [0 seconds].
+     [echo] 
+     [echo] Generating p2 jar files at D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\debug.
+     [java] Install location:
+     [java]     file:/d:/work/repo/builder/tt/tools/eclipse-sdk-4.4.1/
+     [java] Configuration file:
+     [java]     file:/d:/work/repo/builder/tt/tools/eclipse-sdk-4.4.1/configuration/config.ini loaded
+     [java] Configuration location:
+     [java]     file:/d:/work/repo/builder/tt/tools/eclipse-sdk-4.4.1/configuration/
+     [java] Framework located:
+     [java]     file:/d:/work/repo/builder/tt/tools/eclipse-sdk-4.4.1/plugins/org.eclipse.osgi_3.10.1.v20140909-1633.jar
+     [java] Loading extension: reference:file:org.eclipse.osgi.compatibility.state_1.0.1.v20140709-1414.jar
+     [java] 	eclipse.properties not found
+     [java] Framework classpath:
+     [java]     file:/d:/work/repo/builder/tt/tools/eclipse-sdk-4.4.1/plugins/org.eclipse.osgi_3.10.1.v20140909-1633.jar
+     [java]     file:/d:/work/repo/builder/tt/tools/eclipse-sdk-4.4.1/plugins/
+     [java]     file:/d:/work/repo/builder/tt/tools/eclipse-sdk-4.4.1/plugins/org.eclipse.osgi.compatibility.state_1.0.1.v20140709-1414.jar
+     [java] Debug options:
+     [java]     file:/D:/work/repo/builder/devtools/trunk/tools/sample/.options not found
+     [java] Time to load bundles: 8
+     [java] Starting application: 1670
+     [java] Generating metadata for ..
+     [java] Artifact repository out of sync. Overwriting D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\debug\features\com.tibco.sample.feature_1.0.0.003.jar
+     [java] Artifact repository out of sync. Overwriting D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\debug\plugins\com.tibco.sample.plugin_1.0.0.001.jar
+     [java] Generation completed with success [0 seconds].
+   [delete] Deleting directory D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\p2
+
+-sign-jars:
+
+-acquire-buildno:
+   [delete] Deleting: D:\work\repo\builder\devtools\trunk\tools\sample\null107067854
+
+-post-custom-actions:
+
+build:
+     [echo] 
+     [echo] +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     [echo] +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     [echo] +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     [echo] +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     [echo] 
+     [echo] COMPLETED
+     [echo] 
+     [echo]    version info:
+     [echo]    
+     [echo]    features:
+     [echo]         
+     [echo]        com.tibco.sample.feature.devdocs_1.0.0.003
+     [echo]                         
+     [echo]        com.tibco.sample.feature.source_1.0.0.003
+     [echo]                         
+     [echo]        com.tibco.sample.feature.test_1.0.0.003
+     [echo]                         
+     [echo]        com.tibco.sample.feature_1.0.0.003
+     [echo]                         
+     [echo]    plugins:
+     [echo]         
+     [echo]         com.tibco.sample.plugin_1.0.0.001
+     [echo]                         
+     [echo]         docs.com.tibco.sample_1.0.0.001
+     [echo]                         
+     [echo]         sources.com.tibco.sample_1.0.0.001
+     [echo]                         
+     [echo]         tests.com.tibco.sample.plugin_1.0.0.001
+     [echo]                         
+     [echo]    
+     [echo]    devtools/common.tools.sample
+     [echo] 
+     [echo]    com.tibco.sample.feature
+     [echo] 
+     [echo]    release update site:
+     [echo]    D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\release
+     [echo] 
+     [echo]    debug update site:
+     [echo]    D:\work\repo\builder\tt\output\tbuild\candidates\devtools\branches\huaweiSandbox\tools\common.tools.sample\2015-08-10-2315.huawei\jar\debug
+     [echo] 
+     [echo]    Build started: 04:15 PM 10 August 2015
+     [echo] 
+     [echo] +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     [echo] +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     [echo] +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     [echo] +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     [echo]         
+
+BUILD SUCCESSFUL
+Total time: 48 seconds

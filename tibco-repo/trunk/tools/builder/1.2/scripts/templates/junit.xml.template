@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="JUnit Test" default="units-test" basedir=".">
+
+	<target name="units-test">
+
+<!--
+<property name="junit-src.dir" value="" />
+<property name="testResultsFolder" value="." />
+-->
+
+<mkdir dir="${testResultsFolder}"/>
+
+<junit fork="yes">
+	<formatter type="xml"/>
+	<batchtest fork="yes" toDir="${testResultsFolder}">
+		<fileset dir="${junit-src.dir}">
+			<include name="**/*Test*.java"/>
+			<exclude name=""/>
+		</fileset>
+	</batchtest>
+	<classpath refid="junit.classpath"/>
+	<jvmarg value="-Demma.coverage.out.file=${coverage.dir}/coverage.emma" />
+	<jvmarg value="-Demma.coverage.out.merge=true" />
+</junit>
+
+	</target>
+
+	<target name="units-report">
+
+<junitreport toDir="${testResultsFolder}">
+	<fileset dir="${testResultsFolder}">
+		<include name="TEST-*.xml"/>
+		<exclude name=""/>
+	</fileset>
+	<report format="frames" toDir="${testResultsFolder}"/>
+</junitreport>		
+
+	</target>
+</project>

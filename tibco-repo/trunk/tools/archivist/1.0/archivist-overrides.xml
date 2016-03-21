@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Archivist 1.x Overrides">
+
+    <!-- this is the subversion-delivery version, which differs slightly from the
+         eclipse-delivery version.  this property will be dumped using
+         ant properties, which aids debugging. -->
+    <property name="autobuild.dir.archivist"
+              location="${autobuild.dir.archivist.root}/lib" />
+
+    <property name="autobuild.dir.archivist.scripts"
+              location="${autobuild.dir.archivist.root}/scripts" />
+    
+    <!-- devtools: archivist.ant, archivist, common.util.ant, common.util -->
+    <property name="version.d.a.a" value="1.0.2.005" />
+    <property name="version.d.a" value="1.1.4.006" />
+    <property name="version.d.c.u.a" value="1.0.2.002" />
+    <property name="version.d.c.u" value="1.0.2.003" />
+    
+    <!-- neo: common.util, model.base -->
+    <property name="version.n.c.u" value="2.4.0.004" />
+    <property name="version.n.e.s" value="1.0.0.005" />
+    <!-- code inspection suggests that all this stuff is bogus, too, but uncertainty leaves it here -->
+    <property name="version.slf4j" value="1.3.1" />
+    <property name="build.slf4j" value="010" />
+    <property name="version.log4j" value="1.2.13" />
+    <property name="build.log4j" value="010" />
+
+    <path id="autobuild.path.archivist">
+        <pathelement location="${autobuild.dir.archivist}/com.tibco.devtools.archivist.ant_${version.d.a.a}/archivist-ant.jar"/>
+        <pathelement location="${autobuild.dir.archivist}/com.tibco.devtools.archivist_${version.d.a}.jar"/>
+        <pathelement location="${autobuild.dir.archivist}/com.tibco.devtools.common.util.ant_${version.d.c.u.a}.jar"/>
+        <pathelement location="${autobuild.dir.archivist}/com.tibco.devtools.common.util_${version.d.c.u}.jar"/>
+        <pathelement location="${autobuild.dir.archivist}/com.tibco.neo.common.util_${version.n.c.u}.jar"/>
+        <pathelement location="${autobuild.dir.archivist}/com.tibco.neo.eclipse.support_${version.n.e.s}.jar"/>
+        <pathelement location="${autobuild.dir.archivist}/com.tibco.tpcl.org.slf4j.log4j12_${version.slf4j}.${build.slf4j}/slf4j-api-${version.slf4j}.jar"/>
+        <pathelement location="${autobuild.dir.archivist}/com.tibco.tpcl.org.slf4j.log4j12_${version.slf4j}.${build.slf4j}/slf4j-log4j12-${version.slf4j}.jar"/>
+        <pathelement location="${autobuild.dir.archivist}/com.tibco.tpcl.org.slf4j.log4j12_${version.slf4j}.${build.slf4j}/commonlogging-slf4jadapter.jar.jar"/>
+        <pathelement location="${autobuild.dir.archivist}/com.tibco.tpcl.org.apache.log4j_${version.log4j}.${build.log4j}/log4j-${version.log4j}.jar" />
+    </path>
+
+</project>

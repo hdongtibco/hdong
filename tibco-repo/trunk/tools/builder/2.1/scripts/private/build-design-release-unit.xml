@@ -1,0 +1,530 @@
+<project name="Build the design Release Unit">
+    <!-- define the design extension name -->
+    <property name="_extension_name" value=".eclipse" />
+    <!-- define the design build folder name -->
+    <property name="_build_dir_name" value="eclipse-ru" />
+    <!-- build the design features&plugins for debug, release and local-builds-site -->
+    <target name="-build-design-release-unit" if="dual.build.enable" depends="perform-substitutions-wrapper, -pre-design-release-unit, -verify-dual-meta">
+        <if>
+            <isset property="_found_feature_eclipse" />
+            <then>
+                <!-- retrieve the feature list from the release folder -->
+                <for param="target-feature">
+                    <dirset dir="${autobuild.dir.output.release}/features">
+                        <include name="${feature}_*" />
+                    </dirset>
+                    <sequential>
+                        <propertyregex property="_target_feature_name" override="true" input="@{target-feature}" 
+                                       regexp="([^/\\]*$)" select="\1" />
+                        <propertyregex property="_target_feature_id" override="true" input="${_target_feature_name}" 
+                                       regexp="(.*)_(\d+\.\d+\.\d+)" select="\1" />
+                        <!-- process only when the feature.xml.eclipse exists -->
+                        <available property="design_feature_${_target_feature_name}" 
+                                   file="${autobuild.dir.release-unit}/features/${_target_feature_id}/feature.xml${_extension_name}" 
+                                   type="file" value="${_target_feature_name}" />
+                    </sequential>
+                </for>
+                <!-- prepare the feature list property -->
+                <propertyselector property="_feature_list" override="true" match="design_feature_.*" />
+                <if>
+                    <isset property="_feature_list" />
+                    <then>
+                        <!-- for each destination, call the target -build-design-features -->
+                        <foreach list="debug,release/eclipse,jar/debug,jar/release,${autobuild.workspace.update-sites.local}" param="_target" 
+                                 target="-build-design-features" inheritall="true" />
+                        <!-- make the folders as special eclipse folder -->
+                        <echo file="${autobuild.dir.output.candidates}/${_build_dir_name}/debug/.eclipseextension" />
+                        <echo file="${autobuild.dir.output.candidates}/${_build_dir_name}/release/eclipse/.eclipseextension" />
+                    </then>
+                </if>
+                <copy file="${autobuild.dir.release-unit}/features/${feature}/feature.xml${_extension_name}"
+                    tofile="${autobuild.dir.release-unit}/build-artifacts/feature.xml${_extension_name}"/>
+                <delete file="${autobuild.dir.release-unit}/features/${feature}/feature.xml${_extension_name}" quiet="true"/>
+            </then>
+            <else>
+               <fail>
+!!!
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The property dual.build.enable is set but the feature.xml.eclipse 
+wasn't generated. Please find out the problem.
+Fail now!
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+</fail>
+            </else>
+        </if>
+   
+    </target>
+     
+    <target name="-pre-design-release-unit" if="dual.build.enable">
+
+        <!-- set the default value 'false' for the property -->
+        <property name="dual.build.mappings.disable" value="false" />
+
+        <delete file="${autobuild.dir.release-unit}/features/${feature}/feature.xml${_extension_name}" quiet="true"/>
+        
+        <eclipse.nature.feature.convert
+                 inputfile="${autobuild.dir.release-unit}/features/${feature}/feature.xml"
+                 outputfile="${autobuild.dir.release-unit}/features/${feature}/feature.xml${_extension_name}"
+                 extension=".eclipse"
+                 localsitecache="${autobuild.workspace.local-cache}"
+                 caching="${autobuild.workspace.cache-choice}"
+                 featuremappingurl="${autobuild.mappings.file}"
+                 bypasscheck="${dual.build.mappings.disable}">
+                 <updatesites refid="autobuild.workspace.update-sites.default" />
+                 <updatesites refid="autobuild.workspace.update-sites.default.list" />
+                 <updatesites refid="autobuild.workspace.update-sites.list" />
+                 <updatesites refid="autobuild.workspace.update-sites.local.id" />
+            <dualbundles>
+                <fileset dir="${autobuild.dir.release-unit}/plugins" includes="**/MANIFEST.MF.eclipse" />
+            </dualbundles>
+        </eclipse.nature.feature.convert>
+         <!-- first, check the feature.xml.eclipse existing from the feature folder -->
+        <available property="_found_feature_eclipse" 
+                   file="${autobuild.dir.release-unit}/features/${feature}/feature.xml${_extension_name}" />
+    </target>
+    
+    <target name="-build-design-features">
+        <!-- for each feature, call the target -build-design-feature -->
+        <foreach list="${_feature_list}" param="_feature"
+                 target="-build-design-feature" inheritall="true" />
+      
+    </target>
+
+    <target name="-build-design-feature">
+        <propertycopy property="_feature_name" from="${_feature}" override="true" />
+        <propertyregex property="_feature_id" override="true" input="${_feature_name}" 
+                       regexp="(.*)_(\d+\.\d+\.\d+)" select="\1" />
+        <propertyregex property="_feature_version" override="true" input="${_feature_name}"
+                       regexp="${_feature_id}_(.*)" select="\1" />
+        <if>
+            <equals arg1="${_target}" arg2="${autobuild.workspace.update-sites.local}" />
+            <then>
+                <var name="_feature_location" value="${_target}/features/${_feature_name}" />
+                <var name="_copy_feature_location" value="${_target}/features/${_feature_id}${_extension_name}_${_feature_version}" />
+            </then>
+            <else>
+                <var name="_feature_location" value="${autobuild.dir.output.candidates}/${_target}/features/${_feature_name}" />
+                <if>
+                    <or>
+                        <equals arg1="${_target}" arg2="debug" />
+                        <equals arg1="${_target}" arg2="release/eclipse" />
+                    </or>
+                    <then>
+                        <var name="_copy_feature_location" value="${autobuild.dir.output.candidates}/${_build_dir_name}/${_target}/features/${_feature_id}${_extension_name}_${_feature_version}" />
+                    </then>
+                    <else>
+                        <var name="_copy_feature_location" value="${autobuild.dir.output.candidates}/${_target}/features/${_feature_id}${_extension_name}_${_feature_version}" />
+                    </else>
+                </if>
+            </else>
+        </if>
+        <!-- check whether the feature is packed or not -->
+        <available property="_found_this_feature_folder" file="${_feature_location}" type="dir" />
+        <available property="_found_this_feature_jar" file="${_feature_location}.jar" type="file" />
+        <if>
+            <isset property="_found_this_feature_folder" />
+            <then>
+                <copy todir="${_copy_feature_location}">
+                    <fileset dir="${_feature_location}" includes="**/*" />
+                </copy>
+            </then>
+        </if>
+        <if>
+            <isset property="_found_this_feature_jar" />
+            <then>
+                <unjar src="${_feature_location}.jar"
+                       dest="${_copy_feature_location}" />
+            </then>
+        </if>
+        <!-- retrieve the plugin list from the feature.xml -->
+        <tempfile property="_plugins_temp_file" />
+        <xslt in="${_copy_feature_location}/feature.xml" out="${_plugins_temp_file}"
+              style="${autobuild.dir.scripts}/private/extractPlugins.xsl">
+            <param name="feature_id" expression="${_feature_id}" />
+        </xslt>
+        <property file="${_plugins_temp_file}" prefix="_design_target." />
+        <delete file="${_plugins_temp_file}" quiet="true"/>
+        <property name="_plugins_list" value="" />
+        <propertyselector property="_plugins_list" override="true" match="_design_target.plugin_${_feature_id}-.*" />
+        <!-- copy the feature.xml.eclipse, this file is prepared by developer -->
+        <copy file="${autobuild.dir.release-unit}/features/${_feature_id}/feature.xml${_extension_name}" 
+              toFile="${_copy_feature_location}/feature.xml" overwrite="true" />
+        <!-- replace the feature version in the feature.xml.eclipse -->
+        <replaceregexp file="${_copy_feature_location}/feature.xml" 
+                       match="&lt;feature([^&gt;]*)id=&quot;${_feature_id}${_extension_name}&quot;([^&gt;]*)version=&quot;([^&quot;]*)&quot;" 
+                       replace="&lt;feature\1id=&quot;${_feature_id}${_extension_name}&quot;\2version=&quot;${_feature_version}&quot;" 
+                       flags="s" />
+        <!-- for each plugin, call the target -build-design-plugin -->
+        <foreach list="${_plugins_list}" param="_plugin"
+                 target="-build-design-plugin" inheritall="true" />
+        <!-- zip the design feature if the original feature is packed -->
+        <if>
+            <isset property="_found_this_feature_jar" />
+            <then>
+                <zip destfile="${_copy_feature_location}.jar"
+                     basedir="${_copy_feature_location}" />
+                <delete dir="${_copy_feature_location}" quiet="true" />
+            </then>
+        </if>
+        <!-- update the site.xml files  -->
+        <if>
+            <or>
+                <equals arg1="${_target}" arg2="jar/release" />
+                <equals arg1="${_target}" arg2="jar/debug" />
+            </or>
+            <then>
+                <update.site.creator sitedirectory="${autobuild.dir.output.candidates}/${_target}" fastupdatesitexml="${fast.update.site.xml}" />
+            </then>
+        </if>
+        <if>
+            <equals arg1="${_target}" arg2="${autobuild.workspace.update-sites.local}" />
+            <then>
+                  <update.site.creator sitedirectory="${autobuild.workspace.update-sites.local}" fastupdatesitexml="${fast.update.site.xml}" />
+            </then>
+        </if>
+        
+    </target>
+
+    <target name="-build-design-plugin">
+        <propertycopy property="_plugin_version" from="${_plugin}" override="true" />
+        <propertyregex property="_plugin_id" override="true" input="${_plugin}"
+                       regexp="${_feature_id}-(.*)" select="\1" />
+        <!-- replace the plugin version in the feature.xml.eclipse -->
+        <if>
+            <available file="${autobuild.dir.release-unit}/plugins/${_plugin_id}/MANIFEST.MF${_extension_name}" />
+            <then>
+                <var name="_new_plugin_id" value="${_plugin_id}${_extension_name}" />            
+            </then>
+            <else>
+                <var name="_new_plugin_id" value="${_plugin_id}" /> 
+            </else>
+        </if>
+        <replaceregexp file="${_copy_feature_location}/feature.xml" 
+                       match="&lt;plugin([^&gt;]*)id=&quot;${_new_plugin_id}&quot;([^&gt;]*)version=&quot;([^&quot;]*)&quot;" 
+                       replace="&lt;plugin\1id=&quot;${_new_plugin_id}&quot;\2version=&quot;${_plugin_version}&quot;" 
+                       flags="s" />
+
+        <if>
+            <equals arg1="${_target}" arg2="${autobuild.workspace.update-sites.local}" />
+            <then>
+                <var name="_plugins_dir" value="${_target}/plugins" />
+                <var name="_plugin_location" value="${_plugins_dir}/${_plugin_id}_${_plugin_version}" />
+                <if>
+                    <available file="${autobuild.dir.release-unit}/plugins/${_plugin_id}/MANIFEST.MF${_extension_name}" />
+                    <then>
+                        <var name="_copy_plugins_dir" value="${_target}/plugins" />
+                        <var name="_copy_plugin_location" value="${_copy_plugins_dir}/${_plugin_id}${_extension_name}_${_plugin_version}" />
+                    </then>
+                    <else>
+                        <var name="_copy_plugins_dir" value="${_target}/plugins" />
+                        <var name="_copy_plugin_location" value="${_copy_plugins_dir}/${_plugin_id}_${_plugin_version}" />
+                    </else>
+                </if>
+            </then>
+            <else>
+                <var name="_plugin_location" value="${autobuild.dir.output.candidates}/${_target}/plugins/${_plugin_id}_${_plugin_version}" />
+                <var name="_plugins_dir" value="${autobuild.dir.output.candidates}/${_target}/plugins" />
+                <if>
+                    <or>
+                        <equals arg1="${_target}" arg2="debug" />
+                        <equals arg1="${_target}" arg2="release/eclipse" />
+                    </or>
+                    <then>
+                        <if>
+                            <available file="${autobuild.dir.release-unit}/plugins/${_plugin_id}/MANIFEST.MF${_extension_name}" />
+                            <then>
+                                <var name="_copy_plugins_dir" value="${autobuild.dir.output.candidates}/${_build_dir_name}/${_target}/plugins" />
+                                <var name="_copy_plugin_location" value="${_copy_plugins_dir}/${_plugin_id}${_extension_name}_${_plugin_version}" />
+                            </then>
+                            <else>
+                                <var name="_copy_plugins_dir" value="${autobuild.dir.output.candidates}/${_build_dir_name}/${_target}/plugins" />
+                                <var name="_copy_plugin_location" value="${_copy_plugins_dir}/${_plugin_id}_${_plugin_version}" />
+                            </else>
+                        </if>
+                    </then>
+                    <else>
+                        <if>
+                            <available file="${autobuild.dir.release-unit}/plugins/${_plugin_id}/MANIFEST.MF${_extension_name}" />
+                            <then>
+                                <var name="_copy_plugins_dir" value="${autobuild.dir.output.candidates}/${_target}/plugins" />
+                                <var name="_copy_plugin_location" value="${_copy_plugins_dir}/${_plugin_id}${_extension_name}_${_plugin_version}" />
+                            </then>
+                            <else>
+                                <var name="_copy_plugins_dir" value="${autobuild.dir.output.candidates}/${_target}/plugins" />
+                                <var name="_copy_plugin_location" value="${_copy_plugins_dir}/${_plugin_id}_${_plugin_version}" />
+                            </else>
+                        </if>
+                    </else>
+                </if>
+            </else>
+        </if>
+        <!-- check whether the plugin is packed or not -->
+        <available property="_found_this_plugin_folder" file="${_plugin_location}" type="dir" />
+        <available property="_found_this_plugin_jar" file="${_plugin_location}.jar" type="file" />
+        <if>
+            <isset property="_found_this_plugin_folder" />
+            <then>
+                <copy todir="${_copy_plugin_location}">
+                    <fileset dir="${_plugin_location}" includes="**/*" />
+                </copy>
+            </then>
+        </if>
+
+        <if>
+            <available file="${autobuild.dir.release-unit}/plugins/${_plugin_id}/MANIFEST.MF${_extension_name}" />
+            <then>
+                <if>
+                    <isset property="_found_this_plugin_jar" />
+                    <then>
+                        <mkdir dir="${_copy_plugin_location}/META-INF" />
+                    </then>
+                </if>
+                <!-- copy the MANIFEST.MF.eclipse, this file is prepared by developer -->
+                <copy file="${autobuild.dir.release-unit}/plugins/${_plugin_id}/MANIFEST.MF${_extension_name}" 
+                      toFile="${_copy_plugin_location}/META-INF/MANIFEST.MF" overwrite="true" />
+                <!-- replace the bundle version in the MANIFEST.MF  -->
+                <replaceregexp file="${_copy_plugin_location}/META-INF/MANIFEST.MF" match="Bundle-Version: (.*)"
+                               replace="Bundle-Version: ${_plugin_version}" byline="true" />
+                <!-- zip the design plugin if the original plugin is packed -->
+                <if>
+                    <isset property="_found_this_plugin_jar" />
+                    <then>
+                        <zip destfile="${_copy_plugin_location}.jar">
+                            <zipfileset src="${_plugin_location}.jar" includes="**/*" excludes="META-INF/MANIFEST.MF" />
+                            <zipfileset file="${_copy_plugin_location}/META-INF/MANIFEST.MF" fullpath="META-INF/MANIFEST.MF" />
+                        </zip>
+                        <delete dir="${_copy_plugin_location}" quiet="true" />
+                    </then>
+                </if>
+            </then>
+            <else>
+                <if>
+          <and>
+                        <isset property="_found_this_plugin_jar" />
+                        <not>
+                            <equals arg1="${_plugins_dir}" arg2="${_copy_plugins_dir}" />
+                        </not>
+                    </and>
+                    <then>
+                        <copy file="${_plugins_dir}/${_plugin_id}_${_plugin_version}.jar" 
+                              toFile="${_copy_plugins_dir}/${_plugin_id}_${_plugin_version}.jar" overwrite="true" />
+                    </then>
+                </if>
+            </else>
+        </if>
+    </target>
+
+    <!-- through create new ru for verify dual build META -->
+    <target name="-verify-dual-meta" if="_found_feature_eclipse" >
+ 
+        <!-- mk dir and cpoy build.xml,build-overrides.xml -->
+        <property name="dual.build.dir" value="${autobuild.dir.release-unit}/dual-build" />
+        <property name="dual.features.dir" value="${dual.build.dir}/features" />
+        <delete dir="${dual.build.dir}" quiet="true" />
+        <mkdir dir="${dual.build.dir}" />
+        <mkdir dir="${dual.features.dir}" />
+        <copy  todir="${dual.build.dir}">
+            <fileset dir="${autobuild.dir.release-unit}">
+                <include name="*.xml" />
+                <exclude name="build-overrides.xml" />
+            </fileset>
+        </copy>
+        <!-- make this folder as special eclipse folder -->
+        <echo file="${dual.build.dir}/.ws-ignore">This file indicates that this folder should be ignored for feature and project search.</echo>
+        <!--deal with extractFeature.xml -->
+        <if>
+            <available file="${autobuild.dir.release-unit}/extraFeature.xml" />
+            <then>
+                <eclipse.nature.feature.convert
+                        inputfile="${autobuild.dir.release-unit}/extraFeature.xml"
+                        outputfile="${dual.build.dir}/extraFeature.xml"
+                        extension=".eclipse"
+                        localsitecache="${autobuild.workspace.local-cache}"
+                        caching="${autobuild.workspace.cache-choice}"
+                        featuremappingurl="${autobuild.mappings.file}"
+                        bypasscheck="${dual.build.mappings.disable}">
+                        <updatesites refid="autobuild.workspace.update-sites.default" />
+                        <updatesites refid="autobuild.workspace.update-sites.default.list" />
+                        <updatesites refid="autobuild.workspace.update-sites.list" />
+                        <updatesites refid="autobuild.workspace.update-sites.local.id" />
+                    <dualbundles>
+                        <fileset dir="${autobuild.dir.release-unit}/plugins" includes="**/MANIFEST.MF.eclipse" />
+                    </dualbundles>
+                </eclipse.nature.feature.convert>
+            </then>
+        </if>
+        <!--copy features -->
+        <copy todir="${dual.features.dir}/${feature}${_extension_name}" >
+            <fileset dir="${autobuild.dir.release-unit}/features/${feature}" />
+        </copy>
+        <move file="${dual.features.dir}/${feature}${_extension_name}/feature.xml.eclipse" 
+            tofile="${dual.features.dir}/${feature}${_extension_name}/feature.xml" overwrite="true" />
+        <!-- copy archivist directory if it exists -->
+        <if>
+            <available file="${autobuild.dir.release-unit}/archivist" type="dir" />
+            <then>
+                <copy todir="${dual.build.dir}/archivist">
+                    <fileset dir="${autobuild.dir.release-unit}/archivist">
+                        <include name="*.txt"/>
+                    </fileset>
+                </copy>
+            </then>
+        </if>
+
+        <!-- property for dual-build's documentation.plugin.list -->
+        <property name="_dual.documentation.list" value=""/>
+        <!-- set dual feature -->
+        <for param="dual.feature">
+            <dirset dir="${dual.build.dir}/features">
+                <include name="*" />
+            </dirset>
+            <sequential>
+                <set.dual.feature.plugins dual.feature.dir="@{dual.feature}" />
+            </sequential>
+        </for>
+        <!-- replace the property dual.build.enable line.
+            add unset code to the build-override.xml unset official and intergration.
+            add unset code to the dual.build.enable.
+            override release-unit and feature to fit for dual build.
+        -->
+        <xslt in="${autobuild.dir.release-unit}/build-overrides.xml" out="${dual.build.dir}/build-overrides.xml"
+            style="${autobuild.dir.scripts}/private/dualBuildConvert.xsl" >
+            <param name="eclipseFeature" expression="${feature}.eclipse" />
+        </xslt>
+    </target>
+
+    <!--set plugins -->
+    <macrodef name="set.dual.feature.plugins">
+        <attribute name="dual.feature.dir" />
+        <sequential>
+            <!-- get all plugins from feature.xml --> 
+            <tempfile property="dual.property.temp.file" />
+            <xslt in="${dual.features.dir}/${feature}${_extension_name}/feature.xml"
+                  out="${dual.property.temp.file}"
+                  style="${autobuild.dir.scripts}/private/extractPlugins.xsl" >
+                <param name="feature_id" expression="dual_feature_plugins" />
+            </xslt>
+            <property file="${dual.property.temp.file}" prefix="dual.feature.plguin." />
+            <delete file="${dual.property.temp.file}" quiet="true"/>
+            <propertyselector property="dual_feature_plugins_list" match="dual.feature.plguin\.plugin_[^-]*-(.*)"
+                              override="true" select="\1" />
+
+            <!-- base on feature.xml copy plugins  -->
+            <for param="dual.copy.plugin" list="${dual_feature_plugins_list}" >
+                <sequential>
+                    <propertyregex property="_dual.eclipse" input="@{dual.copy.plugin}" regexp="\beclipse\b.*" 
+                                   select="\0" override="true" defaultValue="noeclipse" />
+                    <!-- copy plugins -->
+                    <if>
+                        <!-- this is a nature plugin -->
+                        <equals arg1="${_dual.eclipse}" arg2="eclipse" />
+                        <then>
+                            <propertyregex property="_dual.eclipse" input="@{dual.copy.plugin}" 
+                                           regexp=".eclipse+.*" replace="" defaultValue="@{dual.copy.plugin}" override="true" />            
+                            <copy todir="${dual.build.dir}/plugins/${_dual.eclipse}${_extension_name}" overwrite="true" >
+                                 <fileset dir="${autobuild.dir.release-unit}/plugins/${_dual.eclipse}" />
+                            </copy>
+                            
+                            <!-- detect docs plugins -->
+                            <if>
+                                <available file="${dual.build.dir}/plugins/${_dual.eclipse}${_extension_name}/META-INF" />
+                                <then>
+                                    <copy file="${dual.build.dir}/plugins/${_dual.eclipse}${_extension_name}/MANIFEST.MF.eclipse"
+                                          tofile="${dual.build.dir}/plugins/${_dual.eclipse}${_extension_name}/META-INF/MANIFEST.MF" overwrite="true"/>
+                                </then>
+                                <else>
+                                    <copy file="${dual.build.dir}/plugins/${_dual.eclipse}${_extension_name}/MANIFEST.MF.eclipse"
+                                          tofile="${dual.build.dir}/plugins/${_dual.eclipse}${_extension_name}/MANIFEST.MF" overwrite="true"/>
+                                </else>
+                            </if>
+                        </then>
+                        <elseif>
+                            <!-- this is a plugin -->
+                            <isset property="dual_feature_plugins_list" />
+                            <then>
+                                <copy todir="${dual.build.dir}/plugins/@{dual.copy.plugin}" overwrite="true" >
+                                    <fileset dir="${autobuild.dir.release-unit}/plugins/@{dual.copy.plugin}" />
+                                </copy>
+                            </then>
+                        </elseif>
+                        <else>
+                            <!-- empty RU need directory "plugins" too-->
+                            <mkdir dir="${dual.build.dir}/plugins" />
+                        </else>
+                    </if>
+                    
+                    <!-- change documentation.plugin.list -->
+                    <propertyregex property="_document.eclipse" input="@{dual.copy.plugin}" 
+                                  regexp=".eclipse+.*" replace="" defaultValue="@{dual.copy.plugin}" override="true" /> 
+                    <if>
+                        <isset property="documentation.plugin.list" />
+                        <then>
+                            <property name="_dual.flag" value="nocomma" />
+                            <for param="dual.doc.name" list="${documentation.plugin.list}">
+                                <sequential>
+                                    <if>
+                                        <and>
+                                            <equals arg1="${_dual.flag}" arg2="nocomma" />
+                                            <equals arg1="@{dual.doc.name}" arg2="${_document.eclipse}" />
+                                        </and>
+                                        <then>
+                                            <!-- detect it nature doc plugin or not -->       
+                                            <if>
+                                                 <equals arg1="${_dual.eclipse}" arg2="noeclipse" />
+                                                <then>
+                                                    <var name="_dual.documentation.list" 
+                                                         value="@{dual.doc.name}" />
+                                                </then>
+                                                <else>
+                                                     <var name="_dual.documentation.list" 
+                                                         value="@{dual.doc.name}${_extension_name}" />
+                                                </else>
+                                            </if>
+                                            <var name="_dual.flag" value="comma" />
+                                        </then>
+                                        <elseif>
+                                            <and>
+                                                <equals arg1="${_dual.flag}" arg2="comma" />  
+                                                <equals arg1="@{dual.doc.name}" arg2="${_document.eclipse}" />
+                                            </and>
+                                        <then>
+                                            <!-- detect it nature doc plugin or not -->  
+                                            <if>
+                                                 <equals arg1="${_dual.eclipse}" arg2="noeclipse" />
+                                                <then>
+                                                    <var name="_dual.documentation.list" 
+                                                         value="@{dual.doc.name}" />
+                                                </then>
+                                                <else>
+                                                     <var name="_dual.documentation.list" 
+                                                         value="@{dual.doc.name}${_extension_name}" />
+                                                </else>
+                                            </if>
+                                        </then>
+                                        </elseif>
+                                    </if>
+                                </sequential>
+                            </for>
+                        </then>
+                    </if>
+                </sequential>
+            </for>     
+            <!-- set documentation.plugin.list for dual-build -->
+            <if>
+                <isset property="documentation.plugin.list" />
+                <then>
+                    <replaceregexp file="${dual.build.dir}/build-overrides.xml"
+                                   match="&lt;property([^&gt;]*)name=&quot;documentation.plugin.list&quot;([^&gt;]*)value=&quot;${documentation.plugin.list}&quot;" 
+                                   replace="&lt;property\1name=&quot;documentation.plugin.list&quot;\2value=&quot;${_dual.documentation.list}&quot;"
+                                   flags="s" />
+                </then>
+            </if>    
+ 
+        </sequential>
+    </macrodef>
+    
+</project>

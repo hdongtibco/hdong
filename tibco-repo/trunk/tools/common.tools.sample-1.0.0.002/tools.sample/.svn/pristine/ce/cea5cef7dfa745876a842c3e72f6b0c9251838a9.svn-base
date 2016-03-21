@@ -1,0 +1,16 @@
+## builder 1.5 2009 hearts and flowers release
+#Tue, 28 Jul 2015 23:31:59 -0700
+
+internal.target.path=devtools/branches/huaweiSandbox/tools/common.tools.sample/2015-07-29-0631.huawei
+publish.target.folder=/tsi/root/reldist
+local.base.location=D\:\\work\\repo\\builder\\tt\\output\\tbuild\\candidates
+local.target.location=${local.base.location}/${internal.target.path}
+local.release.update-site=${local.target.location}/jar/release
+local.debug.update-site=${local.target.location}/jar/debug
+release.base.location=http\://reldist.na.tibco.com/candidates
+release.target.location=${release.base.location}/${internal.target.path}
+release.update-site=${release.target.location}/jar/release
+release.devdocs=1.0.0.002
+release.source=1.0.0.002
+release.test=1.0.0.002
+release.code=1.0.0.002

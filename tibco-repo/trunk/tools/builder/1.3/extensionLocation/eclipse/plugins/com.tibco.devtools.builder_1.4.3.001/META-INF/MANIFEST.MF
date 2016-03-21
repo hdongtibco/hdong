@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-Name: Stand-alone Builder Tool
+Bundle-ClassPath: builder-core.jar,builder-ant.jar
+Bundle-Vendor: TIBCO
+Bundle-ManifestVersion: 2
+Bundle-Localization: plugin
+Bundle-SymbolicName: com.tibco.devtools.builder; singleton:=true
+Export-Package: com.tibco.devtools.builder,com.tibco.devtools.builder.
+ generators,com.tibco.devtools.builder.task,com.tibco.devtools.builder
+ .utilities
+Require-Bundle: org.eclipse.update.core,org.eclipse.core.runtime,org.e
+ clipse.pde.core,org.eclipse.pde.build,org.apache.ant,org.eclipse.ant.
+ core,com.tibco.devtools.buildscripts;bundle-version="[1.0.0,2.0.0)"
+Bundle-Version: 1.4.3.001
+

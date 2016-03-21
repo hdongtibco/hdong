@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Bundle-Name: TIBCO Common Logging Slf4jadapter Plug-in
+Bundle-ClassPath: commonlogging-slf4jadapter.jar,slf4j-log4j12-1.3.1.j
+ ar,slf4j-api-1.3.1.jar
+Import-Package: org.apache.log4j;version="[1.2.0,1.3.0)"
+Bundle-Vendor: TIBCO Software Inc.
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: com.tibco.tpcl.org.slf4j.log4j12
+Export-Package: org.slf4j;version="1.3.1",org.slf4j.helpers;version="1
+ .3.1",org.slf4j.impl;version="1.3.1",org.slf4j.spi;version="1.3.1"
+Bundle-Version: 1.3.1.010
+

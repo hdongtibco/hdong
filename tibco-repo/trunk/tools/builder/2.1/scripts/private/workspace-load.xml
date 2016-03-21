@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="workspace-load">
+
+    <available file="${autobuild.dir.workspace.installer}" property="_workspace_is_installed" type="file" />
+    <fail unless="_workspace_is_installed">
+autobuild.dir.workspace.installer: ${autobuild.dir.workspace.installer}
+does not exist or is not a directory</fail>
+
+    <path id="autobuild.path.workspace.installer">
+        <fileset file="${autobuild.dir.workspace.installer}" />
+    </path>
+    <!-- and finally - load all the types and tasks! -->
+    <typedef
+    	classpathref="autobuild.path.workspace.installer"
+    	resource="com/tibco/devtools/workspace/installer/tasks/wi.antlib.xml" />
+    
+</project>

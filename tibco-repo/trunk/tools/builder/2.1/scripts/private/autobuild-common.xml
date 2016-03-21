@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="builder-common">
+<!-- contains common targets from autobuild-main and choreography. -->
+   
+    <available property="_builder_is_identified" file="${autobuild.dir.builder}" type="dir" />
+
+    <target name="-load-ant-contrib">
+        <fail unless="_builder_is_identified">
+The path to builder, ${autobuild.dir.builder}
+does not exist or is not a directory;
+the required ant-contrib library cannot be loaded.</fail>
+        <taskdef resource="net/sf/antcontrib/antlib.xml">
+            <classpath>
+                <fileset dir="${autobuild.dir.builder}" includes="ant-contrib-1.0b3.jar"/>
+            </classpath>
+        </taskdef>
+    </target>
+
+    <target name="-set-osgi-debug-options">
+        <!-- osgi debug mode -->
+        <if>
+            <isset property="osgi.debug.mode" />
+            <then>
+                <!--property name="osgi.debug.arg" value="-Dosgi.debug" /-->
+                <property name="osgi.debug.options" value="-debug ${autobuild.dir.release-unit}/options" />
+                <available property="_existing_options_file" file="${autobuild.dir.release-unit}/options" type="file" />
+                <if>
+                    <isset property="_existing_options_file" />
+                    <then>
+                        <echo> found the options file! </echo>
+                    </then>
+                    <else>
+                        <propertyfile file="${autobuild.dir.release-unit}/options" comment="osgi debug default options generated! the options file can be modified by users.">
+                            <entry key="org.eclipse.osgi/resolver/debug" value="true"/>
+                            <entry key="org.eclipse.osgi/resolver/requires" value="true"/>
+                            <entry key="org.eclipse.osgi/resolver/imports" value="true"/>
+                            <entry key="org.eclipse.osgi/resolver/wiring" value="true"/>
+                        </propertyfile>
+                    </else>
+                </if>
+            </then>
+        </if>
+    </target>
+
+    <target name="-set-timestamp" unless="touch.time">
+        <tstamp>
+            <!-- a common timezone and not local one! -->
+            <format property="touch.time" pattern="yyyy-MM-dd-HHmm" timezone="GMT"/>
+            <format property="display.time" pattern="hh:mm aa d MMMM yyyy"/>
+        </tstamp>
+    </target>
+    
+    <target name="-set-pdehost" depends="-load-ant-contrib">
+        <var name="autobuild.dir.eclipse" unset="true" />
+        <if>
+          <isset property="autobuild.dir.eclipse-4.4" />
+          <then>
+            <propertycopy name="autobuild.dir.eclipse" from="autobuild.dir.eclipse-4.4" />  
+          </then>
+          <else>
+              <fail>!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The host for antrunner has to be Eclipse 4.4.
+Please set eclipse 4.4 path in your user-override.xml or build-override.xml i.e 
+"&lt;property name="autobuild.dir.eclipse-4.4"  location=" ..\eclipse4.4" /&gt;".
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+              </fail>
+          </else>
+        </if>
+    </target>
+
+    <target name="-check-eclipse-macro" unless="express-build">
+        <macrodef name="m.validate.eclipse">
+            <attribute name="eclipsedirprop" description="Property pointing at Eclipse" />
+            <attribute name="target-version" description="Expected version" />
+            <sequential>
+                <!-- First, check to see whether the requisite features and plugins folders exist -->
+                <if>
+                    <isset property="@{eclipsedirprop}" />
+                    <then>
+                        <if>
+                            <not>
+                                <and>
+                                    <available file="${@{eclipsedirprop}}" type="dir" />
+                                    <available file="${@{eclipsedirprop}}/features" type="dir" />
+                                    <available file="${@{eclipsedirprop}}/plugins" type="dir" />
+                                </and>
+                            </not>
+                            <then>
+                                <sequential>
+                                    <fail>
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Configuration failure:
+The setting for @{eclipsedirprop} in ${autobuild.user.overrides} is:
+${@{eclipsedirprop}}
+However, either this directory does not exist, or it does not contain the
+signature directories (features and plugins) that indicate a genuine eclipse
+installation.  Please correct your configuration and try again.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                                    </fail>
+                                </sequential>
+                            </then>   
+                        </if>
+                        <!-- Now verify that the version there is the appropriate one -->
+                        <if>
+                            <resourcecount when="equal" count="0" >
+                                <dirset dir="${@{eclipsedirprop}}/features" includes="org.eclipse.platform_@{target-version}*" />
+                            </resourcecount>
+                            <then>
+                                <fail>
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The property "@{eclipsedirprop}" in
+${autobuild.user.overrides} is set to:
+${@{eclipsedirprop}}
+However, this location does not appear to contain Eclipse @{target-version}.
+This is not a supported configuration.
+Please do one of the following:
+* install Eclipse @{target-version}.x in ${@{eclipsedirprop}} ; or
+* point "@{eclipsedirprop}" at an Eclipse @{target-version}.x installation ; or
+* remove the property "@{eclipsedirprop}" from user-overrides.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                                </fail>
+                            </then>
+                        </if>
+                    </then>
+                </if>
+            </sequential>
+        </macrodef>
+    </target>
+    
+    <!-- need to suppot old version Eclipse as target platform -->
+    <target name="-check-eclipse-vers" depends="-check-eclipse-macro" unless="express-build">
+        <!-- check 2.1 host eclipse as defaut checking -->
+        <m.validate.eclipse eclipsedirprop="autobuild.dir.eclipse-4.4" target-version="4.4" />
+        <!-- check target eclipse -->
+        <if>
+            <isset property="autobuild.version.eclipse" />
+            <then>
+                <propertycopy property="_eclipse.dir.temp" from="autobuild.dir.eclipse-${autobuild.version.eclipse}" silent="true" override="true" />  
+                <m.validate.eclipse eclipsedirprop="_eclipse.dir.temp" target-version="${autobuild.version.eclipse}" />
+            </then>
+        </if>
+        <!-- check workspace used eclipse -->
+        <if>
+            <isset property="autobuild.version.developer.eclipse" />
+            <then>
+                <propertycopy property="_eclipse.dir.temp" from="autobuild.dir.eclipse-${autobuild.version.developer.eclipse}" silent="true" override="true" />  
+                <m.validate.eclipse eclipsedirprop="_eclipse.dir.temp" target-version="${autobuild.version.developer.eclipse}" />
+            </then>
+        </if>
+    </target>
+
+    <target name="-set-and-spin">
+        <!-- set default host and scheme if not specified by user -->
+        <property name="autobuild.spin.host" value="spin.tibco.com" />
+        <property name="autobuild.spin.scheme" value="http" />
+
+        <condition property="_spin_url"
+            value="${autobuild.spin.scheme}://${autobuild.spin.host}:${autobuild.spin.port}"
+            else="${autobuild.spin.scheme}://${autobuild.spin.host}">
+            <isset property="autobuild.spin.port" />
+        </condition>
+
+        <property name="site.type" value="release"/>
+        <condition property="reldist.update.sites"
+            value="http://reldist.na.tibco.com:${autobuild.spin.port}/reldist"
+            else="http://reldist.na.tibco.com/reldist">
+            <isset property="autobuild.spin.port" />
+        </condition>
+    </target>
+
+    <target name="-set-eclipse-targets" depends="-set-and-spin">
+        <!-- if we get a set of consistently-named eclipse update sites, each
+             ending in a version number, then we can remove these property
+             definitions, and use the alternative (commented out) bits that
+             set the eclipse update site URL below -->
+        <property name="autobuild.url.update-site.eclipse-3.3"
+                  value="${_spin_url}/eclipse-3.3/thirdparty" />
+        <property name="autobuild.url.update-site.eclipse-3.4"
+                  value="${_spin_url}/eclipse-3.4/thirdparty" />
+        <property name="autobuild.url.update-site.eclipse-3.5"
+                  value="${_spin_url}/eclipse-3.4/thirdparty" />
+        <property name="autobuild.url.update-site.eclipse-3.6"
+                  value="${_spin_url}/eclipse-3.6/thirdparty" />
+        <property name="autobuild.url.update-site.eclipse-3.7"
+                  value="${_spin_url}/eclipse-3.7/thirdparty" />
+        <property name="autobuild.url.update-site.eclipse-4.4"
+                  value="${_spin_url}/eclipse-4.4/thirdparty" />
+        <!-- first, set the target, using the old autobuild.version.eclipse. -->
+        <if>
+            <isset property="autobuild.version.eclipse" />
+            <then><!-- use custom eclipse -->
+                <propertycopy property="autobuild.dir.eclipse.target" from="autobuild.dir.eclipse-${autobuild.version.eclipse}" silent="true" />
+                <property name="autobuild.dir.target.property.name" value="autobuild.dir.eclipse-${autobuild.version.eclipse}" />
+                <fail unless="autobuild.dir.eclipse.target">
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The eclipse target version is set to autobuild.dir.eclipse-${autobuild.version.eclipse} , but the corresponding property,
+${autobuild.dir.target.property.name}, has not been set in
+${autobuild.user.overrides}.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                </fail>
+                <propertycopy property="autobuild.url.update-site.eclipse" from="autobuild.url.update-site.eclipse-${autobuild.version.eclipse}" />
+            </then>
+            <else><!-- use default eclipse 4.4 -->
+                <fail unless="autobuild.dir.eclipse">!!!
+
+The eclipse target version is set to ${autobuild.dir.eclipse}, but the corresponding property,
+autobuild.dir.eclipse, has not been set in
+${autobuild.user.overrides}.
+
+                </fail>
+                <propertycopy property="autobuild.dir.eclipse.target" from="autobuild.dir.eclipse" />
+                <property name="autobuild.dir.target.property.name" value="autobuild.dir.eclipse" />
+                <property name="autobuild.url.update-site.eclipse" value="${autobuild.url.update-site.eclipse-4.4}" />
+            </else>
+        </if>
+        <!-- builder 2.1 only support Eclipse 4.4 as host. The default autobuild.dir.eclipse has to be eclipse 4.4 -->
+        <if>
+            <isset property="autobuild.dir.eclipse" />
+            <then> 
+                <propertycopy property="autobuild.dir.eclipse.install" from="autobuild.dir.eclipse" />
+                <property name="autobuild.dir.eclipse.property.name" value="autobuild.dir.eclipse" />
+            </then>
+            <else>
+                <fail unless="autobuild.dir.eclipse" >
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The eclipse host version is set to 4.4, but the corresponding property,
+autobuild.dir.eclipse, has not been set in
+${autobuild.user.overrides}.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                </fail>
+            </else>
+        </if>
+    </target>
+
+    <!-- builder 2.1 only support Eclipse 4.4 as host. -->
+    <target name="-check-eclipse"
+            depends="-load-ant-contrib, -check-eclipse-vers, -set-eclipse-targets, -set-osgi-debug-options"/>
+
+    <target name="-set-startup-property">
+        <!-- use default property name autobuild.dir.eclipse.startup -->
+        <eclipse.startup eclipseLocation="${autobuild.dir.eclipse.install}" />
+        <!-- temporary -->
+        <echo level="verbose">Eclipse startup jar: ${autobuild.dir.eclipse.startup}</echo>
+    </target>
+
+    <target name="-verify-ru-feature-name" depends="-load-ant-contrib" if="release-unit" >
+       <verify.hy.un verify.name="${release-unit}" />
+    </target>
+    
+    <macrodef name="verify.hy.un">
+        <attribute name="verify.name"/>
+        <sequential>
+            <propertyregex property="_verify_hy_un" input="@{verify.name}" regexp="[-]" select="\0" />
+            <propertyregex property="_verify_hy_un" input="@{verify.name}" regexp="[_]" select="\0" />
+            <if>
+                <isset property="_verify_hy_un" />
+                <then>
+                    <fail>
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The @{verify.name} contains either dash or underscore 
+that is not allowed for the release unit name.
+
+For more details of release-unit name, please see 
+http://wiki.tibco.com/FrameworksWiki/Componentization/BestPracticesIndex
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++       
+                    </fail>
+                </then>
+            </if>
+        </sequential>
+    </macrodef>      
+   
+    <target name="-dual-build-autorun" unless="dual.build.autorun.bypass">
+        <if>
+            <and>
+                <available file="${dual.build.dir}/build.xml" />
+                <isset property="dual.build.enable" />
+            </and>
+            <then>
+                <!-- clean up the extersion location first for the dual test build -->
+                <ant dir="${autobuild.dir.release-unit}/dual-build" target="conf-clean" inheritall="false" />
+                <ant dir="${autobuild.dir.release-unit}/dual-build" target="build" inheritall="false" />
+                <!-- remove the test eclipse nature build from local-builds-site -->
+                <ant dir="${autobuild.dir.release-unit}/dual-build" target="cancel" inheritall="false" />
+            </then>
+        </if>
+    </target>
+
+    <!-- for signing jars the "autobuild.key.alias","autobuild.key.password" "autobuild.key.path" "autobuild.key.type"are required properties and autobuild.signjar.list is optional -->
+    <target name="-sign-jars" depends="-load-ant-contrib" if="autobuild.sign.jars">
+
+        <!-- set the default values to sign plugin jars for the engineering build -->
+        <property name="autobuild.key.path" value="${autobuild.dir.scripts}/private/sample.p12" />
+        <property name="autobuild.key.alias" value="alias" />
+        <property name="autobuild.key.password" value="password" />
+        <property name="autobuild.key.type" value="pkcs12" />
+        <property name="autobuild.key.tsaurl" value="https://timestamp.geotrust.com/tsa" />
+        <property name="autobuild.key.verbose" value="true" />
+        <if>
+            <not>
+                <and>
+                    <isset property="autobuild.key.alias" />
+                    <isset property="autobuild.key.password" />
+                    <isset property="autobuild.key.path" />
+                    <isset property="autobuild.key.type" />
+                </and>
+            </not>
+            <then>
+                <fail>
+!!!
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Build failed!  
+You have to set property "autobuild.key.alias" "autobuild.key.password" "autobuild.key.path" "autobuild.key.type" if you want to sign you jars.
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                </fail>
+            </then>
+        </if>
+        <if>
+             <isset property="autobuild.signjar.list" />
+             <then>
+                 <for param="sign-jar">
+                     <fileset dir="${autobuild.dir.output.jars.release}/plugins">
+                         <include name="*.jar" />
+                     </fileset>
+                     <sequential>
+                         <for param="sign-jar-name" list="${autobuild.signjar.list}" >
+                             <sequential>
+                                 <propertyregex property="_sign-jar-name" override="true" input="@{sign-jar}" regexp="([^/\\]*$)" select="\1" />
+                                 <propertyregex property="_sign-jar-name" override="true" input="${_sign-jar-name}" regexp="(.*)_" select="\1" />
+                                 <if>
+                                     <equals arg1="@{sign-jar-name}" arg2="${_sign-jar-name}" />
+                                     <then>
+                                         <signjar jar="@{sign-jar}" alias="${autobuild.key.alias}" storepass="${autobuild.key.password}" keystore="${autobuild.key.path}" storetype="${autobuild.key.type}"
+                                                  tsaurl="${autobuild.key.tsaurl}}" verbose="${autobuild.key.verbose}"/>
+                                     </then>
+                                 </if>
+                             </sequential>
+                         </for>
+                     </sequential>
+                 </for>
+            </then>
+            <else>
+                <signjar alias="${autobuild.key.alias}" storepass="${autobuild.key.password}" lazy="true" keystore="${autobuild.key.path}" storetype="${autobuild.key.type}" 
+                         tsaurl="${autobuild.key.tsaurl}" verbose="${autobuild.key.verbose}">
+                    <path>
+                        <fileset dir="${autobuild.dir.output.jars.release}/plugins" includes="**/*.jar" />
+                    </path>
+                </signjar>
+            </else>
+        </if>
+    </target>
+
+    <!-- show version at the build end -->
+    <target name="-acquire-buildno">
+        <tempfile property="acquire.buildno.temp.file" />
+        <echo file="${acquire.buildno.temp.file}" append="true">
+   features:
+        </echo>
+        <if>
+            <available file="${autobuild.dir.output.jars.debug}/features" type="dir" />
+            <then>
+                <for param="ver-feature-jar">
+                    <fileset id="feature-version-list" dir="${autobuild.dir.output.jars.debug}/features">
+                        <include name="*.jar" />
+                    </fileset>
+
+                    <sequential>
+                        <propertyregex property="version-feature-jar" override="true" input="@{ver-feature-jar}"
+                                       regexp="([^/\\]*(?=\.jar\b))" select="\1" />
+                        <echo file="${acquire.buildno.temp.file}" append="true">
+       ${version-feature-jar}
+                        </echo>
+                    </sequential>
+                </for>
+            </then>
+        </if>
+        <echo file="${acquire.buildno.temp.file}" append="true">
+   plugins:
+        </echo>
+        <if>
+            <available file="${autobuild.dir.output.jars.debug}/plugins" type="dir" />
+            <then>
+                <for param="ver-plugin-jar">
+                    <fileset id="feature-plugin-list" dir="${autobuild.dir.output.jars.debug}/plugins">
+                        <include name="*.jar" />
+                    </fileset>
+                    <sequential>
+                        <propertyregex property="version-plugin-jar" override="true" input="@{ver-plugin-jar}"
+                                       regexp="([^/\\]*(?=\.jar\b))" select="\1" />
+                        <echo file="${acquire.buildno.temp.file}" append="true">
+        ${version-plugin-jar}
+                        </echo>
+                    </sequential>
+                </for>
+            </then>
+        </if>
+        <loadfile property="all_version_info" srcfile="${acquire.buildno.temp.file}" />
+        <delete file="${acquire.buildno.temp.file}" quiet="true" />       
+    </target>
+</project>

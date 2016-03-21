@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="gather-overrides">
+    
+    <property name="installation.name" value="sample-installation"/>
+    
+    <property name="devtools.version.eclipse.target" value="3.4" />
+    
+    <property name="installer.feature.id" value="com.tibco.sample.installer.feature"/>
+
+</project>

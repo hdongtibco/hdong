@@ -1,0 +1,170 @@
+<?xml version="1.0"?>
+<project name="all around doc robber">
+    <import file="${autobuild.dir.scripts}/build-feature.xml" />
+
+    <target name="-acquire-doc-plugins" depends="-load-ant-contrib" if="documentation.plugin.list">
+        <condition property="_a_target" value="-acquire-one-doc-plugin" else="-fake-one-doc-plugin">
+            <and>
+                <isset property="autobuild.dir.doc-base" />
+                <available file="${autobuild.dir.doc-base}" type="dir" />
+            </and>
+        </condition>
+        <get.plugins.path plugins.name="_all_provided_plugins_id" />
+        <var name="_documentation.plugin.list" value=""/>
+
+        <for param="one-doc-plugin" list="${documentation.plugin.list}">
+            <sequential>
+                <for param="one-provided-plugin" list="${_all_provided_plugins_id}">
+                    <sequential>
+                        <if>
+                            <!--if the doc plugin is provided by feature.xml-->
+                            <equals arg1="@{one-doc-plugin}" arg2="@{one-provided-plugin}" />
+                            <then>
+                                <var name="_documentation.plugin.list" value="@{one-doc-plugin},${_documentation.plugin.list}" />
+                            </then>
+                        </if>
+                    </sequential>
+                </for>
+            </sequential>
+        </for>
+
+        <foreach list="${_documentation.plugin.list}"
+                 target="${_a_target}"
+                 param="_this_doc_plugin"
+                 inheritall="true"
+                 trim="true" />
+    </target>
+
+    <target name="-acquire-one-doc-plugin">
+        <condition property="_this_plugin_exists">
+            <available file="${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}" type="dir" />
+        </condition>
+        <fail unless="_this_plugin_exists">
+The directory ${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}
+does not exist (and consequently does not contain the required additional information.
+No target; cannot continue.</fail>
+        <property file="${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}/docs.properties" />
+        <fail unless="productAcronym">
+The file ${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}/docs.properties
+does not exist or does not contain a property named "productAcronym".
+No source; cannot continue.</fail>
+        <condition property="_metadata_exists">
+            <available file="${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}/MANIFEST.MF" />
+        </condition>
+        <fail unless="_metadata_exists">
+The file ${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}/MANIFEST.MF
+does not exist, to replace the version in the doc plugin's META-INF directory.
+No metadata; cannot continue.</fail>
+        <if>
+            <available file="${autobuild.dir.doc-base}/${productAcronym}/${productVersion}/Eclipse" type="dir" />
+            <then>
+                <copy todir="${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}">
+                    <fileset dir="${autobuild.dir.doc-base}/${productAcronym}/${productVersion}/Eclipse" />
+                </copy>
+            </then>
+            <else>
+                <if>
+                    <available file="${autobuild.dir.doc-base}/${productAcronym}/${productVersion}/release/Eclipse" type="dir" />
+                    <then>
+                        <copy todir="${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}">
+                            <fileset dir="${autobuild.dir.doc-base}/${productAcronym}/${productVersion}/release/Eclipse" />
+                        </copy>
+                    </then>
+                    <else>
+                        <fail>
+!!!
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+The Eclipse doc folder doesn't exist!  Failed now.
+
+Please find out whether the path at the below is set properly.
+${autobuild.dir.doc-base}/${productAcronym}/${productVersion}/Eclipse
+or
+${autobuild.dir.doc-base}/${productAcronym}/${productVersion}/release/Eclipse
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                        </fail>
+                    </else>
+                </if>
+            </else>
+        </if>
+        <if>
+            <and>
+                <isset property="eclipse.nature.build" />
+                <available file="${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}/MANIFEST.MF.eclipse" />
+            </and>
+            <then>
+                <copy file="${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}/MANIFEST.MF.eclipse"
+                      tofile="${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}/META-INF/MANIFEST.MF"
+                      overwrite="true" />
+            </then>
+            <else>
+                <copy file="${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}/MANIFEST.MF"
+                      todir="${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}/META-INF"
+                      overwrite="true" />
+            </else>
+        </if>
+        <antcall target="-generate-build-properties" />
+    </target>
+
+    <target name="-fake-one-doc-plugin">
+        <if>
+            <available file="${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}/MANIFEST.MF" />
+            <then>
+            <mkdir dir="${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}/META-INF" />
+            <copy file="${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}/MANIFEST.MF"
+                  todir="${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}/META-INF"
+                  overwrite="true" />
+            <echo file="${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}/build.properties">
+qualifier = context
+bin.includes = META-INF/
+</echo>
+            </then>
+            <else>
+                <fail>!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Plase make sure this doc plugin ${_this_doc_plugin} is right.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                </fail>
+            </else>
+        </if>
+    </target>
+
+    <target name="-generate-build-properties">
+        <echo>Generating build.properties in plugins/${_this_doc_plugin}</echo>
+        <echo file="${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}/build.properties">
+qualifier = context
+bin.excludes = build.xml,\
+  build.properties
+bin.includes = *.xml,\
+  *.properties</echo>
+        <for param="a-directory">
+            <dirset dir="${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}" />
+            <sequential>
+                <propertyregex property="_this_directory" override="true" input="@{a-directory}"
+                               regexp="([^/\\]*$)" select="\1" />
+                <echo file="${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}/build.properties" append="true">,\
+        ${_this_directory}/</echo>
+            </sequential>
+        </for>
+        <echo file="${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}/build.properties" append="true">
+</echo>
+    </target>
+
+    <target name="-decease-doc-plugins" if="documentation.plugin.list" depends="-do-ant-runner">
+        <foreach list="${documentation.plugin.list}"
+                 target="-decease-one-doc-plugin"
+                 param="_this_doc_plugin"
+                 inheritall="true"
+                 trim="true" />
+    </target>
+
+    <target name="-decease-one-doc-plugin">
+        <delete includeemptydirs="true" quiet="true">
+            <fileset dir="${autobuild.dir.release-unit}/plugins/${_this_doc_plugin}" excludes="MANIFEST.MF,MANIFEST.MF.eclipse,docs.properties" />
+        </delete>
+    </target>
+
+</project>

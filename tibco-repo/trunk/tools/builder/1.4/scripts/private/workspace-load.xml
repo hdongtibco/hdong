@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="workspace-load">
+
+    <available file="${autobuild.dir.workspace.installer}" property="_workspace_is_installed" type="file" />
+    <fail unless="_workspace_is_installed">
+autobuild.dir.workspace.installer: ${autobuild.dir.workspace.installer}
+does not exist or is not a directory</fail>
+    <!-- we really, really need to have this stuff all be loaded by one loader. -->
+    <path id="autobuild.path.workspace.installer">
+        <fileset file="${autobuild.dir.workspace.installer}" />
+    </path>
+    <taskdef name="gather.dependencies"
+             classname="com.tibco.devtools.workspace.installer.tasks.GatherDependenciesTask"
+             classpathref="autobuild.path.workspace.installer"
+             loaderref="autobuild.path.workspace.loader" />
+    <taskdef name="create.configuration"
+             classname="com.tibco.devtools.workspace.installer.tasks.CreateConfigurationTask"
+             loaderref="autobuild.path.workspace.loader" />
+    <taskdef name="lgpl.updater"
+             classname="com.tibco.devtools.workspace.installer.tasks.RestrictedDependenciesTask"
+             loaderref="autobuild.path.workspace.loader" />
+    <taskdef name="create.workspace"
+             classname="com.tibco.devtools.workspace.installer.tasks.CreateWorkspaceTask"
+             loaderref="autobuild.path.workspace.loader" />
+    <taskdef name="eclipse.startup"
+             classname="com.tibco.devtools.workspace.installer.tasks.EclipseJarLocatorTask"
+             loaderref="autobuild.path.workspace.loader" />
+    <typedef name="updatesites"
+             classname="com.tibco.devtools.workspace.installer.tasks.UrlList"
+             loaderref="autobuild.path.workspace.loader" />
+    <typedef name="excludedfeatures"
+             classname="com.tibco.devtools.workspace.installer.tasks.FeatureList"
+             loaderref="autobuild.path.workspace.loader" />
+    <typedef name="features"
+             classname="com.tibco.devtools.workspace.installer.tasks.FeatureList"
+             loaderref="autobuild.path.workspace.loader" />
+</project>

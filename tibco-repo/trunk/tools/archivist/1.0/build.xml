@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="archivist" basedir="." default="archivist">
+
+    <property name="autobuild.archivist.overrides"
+              location="${autobuild.dir.archivist.root}/archivist-overrides.xml" />
+    <import file="${autobuild.archivist.overrides}" />
+    <import file="${autobuild.dir.archivist.scripts}/archivist.xml" />
+    <import file="${latest-build-file}" optional="true" />
+    
+    <target name="-set-archivist-params" depends="-load-archivist-libs">
+        <property name="archivist.analyzed.files" location="${autobuild.build.latest.extension-location}" />
+        <property name="archivist.dependencies" location="${autobuild.build.latest.configuration-extension}" />
+        <property name="archivist.log" location="${autobuild.dir.release-unit}/archivist.txt" />
+        
+        <echo>
+  Running Archivist with the following properties:
+  
+  archivist.analyzed.files = ${archivist.analyzed.files}
+  
+  archivist.dependencies = ${archivist.dependencies}
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  WARNING: these are the results from the *last* ant execution.  If you chained this target
+     (as in "ant build verify-feature") you won't get what you expect.
+     Do "ant build; ant verify-feature" instead.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        </echo>
+    </target>
+
+    <!-- this new target is for running archivist-diff purpose. -->
+    <target name="archivist-main" depends="verify-feature, verify-manifest" 
+            description="Verify the main feature and plugin metadata for a release unit."/>
+
+    <target name="archivist" depends="verify-feature, verify-manifest, feature-dependency-closure, manifest-dependency-closure" 
+            description="Verify feature and plugin metadata for a release unit."/>
+
+    <target name="verify-feature" depends="-set-archivist-params"
+            description="Verify feature metadata for a release unit.">
+        <record name="${archivist.log}" emacsmode="true"
+                loglevel="verbose" action="start" />
+        <archivist.verifyFeature>
+            <analyzedFiles name="${archivist.analyzed.files}"/>
+            <dependencies name="${archivist.dependencies}"/>
+        </archivist.verifyFeature>
+        <record name="${archivist.log}" action="stop" />
+    </target>
+    
+    <target name="verify-manifest" depends="-set-archivist-params"
+            description="Verify plugin metadata for a release unit.">
+        <record name="${archivist.log}" emacsmode="true"
+                loglevel="verbose" action="start" />
+        <archivist.verifyManifest>
+            <analyzedFiles name="${archivist.analyzed.files}" />
+            <dependentComponents name="${archivist.dependencies}" />
+        </archivist.verifyManifest>
+        <record name="${archivist.log}" action="stop" />
+    </target>
+    
+    <target name="feature-dependency-closure" depends="-set-archivist-params">
+        <record name="${archivist.log}" emacsmode="true"
+                loglevel="verbose" action="start" />
+        <archivist.featureDependencyClosure>
+            <analyzedFiles name="${archivist.analyzed.files}" />
+            <dependentFeatures name="${archivist.dependencies}" />
+        </archivist.featureDependencyClosure>
+        <record name="${archivist.log}" action="stop" />
+    </target>
+    
+    <target name="manifest-dependency-closure" depends="-set-archivist-params">
+        <record name="${archivist.log}" emacsmode="true"
+                loglevel="verbose" action="start" />
+        <archivist.manifestDependencyClosure>
+            <analyzedFiles name="${archivist.analyzed.files}" />
+            <dependentComponents name="${archivist.dependencies}" />
+        </archivist.manifestDependencyClosure>
+        <record name="${archivist.log}" action="stop" />
+    </target>
+    
+    <target name="inverse-feature-dependencies" depends="-set-archivist-params">
+        <archivist.inverseFeatureDependencies>
+            <analyzedFiles name="${archivist.analyzed.files}" />
+            <dependentFeatures name="${archivist.dependencies}" />
+        </archivist.inverseFeatureDependencies>
+    </target>
+    
+    <target name="inverse-manifest-dependencies" depends="-set-archivist-params">
+        <archivist.inverseManifestDependencies>
+            <analyzedFiles name="${archivist.analyzed.files}" />
+            <dependentComponents name="${archivist.dependencies}" />
+        </archivist.inverseManifestDependencies>
+    </target>
+
+    <target name="package-dependencies" depends="-set-archivist-params">
+        <archivist.packageDependencies>
+            <analyzedFiles name="${archivist.analyzed.files}" />
+            <dependentComponents name="${archivist.dependencies}" />
+        </archivist.packageDependencies>
+    </target>
+
+    <!-- target name="find" depends="-set-archivist-params">
+        <archivist.find entry="" package="" class="">
+            <inputs name="${autobuild.dir.release-unit}" />
+        </archivist.find>
+    </target-->
+    
+    <!-- target name="info" depends="-set-archivist-params">
+        <archivist.info>
+            <inputs name="${autobuild.dir.release-unit}" />
+        </archivist.info>
+    </target-->
+    
+    <!-- target name="make-feature" depends="-set-archivist-params">
+        <archivist.makeFeature id="" version="" outputFile="">
+            <featureMembers name="" />
+            <featureDependencies name="" />
+        </archivist.makeFeature>
+    </target-->
+    
+    <!-- target name="make-manifest" depends="-set-archivist-params">
+        <archivist.makeManifest name="" symbolicName=""
+                                version="" manifestFile=""
+                                bundleFile="" checkSoftDependencies="">
+            <importPackage name="" />
+            <dependentComponents name="" />
+        </archivist.makeManifest>
+    </target-->
+    
+</project>

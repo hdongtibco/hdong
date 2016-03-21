@@ -1,0 +1,37 @@
+# general
+.#*
+.DS_Store
+.buildinfo
+*.bak
+*~
+*.iml
+*.setting
+*.pyc
+*.odem
+*.ws
+*.dtd
+*.log
+.gradle/
+build/
+target/
+build-artifacts/
+
+
+# builder
+registry_file.xml
+
+# sample
+sample/plugins/sources.com.tibco.sample/src
+
+# intellij idea
+*.iml
+*.ipr
+*.iws
+.idea/
+classes/
+
+# eclipse
+.project
+.classpath
+.settings/
+out/

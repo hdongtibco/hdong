@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="com.tibco.devtools.builder"
+      label="Stand-alone Builder Tool"
+      version="2.1.0.001"
+      provider-name="TIBCO Software Inc.">
+
+   <description url="http://wiki.tibco.com/FrameworksWiki/Componentization/Builder">
+      command-line building of eclipse features
+   </description>
+
+   <copyright >
+      TIBCO Software Inc., all rights reserved.
+   </copyright>
+
+   <license url="license.txt">
+      TIBCO internal use only.
+   </license>
+
+   <plugin
+         id="com.tibco.devtools.builder"
+         download-size="0"
+         install-size="0"
+         version="2.1.0.001"/>
+
+   <plugin
+         id="com.tibco.devtools.buildscripts"
+         download-size="0"
+         install-size="0"
+         version="1.1.0.001"
+         unpack="false"/>
+
+   <plugin
+         id="com.tibco.tpcl.com.yworks.yguard"
+         download-size="0"
+         install-size="0"
+         version="2.5.2.001"/>
+
+   <plugin
+         id="com.tibco.tpcl.proguard"
+         download-size="0"
+         install-size="0"
+         version="5.0.0.001"/>
+
+</feature>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="RELEASE_UNIT_NAME Overrides">
+
+    <!-- Each Release Unit should change the project name above and the two
+         property definitions below. -->
+    <property name="release-unit" value="RELEASE_UNIT_NAME" />
+    <property name="feature" value="PRIMARY_FEATURE_NAME" />
+
+    <!-- The repository name is only used to separate release unit configurations,
+         preventing confusion of thirdparty common with neo common, for instance. -->
+    <property name="autobuild.repository" value="REPOSITORY_NAME" />
+
+    <!-- if there is a .devdocs feature, and this property is set, the javadoc
+         for the code feature will be output to this location -->
+    <!--property name="javadoc.destination" location="RELATIVE PATH FROM THIS DIRECTORY" /-->
+
+    <!-- for eclipse 3.3 or later, set this (and have a value in user-overrides that corresponds) -->
+    <!-- property name="autobuild.version.eclipse" value="3.3" /-->
+
+    <!-- for additional information on properties commonly overridden by release units, see:
+         http://wiki.tibco.com/FrameworksWiki/BuildTools -->
+
+</project>

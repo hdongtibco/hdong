@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Builder 1.2 Overrides">
+
+    <!-- this is the eclipse-delivery version, which differs slightly from the
+         subversion-delivery version.  this property will be dumped using
+         ant properties, which aids debugging. -->
+    <property name="autobuild.delivery.style" value="eclipse" />
+    <property name="autobuild.dir.eclipse.install" location="${autobuild.dir.eclipse}" />
+    <property name="autobuild.dir.plugins"
+          location="${autobuild.dir.eclipse.install}/plugins" />
+
+    <property name="autobuild.version.builder" value="1.2.2.003" />
+    <property name="autobuild.dir.builder"
+          location="${autobuild.dir.plugins}/com.tibco.devtools.builder_${autobuild.version.builder}" />
+    <property name="autobuild.dir.scripts"
+          location="${autobuild.dir.builder}/scripts" />
+
+    <property name="autobuild.version.workspace" value="1.1.1.001" />
+    <property name="autobuild.dir.workspace.installer"
+          location="${autobuild.dir.plugins}/com.tibco.devtools.workspace.installer_${autobuild.version.workspace}.jar" />
+
+</project>

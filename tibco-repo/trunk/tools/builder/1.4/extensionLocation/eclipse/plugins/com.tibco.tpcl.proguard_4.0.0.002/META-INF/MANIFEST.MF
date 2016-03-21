@@ -1,0 +1,21 @@
+Manifest-Version: 1.0
+Bundle-Name: %pluginName
+Bundle-Vendor: %providerName
+Bundle-ManifestVersion: 2
+Bundle-Localization: plugin
+Bundle-SymbolicName: com.tibco.tpcl.proguard;singleton:=true
+Export-Package: proguard.wtk,proguard.util,proguard.shrink,proguard.pr
+ everify,proguard.optimize.peephole,proguard.optimize.info,proguard.op
+ timize.evaluation,proguard.optimize,proguard.obfuscate,proguard.io,pr
+ oguard.evaluation.value,proguard.evaluation,proguard.classfile.visito
+ r,proguard.classfile.util,proguard.classfile.io,proguard.classfile.in
+ struction.visitor,proguard.classfile.instruction,proguard.classfile.e
+ ditor,proguard.classfile.constant.visitor,proguard.classfile.constant
+ ,proguard.classfile.attribute.visitor,proguard.classfile.attribute.pr
+ everification.visitor,proguard.classfile.attribute.preverification,pr
+ oguard.classfile.attribute.annotation.visitor,proguard.classfile.attr
+ ibute.annotation,proguard.classfile.attribute,proguard.classfile,prog
+ uard.ant,proguard
+Require-Bundle: org.apache.ant;bundle-version="[1.6.5,2.0.0)"
+Bundle-Version: 4.0.0.002
+

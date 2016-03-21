@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Bundle-Name: %pluginName
+Bundle-Vendor: %providerName
+Bundle-ManifestVersion: 2
+Bundle-Localization: plugin
+Bundle-SymbolicName: com.tibco.tpcl.proguard;singleton:=true
+Require-Bundle: org.apache.ant;bundle-version="[1.6.5,2.0.0)"
+Bundle-Version: 3.6.0.002
+

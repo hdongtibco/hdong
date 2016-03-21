@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feature id="jboss.hpa.ganymede"
+         version="1.0.0"
+         label="JBoss HPA installer">
+    <requires>
+        <import feature="com.tibco.tpcl.wstxsd"                         version="1.2.0" />
+        
+        <!-- need the hibernate with disaggregated tpcl dependencies -->
+        <import feature="com.tibco.tpcl.org.hibernate.feature"          version="3.2.6"/>
+    </requires>
+</feature>

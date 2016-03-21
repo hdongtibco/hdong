@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Generate classpaths" default="-generate-classpaths">
+
+    <target name="-generate-classpaths"
+        depends="-check-existence, -generate-build-qualifiers,
+                 -generate-code-classpaths, -generate-source-classpaths, -generate-test-classpaths, -generate-docs-classpaths">
+        <delete quiet="true">
+            <fileset dir="${autobuild.dir.release-unit}" includes="*Versions.properties" />
+        </delete>
+    </target>
+
+    <target name="-check-existence">
+        <available file="${autobuild.dir.release-unit}/features/${feature}.source" property="_source_feature_exists" type="dir" />
+        <available file="${autobuild.dir.release-unit}/features/${feature}.test" property="_test_feature_exists" type="dir" />
+        <available file="${autobuild.dir.release-unit}/features/${feature}.devdocs" property="_docs_feature_exists" type="dir" />
+        <condition property="_auxiliary_feature_exists">
+            <or>
+                <isset property="_docs_feature_exists" />
+                <isset property="_test_feature_exists" />
+                <isset property="_source_feature_exists" />
+            </or>
+        </condition>
+    </target>
+
+    <target name="-generate-source-classpaths" if="_source_feature_exists">
+        <antcall target="-generate-feature-classpaths">
+            <param name="autobuild.feature-id" value="${feature}.source"/>
+            <param name="autobuild.feature-folder" value="${feature}.source"/>
+            <param name="autobuild.feature-type" value="source" />
+            <param name="autobuild.feature-javadoc" value="${nonexistent}" />
+            <param name="autobuild.feature-sources" value="${nonexistent}" />
+            <param name="_feature.has-auxiliaries" value="false" />
+        </antcall>
+    </target>
+
+    <target name="-generate-code-classpaths">
+        <antcall target="-generate-feature-classpaths">
+            <param name="autobuild.feature-id" value="${feature}"/>
+            <param name="autobuild.feature-folder" value="${feature}"/>
+            <param name="autobuild.feature-type" value="code" />
+            <param name="_feature.has-auxiliaries" value="${_auxiliary_feature_exists}" />
+        </antcall>
+    </target>
+
+    <target name="-generate-test-classpaths" if="_test_feature_exists">
+        <antcall target="-generate-feature-classpaths">
+            <param name="autobuild.feature-id" value="${feature}.test"/>
+            <param name="autobuild.feature-folder" value="${feature}.test"/>
+            <param name="autobuild.feature-type" value="test" />
+            <param name="autobuild.feature-javadoc" value="${nonexistent}" />
+            <param name="autobuild.feature-sources" value="${nonexistent}" />
+            <param name="_feature.has-auxiliaries" value="false" />
+        </antcall>
+    </target>
+
+    <target name="-generate-docs-classpaths" if="_docs_feature_exists">
+        <antcall target="-generate-feature-classpaths">
+            <param name="autobuild.feature-id" value="${feature}.devdocs"/>
+            <param name="autobuild.feature-folder" value="${feature}.devdocs"/>
+            <param name="autobuild.feature-type" value="docs" />
+            <param name="autobuild.feature-javadoc" value="${nonexistent}" />
+            <param name="autobuild.feature-sources" value="${nonexistent}" />
+            <param name="_feature.has-auxiliaries" value="false" />
+        </antcall>
+    </target>
+
+    <target name="-generate-build-qualifiers">
+        <copy todir="${autobuild.dir.release-unit}">
+            <fileset dir="${autobuild.dir.build-artifacts}" includes="*Versions.properties" />
+        </copy>
+    </target>
+
+    <target name="-generate-feature-classpaths">
+        <devtools.classpaths featureName="${autobuild.feature-id}"
+            featureType="${autobuild.feature-type}"
+            hasAuxiliaries="${_feature.has-auxiliaries}"
+            eclipseDir="${autobuild.dir.eclipse.target}"
+            extensionLocation="${autobuild.dir.eclipse.extensions}"
+            localUpdateSiteLocation="${autobuild.workspace.update-sites.local}"
+            localDebugUpdateSiteLocation="${autobuild.workspace.update-sites.local-debug}"
+            srcDir="${autobuild.dir.release-unit}"
+            destDir="${autobuild.dir.output.debug}"
+            debugDestDir="${autobuild.dir.output.debug}"
+            jarDestDir="${autobuild.dir.output.jars.release}"
+            debugJarDestDir="${autobuild.dir.output.jars.debug}"
+            testResultsFolder="${autobuild.dir.output.test-results}"
+            javadocDestination="${autobuild.feature-javadoc}"
+            sourcesDestination="${autobuild.feature-sources}"
+            logLocation="${autobuild.dir.output.logs}"
+            logLevel="${autobuild.loglevel}"
+            obfuscationStyle="${autobuild.obfuscator.style}"
+            obfuscatorType="${autobuild.obfuscator.type}"
+            buildTimestamp="${touch.time}"
+            allowBinaryCycles="${allow.binary.cycles}"
+        />
+    </target>
+
+</project>

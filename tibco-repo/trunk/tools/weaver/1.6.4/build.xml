@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="weaver" basedir="." default="weaver">
+
+    <property name="autobuild.tpcl.weaver.overrides"
+              location="${autobuild.dir.tpcl.weaver.root}/weaver-overrides.xml" />
+    <import file="${autobuild.tpcl.weaver.overrides}" />
+    <!--import file="${autobuild.dir.tpcl.weaver.scripts}/weaver.xml" /-->
+    
+    <target name="weaver" description="weaving the metadata for a release unit.">
+		<echo> add more here. </echo>
+    </target>
+    
+</project>

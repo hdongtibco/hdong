@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="@USERNAME@">
+    <!-- This file contains properties which are specific to each user/machine.
+            Please examine each property and modify it for your configuration -->
+
+    <!-- autobuild.dir.java-classes:
+            This is the location of the JRE that you want to use to run ant, Eclipse,
+            and builder.   The folder specified must contain rt.jar (or the equivalent).
+            The default value is very likely to be incorrect, even on Windows. -->
+    <property name="autobuild.dir.java-classes"
+              location="c:/program files/java/jdk1.5.0/jre/lib" />
+
+    <!-- autobuild.dir.eclipse:
+            For 1.2 and later, this should be a bare Eclipse installation.
+            For 1.1, modify the first property in the compatibility file.
+            This should only refer to eclipse 3.2 (or earlier).
+            The default is very likely to be incorrect, even on Windows. -->
+    <property name="autobuild.dir.eclipse"
+              location="c:/program files/eclipse/3.2" />
+    <!-- later versions of eclipse
+            Use "-M.m" as the suffix, where M = major version, m = minor version. -->
+    <!--property name="autobuild.dir.eclipse-3.3"
+              location="" /-->
+
+    <!-- autobuild.dir.user:
+            The default location is the directory that contains this file.
+            Changing it may be convenient, but is particularly useful for release.
+            This is the base directory for most configuration and output. -->
+    <property name="autobuild.dir.user"
+              location="${user.home}/tibco-build" />
+
+    <!-- autobuild.dir.candidates:
+            The output location for build candidates (the output of builder).
+            The default value is a folder next to this file, which should be fine for
+            most people. -->
+    <property name="autobuild.dir.candidates"
+              location="${autobuild.dir.user}/candidates" />
+
+    <!-- autobuild.dir.generated.workspaces
+            The "workspace" target generates its various folders into this location.
+            If you don't like the default, override this setting.  Windows users, for example,
+            might choose, location="C:/mydev/workspaces" -->
+    <!--property name="autobuild.dir.generated.workspaces"
+                 location="${autobuild.dir.user}/workspaces" /-->
+
+    <!-- autobuild.option.eclipse.subversion.client:
+         Some people like Subclipse, and some like Subversive.  Proper values for
+         this choice are "subclipse" or "subversive".  The default is "subclipse".
+         -->
+    <!--property name="autobuild.option.eclipse.subversion.client" value="subclipse" /-->
+
+</project>

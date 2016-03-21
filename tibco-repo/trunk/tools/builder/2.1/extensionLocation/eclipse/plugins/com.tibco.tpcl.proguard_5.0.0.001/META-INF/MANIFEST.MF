@@ -1,0 +1,157 @@
+Manifest-Version: 1.0
+Export-Package: proguard;version="5.0.0"; uses:="proguard.classfile,  
+ proguard.io,  proguard.classfile.constant.visitor,  proguard.classfil
+ e.util,  proguard.classfile.constant,  proguard.classfile.visitor",pr
+ oguard.ant;version="5.0.0";uses:="org.apache.tools.ant.types,org.apac
+ he.tools.ant,proguard",proguard.classfile;version="5.0.0"; uses:="pro
+ guard.classfile.attribute,  proguard.classfile.constant.visitor,  pro
+ guard.classfile.constant,  proguard.classfile.attribute.visitor,  pro
+ guard.classfile.visitor",proguard.classfile.attribute;version="5.0.0"
+ ; uses:="proguard.classfile,  proguard.classfile.instruction.visitor,
+   proguard.classfile.constant.visitor,  proguard.classfile.attribute.
+ visitor,  proguard.classfile.visitor",proguard.classfile.attribute.an
+ notation;version="5.0.0"; uses:="proguard.classfile.attribute.annotat
+ ion.target,  proguard.classfile.attribute,  proguard.classfile,  prog
+ uard.classfile.attribute.annotation.visitor,  proguard.classfile.attr
+ ibute.annotation.target.visitor,  proguard.classfile.attribute.visito
+ r,  proguard.classfile.visitor",proguard.classfile.attribute.annotati
+ on.visitor;version="5.0.0"; uses:="proguard.classfile.attribute,  pro
+ guard.classfile,  proguard.classfile.util,  proguard.classfile.attrib
+ ute.annotation,  proguard.classfile.attribute.visitor,  proguard.clas
+ sfile.visitor",proguard.classfile.attribute.preverification;version="
+ 5.0.0"; uses:="proguard.classfile.attribute,  proguard.classfile,  pr
+ oguard.classfile.attribute.visitor,  proguard.classfile.attribute.pre
+ verification.visitor",proguard.classfile.attribute.preverification.vi
+ sitor;version="5.0.0";uses:="proguard.classfile.attribute,proguard.cl
+ assfile,proguard.classfile.attribute.preverification",proguard.classf
+ ile.attribute.visitor;version="5.0.0"; uses:="proguard.classfile.attr
+ ibute,  proguard.classfile,  proguard.classfile.instruction.visitor, 
+  proguard.util,  proguard.classfile.attribute.annotation,  proguard.c
+ lassfile.attribute.preverification,  proguard.classfile.util,  progua
+ rd.classfile.instruction,  proguard.classfile.visitor",proguard.class
+ file.constant;version="5.0.0";uses:="proguard.classfile,proguard.clas
+ sfile.constant.visitor,proguard.classfile.visitor",proguard.classfile
+ .constant.visitor;version="5.0.0"; uses:="proguard.classfile.attribut
+ e,  proguard.classfile,  proguard.classfile.util,  proguard.classfile
+ .constant,  proguard.classfile.attribute.visitor,  proguard.classfile
+ .visitor",proguard.classfile.editor;version="5.0.0"; uses:="proguard.
+ classfile,  proguard.classfile.attribute,  proguard.classfile.attribu
+ te.annotation.visitor,  proguard.classfile.constant.visitor,  proguar
+ d.classfile.util,  proguard.classfile.attribute.preverification,  pro
+ guard.classfile.instruction,  proguard.classfile.attribute.visitor,  
+ proguard.classfile.visitor,  proguard.classfile.attribute.annotation.
+ target,  proguard.classfile.instruction.visitor,  proguard.classfile.
+ attribute.annotation.target.visitor,  proguard.classfile.attribute.an
+ notation,  proguard.classfile.constant,  proguard.classfile.attribute
+ .preverification.visitor",proguard.classfile.instruction;version="5.0
+ .0"; uses:="proguard.classfile.attribute,  proguard.classfile,  progu
+ ard.classfile.instruction.visitor,  proguard.classfile.constant.visit
+ or,  proguard.classfile.constant",proguard.classfile.instruction.visi
+ tor;version="5.0.0"; uses:="proguard.classfile.attribute,  proguard.c
+ lassfile,  proguard.classfile.constant.visitor,  proguard.classfile.u
+ til,  proguard.classfile.attribute.visitor,  proguard.classfile.instr
+ uction",proguard.classfile.io;version="5.0.0"; uses:="proguard.classf
+ ile,  proguard.classfile.attribute,  proguard.classfile.attribute.ann
+ otation.visitor,  proguard.classfile.constant.visitor,  proguard.clas
+ sfile.attribute.preverification,  proguard.classfile.util,  proguard.
+ classfile.attribute.visitor,  proguard.classfile.visitor,  proguard.c
+ lassfile.attribute.annotation.target,  proguard.classfile.attribute.a
+ nnotation.target.visitor,  proguard.classfile.attribute.annotation,  
+ proguard.classfile.constant,  proguard.classfile.attribute.preverific
+ ation.visitor",proguard.classfile.util;version="5.0.0"; uses:="progua
+ rd.classfile,  proguard.classfile.attribute,  proguard.util,  proguar
+ d.classfile.attribute.annotation.visitor,  proguard.classfile.constan
+ t.visitor,  proguard.classfile.attribute.preverification,  proguard.c
+ lassfile.instruction,  proguard.classfile.attribute.visitor,  proguar
+ d.classfile.visitor,  proguard.classfile.attribute.annotation.target,
+   proguard.classfile.instruction.visitor,  proguard.classfile.attribu
+ te.annotation,  proguard.classfile.constant",proguard.classfile.visit
+ or;version="5.0.0"; uses:="proguard.classfile,  proguard.classfile.at
+ tribute,  proguard.util,  proguard.classfile.attribute.annotation.vis
+ itor,  proguard.classfile.constant.visitor,  proguard.classfile.attri
+ bute.preverification,  proguard.classfile.util,  proguard.classfile.a
+ ttribute.visitor,  proguard.classfile.instruction,  proguard.classfil
+ e.attribute.annotation.target,  proguard.classfile.instruction.visito
+ r,  proguard.classfile.attribute.annotation.target.visitor,  proguard
+ .classfile.attribute.annotation,  proguard.classfile.constant,  progu
+ ard.classfile.attribute.preverification.visitor",proguard.evaluation;
+ version="5.0.0"; uses:="proguard.classfile.attribute,  proguard.class
+ file,  proguard.evaluation.value,  proguard.classfile.instruction.vis
+ itor,  proguard.classfile.constant.visitor,  proguard.classfile.util,
+   proguard.classfile.constant,  proguard.classfile.instruction,  prog
+ uard.classfile.visitor",proguard.evaluation.value;version="5.0.0";use
+ s:="proguard.classfile",proguard.io;version="5.0.0"; uses:="proguard.
+ classfile,  proguard.util,  proguard.classfile.util,  proguard.classf
+ ile.visitor",proguard.obfuscate;version="5.0.0"; uses:="proguard.clas
+ sfile.attribute,  proguard.classfile,  proguard.classfile.constant.vi
+ sitor,  proguard.classfile.util,  proguard.classfile.constant,  progu
+ ard,  proguard.classfile.attribute.visitor,  proguard.classfile.visit
+ or",proguard.optimize;version="5.0.0"; uses:="proguard.classfile.attr
+ ibute,  proguard.classfile,  proguard.classfile.instruction.visitor, 
+  proguard.classfile.constant.visitor,  proguard.classfile.util,  prog
+ uard.classfile.attribute.annotation,  proguard.classfile.attribute.pr
+ everification,  proguard.classfile.constant,  proguard.classfile.inst
+ ruction,  proguard,  proguard.classfile.attribute.visitor,  proguard.
+ classfile.visitor",proguard.optimize.evaluation;version="5.0.0"; uses
+ :="proguard.classfile,  proguard.classfile.attribute,  proguard.evalu
+ ation,  proguard.classfile.constant.visitor,  proguard.classfile.util
+ ,  proguard.classfile.instruction,  proguard.classfile.attribute.visi
+ tor,  proguard.classfile.visitor,  proguard.evaluation.value,  progua
+ rd.classfile.editor,  proguard.classfile.instruction.visitor,  progua
+ rd.classfile.constant",proguard.optimize.info;version="5.0.0"; uses:=
+ "proguard.evaluation.value,  proguard.classfile.attribute,  proguard.
+ classfile,  proguard.classfile.instruction.visitor,  proguard.classfi
+ le.constant.visitor,  proguard.classfile.util,  proguard.classfile.co
+ nstant,  proguard.classfile.attribute.visitor,  proguard.classfile.in
+ struction,  proguard.classfile.visitor",proguard.optimize.peephole;ve
+ rsion="5.0.0"; uses:="proguard.classfile,  proguard.classfile.attribu
+ te,  proguard.classfile.attribute.annotation.visitor,  proguard.class
+ file.constant.visitor,  proguard.classfile.util,  proguard.classfile.
+ instruction,  proguard.classfile.attribute.visitor,  proguard.classfi
+ le.visitor,  proguard.classfile.editor,  proguard.classfile.instructi
+ on.visitor,  proguard.classfile.attribute.annotation,  proguard.class
+ file.constant",proguard.preverify;version="5.0.0"; uses:="proguard.cl
+ assfile.attribute,  proguard.classfile,  proguard.classfile.instructi
+ on.visitor,  proguard.classfile.util,  proguard,  proguard.classfile.
+ attribute.visitor,  proguard.classfile.instruction",proguard.shrink;v
+ ersion="5.0.0"; uses:="proguard.classfile,  proguard.classfile.attrib
+ ute,  proguard.classfile.attribute.annotation.visitor,  proguard.clas
+ sfile.constant.visitor,  proguard.classfile.attribute.preverification
+ ,  proguard.classfile.util,  proguard.classfile.instruction,  proguar
+ d.classfile.attribute.visitor,  proguard.classfile.visitor,  proguard
+ .classfile.instruction.visitor,  proguard.classfile.attribute.annotat
+ ion,  proguard.classfile.constant,  proguard,  proguard.classfile.att
+ ribute.preverification.visitor",proguard.util;version="5.0.0",proguar
+ d.wtk;version="5.0.0";uses:="com.sun.kvem.environment"
+Bundle-Vendor: %providerName
+Bundle-Version: 5.0.0.001
+Bundle-Localization: plugin
+Bundle-Name: %pluginName
+Bundle-ManifestVersion: 2
+Import-Package: org.apache.tools.ant,org.apache.tools.ant.types,progua
+ rd.wtk;version="[5.0.0,6.0.0)",proguard.util;version="[5.0.0,6.0.0)",
+ proguard.shrink;version="[5.0.0,6.0.0)",proguard.preverify;version="[
+ 5.0.0,6.0.0)",proguard.optimize.peephole;version="[5.0.0,6.0.0)",prog
+ uard.optimize.info;version="[5.0.0,6.0.0)",proguard.optimize.evaluati
+ on;version="[5.0.0,6.0.0)",proguard.optimize;version="[5.0.0,6.0.0)",
+ proguard.obfuscate;version="[5.0.0,6.0.0)",proguard.io;version="[5.0.
+ 0,6.0.0)",proguard.evaluation.value;version="[5.0.0,6.0.0)",proguard.
+ evaluation;version="[5.0.0,6.0.0)",proguard.classfile.visitor;version
+ ="[5.0.0,6.0.0)",proguard.classfile.util;version="[5.0.0,6.0.0)",prog
+ uard.classfile.io;version="[5.0.0,6.0.0)",proguard.classfile.instruct
+ ion.visitor;version="[5.0.0,6.0.0)",proguard.classfile.instruction;ve
+ rsion="[5.0.0,6.0.0)",proguard.classfile.editor;version="[5.0.0,6.0.0
+ )",proguard.classfile.constant.visitor;version="[5.0.0,6.0.0)",progua
+ rd.classfile.constant;version="[5.0.0,6.0.0)",proguard.classfile.attr
+ ibute.visitor;version="[5.0.0,6.0.0)",proguard.classfile.attribute.pr
+ everification.visitor;version="[5.0.0,6.0.0)",proguard.classfile.attr
+ ibute.preverification;version="[5.0.0,6.0.0)",proguard.classfile.attr
+ ibute.annotation.visitor;version="[5.0.0,6.0.0)",proguard.classfile.a
+ ttribute.annotation;version="[5.0.0,6.0.0)",proguard.classfile.attrib
+ ute;version="[5.0.0,6.0.0)",proguard.classfile;version="[5.0.0,6.0.0)
+ ",proguard.ant;version="[5.0.0,6.0.0)",proguard;version="[5.0.0,6.0.0
+ )"
+Bundle-SymbolicName: com.tibco.tpcl.proguard;singleton:=true
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+
+

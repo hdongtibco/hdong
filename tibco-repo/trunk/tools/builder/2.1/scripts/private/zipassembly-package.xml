@@ -1,0 +1,664 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="zipassembly-package">
+<!-- contains targets from assembly package. -->
+    <target name="-zip-assembly-package" depends="-set-env-version" if="assembly.packaging.enable">
+        <if>
+            <available file="${autobuild.dir.output.candidates}/assembly/export" type="dir" />
+            <then>
+                <propertyregex property="_assem_feature" override="true" input="${feature}" regexp="\." replace="_" />
+                <propertyregex property="assembly_feature" override="true" input="${_assem_feature}" regexp="-" replace="_" />
+                <if>
+                    <not>
+                        <isset property="assembly_feature" />
+                    </not>
+                    <then>
+                        <property name="assembly_feature" value="${_assem_feature}" />
+                    </then>
+                </if>
+                <property name="buildType" value="test" />
+                <property name="ZIPFILE_ASSEMBLY_GALLERY" value="${autobuild.dir.output.candidates}/assembly/temp" /> 
+
+                <mkdir dir="${autobuild.dir.output.candidates}/assembly/debug" />
+                <mkdir dir="${autobuild.dir.output.candidates}/assembly/release" />
+
+                <for param="each-export-path">
+                    <dirset dir="${autobuild.dir.output.candidates}/assembly/export">
+                        <include name="*" />
+                    </dirset>
+                    <sequential>
+                        <delete dir="${ZIPFILE_ASSEMBLY_GALLERY}" quiet="true" />
+                        <mkdir dir="${ZIPFILE_ASSEMBLY_GALLERY}" />
+                        <var name="env.EXPORT_DIR" value="@{each-export-path}" />
+                        <propertyregex property="each-export-dir" override="true" input="@{each-export-path}"
+                                       regexp="([^/\\]*$)" select="\1" />
+                        <if>
+                            <or>
+                                <equals arg1="${each-export-dir}" arg2="debug-dual" /> 
+                                <equals arg1="${each-export-dir}" arg2="release-dual" /> 
+                            </or>
+                            <then>
+                                <var name="ASSEMBLY_ID" value="assembly_tibco_${assembly_feature}_eclipse" />
+                                <var name="PROJECT_ID" value="${assembly_feature}_eclipse" />
+                            </then>
+                            <else>
+                                <var name="ASSEMBLY_ID" value="assembly_tibco_${assembly_feature}" />
+                                <var name="PROJECT_ID" value="${assembly_feature}" />
+                            </else>
+                        </if>
+                        <if>
+                            <or>
+                                <equals arg1="${each-export-dir}" arg2="debug" /> 
+                                <equals arg1="${each-export-dir}" arg2="debug-dual" /> 
+                            </or>
+                            <then>
+                                <var name="ZIPFILE_ASSEMBLY_ARCHIVE" value="${autobuild.dir.output.candidates}/assembly/debug" />
+                            </then>
+                            <else>
+                                <var name="ZIPFILE_ASSEMBLY_ARCHIVE" value="${autobuild.dir.output.candidates}/assembly/release" />
+                            </else>
+                        </if>
+                        <if>
+                            <isset property="dist_platform" />
+                            <then>
+                                <ant antfile="${autobuild.dir.installzipassembly.root}/build.xml" target="zip-dist-assembly-contents" inheritrefs="true" />
+                            </then>
+                            <else>
+                                <ant antfile="${autobuild.dir.installzipassembly.root}/build.xml" target="zip-assembly-contents" inheritrefs="true" />
+                            </else>
+                        </if>
+                    </sequential>
+                </for>
+                <delete dir="${ZIPFILE_ASSEMBLY_GALLERY}" quiet="true" />
+                <delete dir="${autobuild.dir.output.candidates}/assembly/export" quiet="true" />
+                <delete dir="${autobuild.dir.release-unit}/registry_file.xml" quiet="true" />
+            </then>
+        </if>
+    </target>
+    
+    <!-- set env for assembly -->
+    <target name="-set-env-version" if="assembly.packaging.enable">
+        <!-- get main feature's version -->
+        <for param="assembly-feature">
+            <fileset id="feature-list" dir="${autobuild.dir.output.jars.release}/features">
+                <include name="*.jar" />
+            </fileset>
+            <sequential>
+                <propertyregex property="_main_feature" override="true" input="@{assembly-feature}"
+                               regexp="([^/\\]*(?=\.jar\b))" select="\1" />
+                 <propertyregex property="_temp_feature" override="true" input="${_main_feature}" regexp="(_\d{1,3}\.\d{1,3}\.\d{1,}\..*)" replace="" />
+                <if>
+                    <equals arg1="${feature}" arg2="${_temp_feature}" />
+                    <then>
+                        <property name="_assembly_version" value="${_main_feature}" />
+                    </then>
+                </if>
+            </sequential>
+        </for>
+        <!-- set env.xxx value -->
+        <propertyregex property="_assembly_version" override="true" input="${_assembly_version}" regexp="(\d{1,3}\.\d{1,3}\.\d{1,}\..*)" select="\1" />
+        <property name="_env_versions" value="env.VERSION_MAJOR,env.VERSION_MINOR,env.VERSION_MAINT,env.VERSION_UPDATE" />
+        <property name="prod_registry_info" value="${feature}" />
+        <for list="${_env_versions}" param="one.env.version">
+            <sequential>
+                <propertyregex property="_assembly_temp_version" override="true" input="${_assembly_version}" regexp="([^\.]+).*" select="\1" />
+                <propertyregex property="_assembly_version" override="true" input="${_assembly_version}" regexp="^.*?\." replace="" />
+                <var name="@{one.env.version}" value="${_assembly_temp_version}" />
+            </sequential>
+        </for>
+    </target>
+
+    <target name="-merge-site-provenance-xml">
+        <property name="_site_provenance" value="site-provenance.xml" />
+        <condition property="_output_jars_debug">
+            <available file="${autobuild.dir.output.jars.debug}" type="dir" />
+        </condition>
+        <condition property="_output_jars_release">
+            <available file="${autobuild.dir.output.jars.release}" type="dir" />
+        </condition>
+        <if>
+            <and>
+                <isset property="_output_jars_debug" />
+                <isset property="_output_jars_release" />
+                <available file="${autobuild.dir.build-artifacts}/${_site_provenance}" />
+            </and>
+            <then>
+                <if>
+                    <available file="${autobuild.workspace.update-sites.local}/${_site_provenance}" />
+                    <then>
+                         <merge.site.provenance m.site1="${autobuild.workspace.update-sites.local}/${_site_provenance}"
+                                                m.site2="${autobuild.dir.build-artifacts}/${_site_provenance}"
+                                                m.into="${autobuild.dir.build-artifacts}/merged-${touch.time}-${_site_provenance}" />
+                         <move file="${autobuild.dir.build-artifacts}/merged-${touch.time}-${_site_provenance}" 
+                               tofile="${autobuild.workspace.update-sites.local}/${_site_provenance}" />
+                    </then>
+                    <else>
+                         <copy file="${autobuild.dir.build-artifacts}/${_site_provenance}" todir="${autobuild.workspace.update-sites.local}" />
+                    </else>
+                </if>
+                <copy file="${autobuild.dir.build-artifacts}/${_site_provenance}" todir="${autobuild.dir.output.jars.debug}" />
+                <copy file="${autobuild.dir.build-artifacts}/${_site_provenance}" todir="${autobuild.dir.output.jars.release}" />
+                <delete file="${autobuild.dir.build-artifacts}/${_site_provenance}" quiet="true"/>
+            </then>
+        </if>
+    </target>
+
+    <macrodef name="merge.site.provenance">
+        <attribute name="m.site1" />
+        <attribute name="m.site2" />
+        <attribute name="m.into" />
+        <sequential>
+            <delete file="@{m.into}"/>
+            <xslt in="@{m.site1}" out="@{m.into}" style="${autobuild.dir.scripts}/private/siteProvenanceMerge.xsl">
+                <param name="otherfile" expression="@{m.site2}" />
+            </xslt>
+        </sequential>
+    </macrodef>
+
+    <target name="-generate-release-build-list" unless="express-build">
+        <condition property="_eclipse-ru_dir_exists">
+            <available file="${autobuild.dir.output.candidates}/${_build_dir_name}/debug" type="dir" />
+        </condition>
+        <condition property="_ru_dir_exists">
+            <available file="${autobuild.dir.output.debug}" type="dir" />
+        </condition>
+        <if>
+            <isset property="_eclipse-ru_dir_exists" />
+            <then>
+                <property name="dirs_list" value="${autobuild.dir.output.debug},${autobuild.dir.output.candidates}/${_build_dir_name}/debug" />
+            </then>
+        </if>
+        <if>
+            <isset property="_ru_dir_exists" />
+            <then>
+                 <property name="dirs_list" value="${autobuild.dir.output.debug}" />
+                 <!-- add assembly for packaging -->
+                <if>
+                    <isset property="assembly.packaging.enable" />
+                    <then>
+                        <property name="_assembly_package" value="${autobuild.dir.output.candidates}/assembly/export" />
+                        <mkdir dir="${_assembly_package}" />
+                    </then>
+                </if>
+            </then>
+        </if>
+        <if>
+            <isset property="dirs_list" />
+            <then>
+                <foreach list="${dirs_list}" param="each_output_dir"
+                         target="-run-generate-release-build-list" inheritall="true" />
+            </then>
+        </if>
+    </target>
+
+    <target name="-run-generate-release-build-list">            
+        <property name="release-build.full-list" value="${autobuild.dir.output.logs}/full-ru.txt" />
+        <property name="release-build.full-eclipse-list" value="${autobuild.dir.output.logs}/full-dual-ru.txt" />
+        <property name="release-build.main-list" value="${autobuild.dir.output.logs}/assembly.txt" />
+        <property name="release-build.eclipse-list" value="${autobuild.dir.output.logs}/assembly-dual.txt" />
+        <property name="_ru_additionalProps" value="${autobuild.dir.release-unit}/features/${feature}/additionalProps.txt" />
+        <!-- retrieve the feature list from the release folder -->
+        <for param="each-feature">
+            <dirset dir="${each_output_dir}/features">
+                <include name="*" />
+            </dirset>
+            <sequential>
+                <propertyregex property="_each_feature_name" override="true" input="@{each-feature}" 
+                               regexp="([^/\\]*$)" select="\1" />
+                <propertyregex property="_each_feature_id" override="true" input="${_each_feature_name}" 
+                               regexp="(_\d{1,3}\.\d{1,3}\.\d{1,}\..*)" replace="" />
+               
+                <available property="list_feature_${_each_feature_name}" 
+                           file="${each_output_dir}/features/${_each_feature_name}/feature.xml" 
+                           type="file" value="${_each_feature_name}" />
+              
+                <if>
+                    <equals arg1="${each_output_dir}" arg2="${autobuild.dir.output.debug}" />
+                    <then>
+                        <echo file="${release-build.full-list}" append="true">feature=${_each_feature_name}.jar${line.separator}</echo>
+                        <if>
+                            <equals arg1="${_each_feature_id}" arg2="${feature}" />
+                            <then>
+                                <if>
+                                    <equals arg1="${autobuild.p2.packaging}" arg2="true" />
+                                    <then>
+                                        <mkdir dir="${autobuild.dir.output.candidates}/jar/p2/release/features" />
+                                        <mkdir dir="${autobuild.dir.output.candidates}/jar/p2/release/plugins" />
+                                        <mkdir dir="${autobuild.dir.output.candidates}/jar/p2/debug/features" />
+                                        <mkdir dir="${autobuild.dir.output.candidates}/jar/p2/debug/plugins" />
+                                        <copy file="${autobuild.dir.output.jars.release}/features/${_each_feature_name}.jar" todir="${autobuild.dir.output.candidates}/jar/p2/release/features" overwrite="true" />
+                                        <copy file="${autobuild.dir.output.jars.debug}/features/${_each_feature_name}.jar" todir="${autobuild.dir.output.candidates}/jar/p2/debug/features" overwrite="true" />
+                                    </then>
+                                </if>
+                                <echo file="${release-build.main-list}" append="true">feature=${_each_feature_name}.jar${line.separator}</echo>
+                                <!-- generate runtime assembly directory -->
+                                <if>
+                                    <available file="${_assembly_package}" type="dir" />
+                                    <then>
+                                        <copy todir="${_assembly_package}/debug/features" overwrite="true">
+                                           <fileset dir="${autobuild.dir.output.debug}/features">
+                                               <include name="${_each_feature_name}/" />
+                                           </fileset>
+                                        </copy>
+                                        <copy todir="${_assembly_package}/release/features" overwrite="true">
+                                           <fileset dir="${autobuild.dir.output.release}/features">
+                                               <include name="${_each_feature_name}/" />
+                                           </fileset>
+                                        </copy>
+                                        <if>
+                                            <available file="${_ru_additionalProps}" />
+                                            <then>
+                                                <copy file="${_ru_additionalProps}"
+                                                      todir="${_assembly_package}/debug/features/${_each_feature_name}" overwrite="true" />
+                                                <copy file="${_ru_additionalProps}"
+                                                      todir="${_assembly_package}/release/features/${_each_feature_name}" overwrite="true" />
+                                            </then>
+                                        </if>
+                                    </then>
+                                </if>
+                            </then>
+                        </if>
+                        <if>
+                            <and>
+                                <equals arg1="${_each_feature_id}" arg2="${feature}.devdocs" />
+                                <equals arg1="${javadoc.assembly.enable}" arg2="true" />
+                            </and>
+                            <then>
+                                <if>
+                                    <equals arg1="${autobuild.p2.packaging}" arg2="true" />
+                                    <then>
+                                        <copy file="${autobuild.dir.output.jars.release}/features/${_each_feature_name}.jar" todir="${autobuild.dir.output.candidates}/jar/p2/release/features" overwrite="true" />
+                                        <copy file="${autobuild.dir.output.jars.debug}/features/${_each_feature_name}.jar" todir="${autobuild.dir.output.candidates}/jar/p2/debug/features" overwrite="true" />
+                                    </then>
+                                </if>
+                                <echo file="${release-build.main-list}" append="true">feature=${_each_feature_name}.jar${line.separator}</echo>
+                            </then>
+                        </if>
+                    </then>
+                    <else>
+                        <echo file="${release-build.full-eclipse-list}" append="true">feature=${_each_feature_name}.jar${line.separator}</echo>
+                        <if>
+                            <equals arg1="${_each_feature_id}" arg2="${feature}${_extension_name}" />
+                            <then>
+                                <mkdir dir="${autobuild.dir.output.candidates}/${_build_dir_name}/jar/release/features" />
+                                <mkdir dir="${autobuild.dir.output.candidates}/${_build_dir_name}/jar/release/plugins/" />
+                                <mkdir dir="${autobuild.dir.output.candidates}/${_build_dir_name}/jar/debug/features" />
+                                <mkdir dir="${autobuild.dir.output.candidates}/${_build_dir_name}/jar/debug/plugins/" />
+                                <copy file="${autobuild.dir.output.jars.release}/features/${_each_feature_name}.jar" todir="${autobuild.dir.output.candidates}/${_build_dir_name}/jar/release/features" overwrite="true" />
+                                <copy file="${autobuild.dir.output.jars.debug}/features/${_each_feature_name}.jar" todir="${autobuild.dir.output.candidates}/${_build_dir_name}/jar/debug/features" overwrite="true" />
+                                <copy file="${autobuild.dir.output.jars.debug}/features/${_each_feature_name}.jar" todir="${autobuild.workspace.update-sites.local}-debug/features" overwrite="true" />
+                                <echo file="${release-build.eclipse-list}" append="true">feature=${_each_feature_name}.jar${line.separator}</echo>
+                                 <!-- generate designtime assembly directory -->
+                                <if>
+                                    <available file="${_assembly_package}" type="dir" />
+                                    <then>
+                                        <copy todir="${_assembly_package}/debug-dual/features" overwrite="true">
+                                           <fileset dir="${autobuild.dir.output.candidates}/${_build_dir_name}/debug/features">
+                                               <include name="${_each_feature_name}/" />
+                                           </fileset>
+                                        </copy>
+                                        <copy todir="${_assembly_package}/release-dual/features" overwrite="true">
+                                           <fileset dir="${autobuild.dir.output.candidates}/${_build_dir_name}/release/eclipse/features">
+                                               <include name="${_each_feature_name}/" />
+                                           </fileset>
+                                        </copy>
+                                        <if>
+                                            <available file="${_ru_additionalProps}" />
+                                            <then>
+                                                <copy file="${_ru_additionalProps}"
+                                                      todir="${_assembly_package}/debug-dual/features/${_each_feature_name}" overwrite="true" />
+                                                <copy file="${_ru_additionalProps}"
+                                                  todir="${_assembly_package}/release-dual/features/${_each_feature_name}" overwrite="true" />
+                                            </then>
+                                        </if>
+                                    </then>
+                                </if>
+                            </then>
+                        </if>
+                    </else>
+                </if>
+            </sequential>
+        </for>
+        <!-- prepare the feature list property -->
+        <propertyselector property="_build_feature_list" override="true" match="list_feature_.*" />
+        <if>
+            <isset property="_build_feature_list" />
+            <then>
+                <foreach list="${_build_feature_list}" param="_a_feature"
+                         target="-read-feature" inheritall="true" />
+            </then>
+        </if>
+    </target>
+
+    <target name="-read-feature">
+        <propertyregex property="_a_feature_id" override="true" input="${_a_feature}" 
+                       regexp="list_feature_(.*)" select="\1" />
+        <!-- retrieve the plugin list from the feature.xml -->
+        <tempfile property="_plugins_list_file" />
+        <xslt in="${each_output_dir}/features/${_a_feature_id}/feature.xml" out="${_plugins_list_file}"
+              style="${autobuild.dir.scripts}/private/extractPlugins.xsl">
+            <param name="feature_id" expression="${_a_feature_id}" />
+        </xslt>
+        <property file="${_plugins_list_file}" prefix="_list_target." />
+        <delete file="${_plugins_list_file}" quiet="true"/>
+        <property name="_p_list" value="" />
+        <propertyselector property="_p_list" override="true" match="_list_target.plugin_${_a_feature_id}-.*" />
+        <foreach list="${_p_list}" param="_a_plugin"
+                 target="-read-plugin" inheritall="true" />
+    </target>
+
+    <target name="-read-plugin">
+        <propertycopy property="_p_version" from="${_a_plugin}" override="true" />
+        <propertyregex property="_p_id" override="true" input="${_a_plugin}"
+                       regexp="_list_target.plugin_${_a_feature_id}-" replace="" />
+        <propertyregex property="_f_id" override="true" input="${_a_feature_id}"
+                       regexp="(_\d{1,3}\.\d{1,3}\.\d{1,}\..*)" replace="" />
+        <if>
+            <equals arg1="${each_output_dir}" arg2="${autobuild.dir.output.debug}" />
+            <then>
+                <echo file="${release-build.full-list}" append="true">plugin=${_p_id}_${_p_version}.jar${line.separator}</echo>
+                <if>
+                    <equals arg1="${_f_id}" arg2="${feature}" />
+                    <then>
+                        <if>
+                            <equals arg1="${autobuild.p2.packaging}" arg2="true" />
+                            <then>
+                                <copy file="${autobuild.dir.output.jars.release}/plugins/${_p_id}_${_p_version}.jar" todir="${autobuild.dir.output.candidates}/jar/p2/release/plugins" overwrite="true" />
+                                <copy file="${autobuild.dir.output.jars.debug}/plugins/${_p_id}_${_p_version}.jar" todir="${autobuild.dir.output.candidates}/jar/p2/debug/plugins" overwrite="true" />
+                            </then>
+                        </if>
+                        <echo file="${release-build.main-list}" append="true">plugin=${_p_id}_${_p_version}.jar${line.separator}</echo>
+                        <!-- copy runtime plugins for assemblying-->
+                        <if>
+                            <and>
+                                <available file="${autobuild.dir.output.debug}/plugins/${_p_id}_${_p_version}.jar" />
+                                <available file="${autobuild.dir.output.release}/plugins/${_p_id}_${_p_version}.jar" />
+                                <available file="${_assembly_package}" type="dir" />
+                            </and>
+                            <then>
+                                <copy todir="${_assembly_package}/debug/plugins" file="${autobuild.dir.output.debug}/plugins/${_p_id}_${_p_version}.jar" />
+                                <copy todir="${_assembly_package}/release/plugins" file="${autobuild.dir.output.release}/plugins/${_p_id}_${_p_version}.jar" />
+                            </then>
+                            <elseif>
+                                <and>
+                                    <available file="${autobuild.dir.output.debug}/plugins/${_p_id}_${_p_version}" type="dir" />
+                                    <available file="${autobuild.dir.output.release}/plugins/${_p_id}_${_p_version}" type="dir" />
+                                    <available file="${_assembly_package}" type="dir" />
+                                </and>
+                                <then>
+                                    <copy todir="${_assembly_package}/debug/plugins" overwrite="true">
+                                        <fileset dir="${autobuild.dir.output.debug}/plugins">
+                                             <include name="${_p_id}_${_p_version}/" />
+                                        </fileset>
+                                    </copy>
+                                    <copy todir="${_assembly_package}/release/plugins" overwrite="true">
+                                        <fileset dir="${autobuild.dir.output.release}/plugins">
+                                             <include name="${_p_id}_${_p_version}/" />
+                                        </fileset>
+                                    </copy>
+                                </then>
+                            </elseif>
+                        </if>
+                    </then>
+                </if>
+                <if>
+                    <and>
+                        <equals arg1="${_f_id}" arg2="${feature}.devdocs" />
+                        <equals arg1="${javadoc.assembly.enable}" arg2="true" />
+                    </and>
+                    <then>
+                        <if>
+                            <equals arg1="${autobuild.p2.packaging}" arg2="true" />
+                            <then>
+                                <copy file="${autobuild.dir.output.jars.release}/plugins/${_p_id}_${_p_version}.jar" todir="${autobuild.dir.output.candidates}/jar/p2/release/plugins" overwrite="true" />
+                                <copy file="${autobuild.dir.output.jars.debug}/plugins/${_p_id}_${_p_version}.jar" todir="${autobuild.dir.output.candidates}/jar/p2/debug/plugins" overwrite="true" />
+                            </then>
+                        </if>
+                        <echo file="${release-build.main-list}" append="true">plugin=${_p_id}_${_p_version}.jar${line.separator}</echo>
+                    </then>
+                </if>
+            </then>
+            <else>
+                <echo file="${release-build.full-eclipse-list}" append="true">plugin=${_p_id}_${_p_version}.jar${line.separator}</echo>
+                <if>
+                    <equals arg1="${_f_id}" arg2="${feature}${_extension_name}" />
+                    <then>
+                        <copy file="${autobuild.dir.output.jars.release}/plugins/${_p_id}_${_p_version}.jar" todir="${autobuild.dir.output.candidates}/${_build_dir_name}/jar/release/plugins" overwrite="true" />
+                        <copy file="${autobuild.dir.output.jars.debug}/plugins/${_p_id}_${_p_version}.jar" todir="${autobuild.dir.output.candidates}/${_build_dir_name}/jar/debug/plugins" overwrite="true" />
+                        <copy file="${autobuild.dir.output.jars.debug}/plugins/${_p_id}_${_p_version}.jar" todir="${autobuild.workspace.update-sites.local}-debug/plugins" overwrite="true" />
+                        <echo file="${release-build.eclipse-list}" append="true">plugin=${_p_id}_${_p_version}.jar${line.separator}</echo>
+                        <!-- copy designime plugins for assemblying-->
+                        <if> 
+                            <and>
+                                <available file="${autobuild.dir.output.candidates}/${_build_dir_name}/debug/plugins/${_p_id}_${_p_version}.jar" />
+                                <available file="${autobuild.dir.output.candidates}/${_build_dir_name}/release/eclipse/plugins/${_p_id}_${_p_version}.jar" />
+                                <available file="${_assembly_package}" type="dir" />
+                            </and>
+                            <then>
+                                <copy todir="${_assembly_package}/debug-dual/plugins" file="${autobuild.dir.output.candidates}/${_build_dir_name}/debug/plugins/${_p_id}_${_p_version}.jar" />
+                                <copy todir="${_assembly_package}/release-dual/plugins" file="${autobuild.dir.output.candidates}/${_build_dir_name}/release/eclipse/plugins/${_p_id}_${_p_version}.jar" />
+                            </then>
+                            <elseif>
+                                <and>
+                                    <available file="${autobuild.dir.output.candidates}/${_build_dir_name}/debug/plugins/${_p_id}_${_p_version}" type="dir" />
+                                    <available file="${autobuild.dir.output.candidates}/${_build_dir_name}/release/eclipse/plugins/${_p_id}_${_p_version}" type="dir" />
+                                    <available file="${_assembly_package}" type="dir" />
+                                </and>
+                                <then>
+                                    <copy todir="${_assembly_package}/debug-dual/plugins" overwrite="true">
+                                        <fileset dir="${autobuild.dir.output.candidates}/${_build_dir_name}/debug/plugins">
+                                             <include name="${_p_id}_${_p_version}/" />
+                                        </fileset>
+                                    </copy>
+                                    <copy todir="${_assembly_package}/release-dual/plugins" overwrite="true">
+                                        <fileset dir="${autobuild.dir.output.candidates}/${_build_dir_name}/release/eclipse//plugins">
+                                             <include name="${_p_id}_${_p_version}/" />
+                                        </fileset>
+                                    </copy>
+                                </then>
+                            </elseif>
+                        </if>
+                    </then>
+                </if>
+            </else>
+        </if>
+    </target>
+    
+    <target name="assembly-clean">
+    <if>
+        <available file="${autobuild.dir.output.candidates}/assembly" type="dir" />
+        <then>
+            <delete dir="${autobuild.dir.output.candidates}/assembly" quiet="true" />
+        </then>
+    </if>
+    </target>
+
+    <!-- check the plugin packed or not -->
+    <target name="-check-plugin-unpacked" unless="express-build">
+        <if>
+            <available file="${autobuild.dir.output.jars.release}/plugins" type="dir" />
+            <then>
+                <for param="ver-plugin-jar">
+                    <fileset id="feature-plugin-list" dir="${autobuild.dir.output.jars.release}/plugins">
+                        <include name="*.jar" />
+                    </fileset>
+                    <sequential>
+                        <propertyregex property="version-plugin-jar" override="true" input="@{ver-plugin-jar}"
+                                       regexp="([^/\\]*(?=\.jar\b))" select="\1" />
+                        <propertyregex property="plugin-name" override="true" input="${version-plugin-jar}" 
+                                       regexp="(.*)_(\d+\.\d+\.\d+)" select="\1" />
+                        <manifest.bundle.classpath manifest.path="${autobuild.dir.release-unit}/plugins/${plugin-name}/META-INF/MANIFEST.MF" manifest.plugin="${plugin-name}" plugin.folder="${autobuild.dir.output.release}/plugins/${version-plugin-jar}" />
+                    </sequential>
+                </for>
+
+                <!-- check whether there is the jars in the unpackaged plugin of test RU and the jars have to be unjared for running the test target -->
+                <for param="ver-test-plugin-jar">
+                    <fileset id="feature-plugin-list" dir="${autobuild.dir.output.jars.release}/plugins">
+                        <include name="test.*.jar" />
+                    </fileset>
+                    <sequential>
+                        <propertyregex property="version-test-plugin-jar" override="true" input="@{ver-test-plugin-jar}"
+                                       regexp="([^/\\]*(?=\.jar\b))" select="\1" />
+                        <if>
+                            <and>
+                                <not>
+                                    <isset property="official-release-build" />
+                                </not>
+                                <available file="${autobuild.dir.release-unit}/features/${feature}.test" type="dir" />
+                                <available file="${autobuild.dir.output.release}/plugins/${version-test-plugin-jar}" type="dir" />
+                            </and>
+                            <then>
+                                <for param="ver-jar">
+                                    <fileset id="plugin-jar-list" dir="${autobuild.dir.output.release}/plugins/${version-test-plugin-jar}">
+                                        <include name="*.jar" />
+                                    </fileset>
+                                    <sequential>
+                                        <mkdir dir="${autobuild.dir.output.release}/plugins/${version-test-plugin-jar}/local" />
+                                        <unjar src="@{ver-jar}" dest="${autobuild.dir.output.release}/plugins/${version-test-plugin-jar}/local" />
+                                        <copy todir="${autobuild.dir.output.release}/plugins/${version-test-plugin-jar}" overwrite="true">
+                                            <fileset dir="${autobuild.dir.output.release}/plugins/${version-test-plugin-jar}/local">
+                                                <include name="**" />
+                                                <exclude name="**/MANIFEST.MF" />
+                                            </fileset>
+                                        </copy>
+                                        <delete dir="${autobuild.dir.output.release}/plugins/${version-test-plugin-jar}/local" includeemptydirs="true" quiet="true"/>
+                                    </sequential>
+                                </for>
+                            </then>
+                        </if>
+                    </sequential>
+                </for>
+
+            </then>
+        </if>
+    </target>
+
+    <macrodef name="manifest.bundle.classpath">
+        <attribute name="manifest.path" />
+        <attribute name="manifest.plugin" />
+        <attribute name="plugin.folder" />
+        <sequential>
+            <if>
+                <available file="@{manifest.path}" />
+                <then>
+                    <loadproperties srcFile="@{manifest.path}">
+                        <filterchain>
+                            <linecontains>
+                                <contains value="Bundle-ClassPath" />
+                            </linecontains>
+                            <prefixlines prefix="@{manifest.plugin}-" />
+                        </filterchain>
+                    </loadproperties>
+                    <if>
+                        <isset property="@{manifest.plugin}-Bundle-ClassPath" />
+                        <then>
+                            <if>
+                                <available file="@{plugin.folder}.jar" />
+                                <then>
+<echo>
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+WARNING!!!  The plugin @{manifest.plugin} has to be unpacked since there is 
+the attribute Bundle-ClassPath set in the file MANIFEST.MF.
+@{manifest.path}
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+</echo>
+                                </then>
+                            </if>
+                        </then>
+                    </if>
+                </then>
+            </if>
+        </sequential>
+    </macrodef>
+
+    <target name="query-tag" description="Query the tag information on the latest build of this release-unit." depends="-set-build-properties, -query-versions" >
+        <if>
+            <isset property="build.number" />
+            <then>
+                <mkdir dir="${autobuild.dir.release-unit}/tag-dir" />
+                <exec executable="svn"
+                      logerror="on"
+                      failonerror="on">
+                    <arg line='export --force ${tag.path}/${release-unit}-${release.version}.${build.number}/${autobuild.svn.tag-pattern}/build-artifacts  ${autobuild.dir.release-unit}/tag-dir' />
+                </exec>
+                <copy file="${autobuild.dir.release-unit}/tag-dir/tag.xml" todir="${autobuild.dir.release-unit}" overwrite="true" />
+                <delete dir="${autobuild.dir.release-unit}/tag-dir" includeemptydirs="true" quiet="true"/>
+            </then>
+        </if>
+        <var name="autobuild.svn.revision" value="${svn.revision}" />
+        <ant antfile="${autobuild.dir.scripts}/private/svn-log.xml" target="-run-svn-log" inheritall="true"/>
+    </target>
+
+    <target name="-query-versions" depends="-load-ant-contrib" >
+        <exec executable="svn" logerror="on" failonerror="on" outputproperty="vc.info">
+             <arg line="info --xml ${autobuild.dir.release-unit}"/>
+        </exec>
+        <tempfile property="svninfo.temp.file" />
+        <tempfile property="svninfo.property.temp.file" />
+        <echo file="${svninfo.temp.file}">${vc.info}</echo>
+        <xslt in="${svninfo.temp.file}" out="${svninfo.property.temp.file}"
+              style="${autobuild.dir.scripts}/private/svnInfo.xsl">
+            <param name="tags-prefix" expression="${autobuild.svn.tags-prefix}" />
+            <param name="tags-suffix" expression="${autobuild.svn.tags-suffix}" />
+        </xslt>
+        <property file="${svninfo.property.temp.file}" />
+        <delete file="${svninfo.temp.file}" quiet="true"/>
+        <delete file="${svninfo.property.temp.file}" quiet="true"/>
+
+        <if>
+            <isset property="autobuild.svn.tags-prefix" />
+            <then>
+                <var name="tag.path" value="${svn.repoURL}${autobuild.svn.tags-prefix}/tags" />
+            </then>
+            <else>
+                <var name="tag.path" value="${svn.repoURL}/tags" />
+            </else>
+        </if>
+
+        <if>
+            <isset property="autobuild.svn.tags-suffix" />
+            <then>
+                <var name="tag.path" value="${tag.path}${autobuild.svn.tags-suffix}" />
+            </then>
+        </if>
+
+        <tempfile property="featureVersion.current.temp.file" />
+        <xslt in="${autobuild.dir.release-unit}/features/${feature}/feature.xml" out="${featureVersion.current.temp.file}"
+              style="${autobuild.dir.scripts}/private/featureVersion.xsl">
+            <param name="propname" expression="_version.number.target" />
+        </xslt>
+        <property file="${featureVersion.current.temp.file}" />
+        <delete file="${featureVersion.current.temp.file}" quiet="true"/>
+
+        <propertyregex property="release.version" override="true"
+                       input="${_version.number.target}"
+                       regexp=".qualifier" replace="" />
+        <exec executable="svn" logerror="on" failonerror="off" outputproperty="tag.list">
+              <arg line="ls ${tag.path}"/>
+        </exec>
+        <if>
+            <not>
+                <equals arg1="${tag.list}" arg2="" />
+            </not>
+            <then>
+                <for param="list.line" list="${tag.list}" delimiter="${line.separator}" trim="true" > 
+                    <sequential>
+                        <propertyregex property="tag.line" override="true" input="@{list.line}"
+                                       regexp="${release-unit}-${release.version}\.(.*)" select="\1" />
+                        <if>
+                            <isset property="tag.line" />
+                            <then>
+                                <propertyregex property="build.number" override="true"
+                                               input="${tag.line}" regexp="/" replace="" />
+                            </then>
+                        </if>
+                    </sequential>
+                </for>
+            </then>
+        </if>
+    </target>
+</project>

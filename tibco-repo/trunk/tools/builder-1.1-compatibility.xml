@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="Builder 1.1 Compatibility Overrides">
+
+    <!-- autobuild.dir.eclipse.install:
+            This is the location of an Eclipse installation with the builder
+            feature installed into it.
+            The default is very likely to be incorrect, even on Windows. -->
+    <property name="autobuild.dir.eclipse.install"
+              location="c:/program files/eclipse/3.6" />
+
+    <!-- autobuild.version.builder, autobuild.dir.builder, autobuild.dir.scripts
+            The location of builder, and of the scripts which are the key
+            entry points, are identified by concatenating the above eclipse
+            location, the id of the builder plugin, and the version specified.
+            When you update builder, also update this version and leave the
+            rest alone, and everything should work. -->
+    <property name="autobuild.version.builder" value="1.1.5.001" />
+    <property name="autobuild.dir.builder"
+              location="${autobuild.dir.eclipse.install}/plugins/com.tibco.devtools.builder_${autobuild.version.builder}" />
+    <property name="autobuild.dir.scripts"
+              location="${autobuild.dir.builder}/scripts" />
+
+    <!-- autobuild.version.workspace, autobuid.dir.workspace.installer
+            As with builder, the standard location of the workspace installer
+            (a jar rather than a dir) is specified relative to the eclipse
+            location and the version of the plugin.  Change the value of
+            the version property when you upgrade, and it should work -->
+    <property name="autobuild.version.workspace" value="1.0.0.001" />
+    <property name="autobuild.dir.workspace.installer"
+              location="${autobuild.dir.eclipse.install}/plugins/com.tibco.devtools.workspace.installer_${autobuild.version.workspace}.jar" />
+
+    <property name="workspace-installer-jar" location="${autobuild.dir.workspace.installer}" />
+    <property name="autobuild.dir.home" location="${autobuild.dir.scripts}" />
+
+</project>

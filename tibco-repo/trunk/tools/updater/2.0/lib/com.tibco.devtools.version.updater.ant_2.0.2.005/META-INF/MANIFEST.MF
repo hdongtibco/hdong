@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Export-Package: com.tibco.devtools.versionupdater.tasks;version="2.0.2
+ "
+Bundle-Vendor: TIBCO Software Inc.
+Bundle-Version: 2.0.2.005
+Bundle-Name: Bump/Sweep Ant Tasks
+Bundle-ManifestVersion: 2
+Import-Package: com.tibco.devtools.common;version="[1.0.1,2.0.0)",com.
+ tibco.devtools.common.tasks;version="[1.0.2,2.0.0)",com.tibco.devtool
+ s.versionupdater;version="[2.0.1,3.0.0)",org.apache.tools.ant,org.apa
+ che.tools.ant.types
+Bundle-SymbolicName: com.tibco.devtools.version.updater.ant; singleton
+ :=true
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+

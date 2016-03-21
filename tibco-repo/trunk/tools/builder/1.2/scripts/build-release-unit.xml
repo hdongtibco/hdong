@@ -1,0 +1,403 @@
+<project name="Build and Export Release Unit" default="export-all-features">
+
+    <taskdef resource="net/sf/antcontrib/antlib.xml">
+        <classpath>
+            <fileset dir="${autobuild.dir.builder}" includes="ant-contrib-1.0b3.jar"/>
+        </classpath>
+    </taskdef>
+
+
+    <import file="${autobuild.dir.scripts}/private/release-props.xml" />
+
+    <!-- informational target -->
+    <target name="properties" depends="-check-existence, -generate-build-qualifiers"
+              description="dump most of the relevant property values that will be used for an actual run">
+        <echo>Properties defined:</echo>
+        <echoproperties prefix="user." />
+        <echoproperties prefix="autobuild." />
+        <echoproperties>
+            <propertyset>
+                <propertyref name="feature" />
+                <propertyref name="basedir" />
+                <propertyref name="release-unit" />
+                <propertyref name="official-release-build" />
+            </propertyset>
+        </echoproperties>
+        <antcall target="-cleanup-temporaries" />
+    </target>
+
+    <target name="export-all-features"
+        depends="-check-existence, -generate-build-qualifiers, -start-ru-log,
+                 -export-source-feature, -export-code-feature, -export-test-feature, -export-docs-feature,
+                 -stop-ru-log">
+        <antcall target="-cleanup-temporaries" />
+        <antcall target="-generate-site-xml" />
+        <echo>
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+COMPLETED
+
+   ${autobuild.repository}/${release-unit}
+
+   ${feature}
+
+   release update site: ${autobuild.dir.output.jars.release}
+     debug update site: ${autobuild.dir.output.jars.debug}
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        </echo>
+        <!-- post release unit processing.
+             called in the context of the release unit (inheritall defaults to true),
+             and should *not* do anything choreography-related. -->
+        <!-- why use ant-contrib if rather than core condition?
+             because the ant task isn't conditional.  so we'd have to antcall
+             a target (which can be conditional), which would call ant.  that's
+             ugly as sin. -->
+        <if>
+            <and>
+                <isset property="autobuild.extension.script" />
+                <available file="${autobuild.extension.script}" />
+            </and>
+            <then>
+                <if>
+                    <isset property="autobuild.extension.target" />
+                    <then>
+                        <ant antfile="${autobuild.extension.script}"
+                             target="${autobuild.extension.target}" />
+                    </then>
+                    <else>
+                        <ant antfile="${autobuild.extension.script}" />
+                    </else>
+                </if>
+            </then>
+        </if>
+    </target>
+
+    <target name="-check-existence">
+        <available file="${autobuild.dir.release-unit}/features/${feature}.source" property="_source_feature_exists" type="dir" />
+        <available file="${autobuild.dir.release-unit}/features/${feature}.test" property="_test_feature_exists" type="dir" />
+        <available file="${autobuild.dir.release-unit}/features/${feature}.devdocs" property="_docs_feature_exists" type="dir" />
+        <condition property="_auxiliary_feature_exists">
+            <or>
+                <isset property="_docs_feature_exists" />
+                <isset property="_test_feature_exists" />
+            </or>
+        </condition>
+    </target>
+
+    <target name="-export-source-feature" if="_source_feature_exists">
+        <antcall target="-stop-ru-log" />
+        <ant antfile="${autobuild.dir.scripts}/build-feature.xml">
+            <property name="autobuild.feature-id" value="${feature}.source"/>
+            <property name="autobuild.feature-folder" value="${feature}.source"/>
+            <property name="autobuild.feature-type" value="source" />
+            <property name="_feature.has-auxiliaries" value="false" />
+        </ant>
+        <antcall target="-start-ru-log" />
+    </target>
+
+    <target name="-export-code-feature" depends="-set-javadoc-destination">
+        <antcall target="-stop-ru-log" />
+        <ant antfile="${autobuild.dir.scripts}/build-feature.xml">
+            <property name="autobuild.feature-id" value="${feature}"/>
+            <property name="autobuild.feature-folder" value="${feature}"/>
+            <property name="autobuild.feature-type" value="code" />
+            <property name="_feature.has-auxiliaries" value="${_auxiliary_feature_exists}" />
+        </ant>
+        <antcall target="-start-ru-log" />
+    </target>
+
+    <target name="-export-test-feature" if="_test_feature_exists">
+        <antcall target="-stop-ru-log" />
+        <ant antfile="${autobuild.dir.scripts}/build-feature.xml">
+            <property name="autobuild.feature-id" value="${feature}.test"/>
+            <property name="autobuild.feature-folder" value="${feature}.test"/>
+            <property name="autobuild.feature-type" value="test" />
+            <property name="autobuild.feature-javadoc" value="${nonexistent}" />
+            <property name="_feature.has-auxiliaries" value="false" />
+        </ant>
+        <antcall target="-start-ru-log" />
+    </target>
+
+    <target name="-export-docs-feature" if="_docs_feature_exists">
+        <antcall target="-stop-ru-log" />
+        <ant antfile="${autobuild.dir.scripts}/build-feature.xml">
+            <property name="autobuild.feature-id" value="${feature}.devdocs"/>
+            <property name="autobuild.feature-folder" value="${feature}.devdocs"/>
+            <property name="autobuild.feature-type" value="docs" />
+            <property name="autobuild.feature-javadoc" value="${nonexistent}" />
+            <property name="_feature.has-auxiliaries" value="false" />
+        </ant>
+        <antcall target="-start-ru-log" />
+        <antcall target="-cleanup-javadoc-dir" />
+    </target>
+
+    <!-- branch processing depending upon whether this is an official release build
+         or not.  first set up the properties based on that, then generate the
+         qualifiers (in pluginVersions.properties and featureVersions.properties)
+         based on role and the state of the working copy. -->
+    <target name="-generate-build-qualifiers"
+            depends="-set-generic-properties, -set-role-specific-properties,
+                     -generate-feature-build-qualifiers, -generate-plugin-build-qualifiers,
+                     -create-directories">
+    </target>
+
+    <target name="-set-generic-properties"
+            depends="-set-fixed-output-location, -set-stamped-output-location">
+        <record name="${autobuild.dir.release-unit}/setup-${feature}.log" action="start"
+                loglevel="${autobuild.loglevel}" />
+        <property name="autobuild.svn.featureVersionProperties.working" value="${autobuild.dir.release-unit}/featureVersions.properties" />
+        <property name="autobuild.svn.pluginVersionProperties.working" value="${autobuild.dir.release-unit}/pluginVersions.properties" />
+    </target>
+
+    <target name="-set-role-dependent-properties">
+        <property name="autobuild.dir.output.release" location="${autobuild.dir.output.candidates}/release" />
+        <property name="autobuild.dir.output.debug" location="${autobuild.dir.output.candidates}/debug" />
+        <property name="autobuild.dir.output.test-results" location="${autobuild.dir.output.candidates}/junit" />
+
+        <property name="autobuild.dir.output.jars.release" location="${autobuild.dir.output.candidates}/jar/release"/>
+        <property name="autobuild.dir.output.jars.debug" location="${autobuild.dir.output.candidates}/jar/debug"/>
+    </target>
+
+    <!-- also turns off the log and copies it to the right place. -->
+    <target name="-create-directories" depends="-set-role-dependent-properties" >
+        <echo level="verbose">Creating directories: ${autobuild.dir.output.jars.release}, ${autobuild.dir.output.jars.debug}</echo>
+        <mkdir dir="${autobuild.dir.output.jars.release}"/>
+        <mkdir dir="${autobuild.dir.output.jars.debug}"/>
+        <!-- now that we know the proper location for logging, move the setup log there. -->
+        <echo level="verbose">Turning off logging in the setup log and copying it to logs location</echo>
+        <echo level="verbose">Looking for ${autobuild.workspace.log}</echo>
+        <record name="${autobuild.dir.release-unit}/setup-${feature}.log" action="stop" />
+        <copy file="${autobuild.dir.release-unit}/setup-${feature}.log" todir="${autobuild.dir.output.logs}" />
+        <delete file="${autobuild.dir.release-unit}/setup-${feature}.log" />
+        <!-- check for the existence of the dependencies log, and collect it too -->
+        <if>
+            <and>
+                <isset property="${autobuild.workspace.log}" />
+                <available file="${autobuild.workspace.log}" type="file" />
+            </and>
+            <then>
+                <copy file="${autobuild.workspace.log}" todir="${autobuild.dir.output.logs}" />
+                <delete file="${autobuild.workspace.log}" />
+            </then>
+        </if>
+    </target>
+
+    <target name="-set-role-specific-properties" depends="-release-set-properties, -developer-generate-qualifier">
+    </target>
+
+    <!-- iterate over a list of directories in the feature folder.  for each directory
+         found, either call developer-update-propertyfile (passing the feature id and
+         the property file as params), or release-update-feature (which is more complex). -->
+    <target name="-generate-feature-build-qualifiers">
+        <for param="a-feature">
+            <dirset id="autobuild.feature-list" dir="${autobuild.dir.release-unit}/features">
+                <include name="*" />
+            </dirset>
+            <sequential>
+            <propertyregex property="this-feature" override="true" input="@{a-feature}"
+                           regexp="([^/\\]*$)" select="\1" />
+            <if>
+                <isset property="official-release-build" />
+                <then>
+                    <if>
+                        <isset property="release.svn.bypass.flag" />
+                        <then> <!-- do nothing; better hope the files are in place -->
+                            <echo>* WARNING * WARNING * WARNING * WARNING * WARNING *</echo>
+                            <echo />
+                            <echo>* WARNING:  release.svn.bypass.flag set!  WARNING *</echo>
+                            <echo />
+                            <echo>* WARNING * WARNING * WARNING * WARNING * WARNING *</echo>
+                        </then>
+                        <else>
+                            <ant antfile="${autobuild.dir.scripts}/private/release-tasks.xml" target="-release-update-feature">
+                                <!--property name="this-feature" value="${this-feature}" /-->
+                            </ant>
+                        </else>
+                    </if>
+                </then>
+                <else>
+                    <antcall target="-developer-update-propertyfile">
+                        <param name="target" value="${this-feature}" />
+                        <param name="developer.propertyfile" value="${autobuild.svn.featureVersionProperties.working}" />
+                    </antcall>
+                </else>
+            </if>
+            </sequential>
+        </for>
+    </target>
+
+    <!-- works just like feature build qualifiers, really, except that different parameters
+         are passed to developer-update-propertyfile and a different ant call (with slightly
+         different logic) is used for an official release build -->
+    <target name="-generate-plugin-build-qualifiers">
+        <for param="a-plugin">
+            <dirset id="autobuild.plugin-list" dir="${autobuild.dir.release-unit}/plugins">
+                <include name="*" />
+            </dirset>
+            <sequential>
+            <propertyregex property="this-plugin" override="true" input="@{a-plugin}"
+                           regexp="([^/\\]*$)" select="\1" />
+            <if>
+                <isset property="official-release-build" />
+                <then>
+                    <if>
+                        <isset property="release.svn.bypass.flag" />
+                        <then /> <!-- do nothing; better hope the files are in place -->
+                        <else>
+                            <ant antfile="${autobuild.dir.scripts}/private/release-tasks.xml" target="-release-update-plugin">
+                                <property name="plugin" value="${this-plugin}" />
+                            </ant>
+                        </else>
+                    </if>
+                </then>
+                <else>
+                    <antcall target="-developer-update-propertyfile">
+                        <param value="${autobuild.svn.pluginVersionProperties.working}" name="developer.propertyfile" />
+                        <param value="${this-plugin}" name="target" />
+                    </antcall>
+                </else>
+            </if>
+            </sequential>
+        </for>
+    </target>
+
+    <target name="-set-fixed-output-location" if="autobuild.qualifier.fixed">
+        <property name="autobuild.dir.output.candidates" location="${autobuild.dir.candidates}" />
+        <property name="autobuild.dir.output.logs" location="${autobuild.dir.output.candidates}/logs/${touch.time}" />
+    </target>
+
+    <target name="-set-stamped-output-location" unless="autobuild.qualifier.fixed">
+        <property name="autobuild.dir.output.candidates" location="${autobuild.dir.candidates}/${autobuild.repository}/${release-unit}/${touch.time}.${autobuild.user.name}"/>
+        <property name="autobuild.dir.output.logs" location="${autobuild.dir.output.candidates}/logs" />
+    </target>
+
+    <target name="-developer-generate-qualifier" unless="official-release-build">
+        <condition property="autobuild.developer-qualifier"
+                   value="DEV"
+                   else="${autobuild.user.name}-${touch.time}">
+            <istrue value="${autobuild.qualifier.fixed}" />
+        </condition>
+    </target>
+
+    <target name="-set-javadoc-destination">
+        <!-- of course, if it's already set to false, we can't change it.  hah! -->
+        <condition property="autobuild.javadoc.generate">
+            <or>
+                <and>
+                    <isset property="javadoc.container" />
+                    <isset property="javadoc.destination" />
+                    <available file="${javadoc.container}/${javadoc.destination}" type="dir" />
+                </and>
+                <and>
+                    <isset property="javadoc.destination" />
+                    <available file="${javadoc.destination}" type="dir" />
+                    <isset property="_docs_feature_exists" />
+                </and>
+            </or>
+        </condition>
+        <echo level="verbose">Javadoc generation is set to: ${autobuild.javadoc.generate}</echo>
+        <!-- double-check, though, in case someone manually set javadoc.generate to true -->
+        <condition property="autobuild.feature-javadoc"
+                   value="${javadoc.container}/${javadoc.destination}">
+            <and>
+                <isset property="autobuild.javadoc.generate" />
+                <isset property="javadoc.container" />
+                <isset property="javadoc.destination" />
+                <available file="${javadoc.container}/${javadoc.destination}" type="dir" />
+            </and>
+        </condition>
+        <if>
+            <isset property="autobuild.feature-javadoc" />
+            <then>
+                <echo level="verbose">Containerized autobuild.feature-javadoc: ${autobuild.feature-javadoc}</echo>
+            </then>
+        </if>
+        <condition property="autobuild.feature-javadoc"
+                   value="${javadoc.destination}">
+            <and>
+                <isset property="autobuild.javadoc.generate" />
+                <not>
+                    <isset property="javadoc.container" />
+                </not>
+                <isset property="javadoc.destination" />
+                <available file="${javadoc.destination}" type="dir" />
+                <isset property="_docs_feature_exists" />
+            </and>
+        </condition>
+        <if>
+            <isset property="autobuild.feature-javadoc" />
+            <then>
+                <echo level="verbose">autobuild.feature-javadoc: ${autobuild.feature-javadoc}</echo>
+            </then>
+            <else>
+                <echo level="verbose">Javadoc will not be generated.</echo>
+            </else>
+        </if>
+    </target>
+
+    <!-- used for both features and properties.  parameters are a-target (either a feature
+         id or a plugin id) and developer-propertyfile (pluginVersions.properties or featureVersions.properties,
+         the ones in the working copy) -->
+    <target name="-developer-update-propertyfile" unless="official-release-build">
+        <echo>Setting ${target} to ${autobuild.developer-qualifier}</echo>
+        <propertyfile file="${developer.propertyfile}">
+            <entry key="${target}" default="${autobuild.developer-qualifier}" />
+        </propertyfile>
+    </target>
+
+    <target name="-start-ru-log">
+        <property name="autobuild.log.release-unit" location="${autobuild.dir.output.logs}/${release-unit}.log" />
+        <record name="${autobuild.log.release-unit}" action="start"
+                loglevel="${autobuild.loglevel}" />
+    </target>
+
+    <target name="-stop-ru-log">
+        <record name="${autobuild.log.release-unit}" action="stop" />
+    </target>
+
+    <target name="-check-javadoc-dir">
+        <available property="_javadoc_dir_exists" file="${autobuild.feature-javadoc}" type="dir" />
+    </target>
+
+    <target name="-cleanup-javadoc-dir" if="_javadoc_dir_exists" depends="-check-javadoc-dir">
+        <delete failonerror="false" includeemptydirs="true">
+            <fileset dir="${javadoc.destination}" includes="**/*"/>
+        </delete>
+    </target>
+
+    <!-- if the "clean" property is set, then the _clean property will be set.  -->
+    <condition property="_clean">
+        <equals arg1="${autobuild.clean}" arg2="-clean"/>
+    </condition>
+
+    <target name="deleteDir" if="_clean">
+        <delete dir="${deleteDir.dir}"/>
+    </target>
+
+    <target name="-cleanup-temporaries" unless="official-release-build">
+        <delete>
+             <!-- none of these should exist, except *Versions.properties, after a successful build. -->
+             <fileset dir="${autobuild.dir.release-unit}" includes="*Versions.properties" />
+             <fileset dir="${autobuild.dir.release-unit}" includes="null*" />
+             <fileset dir="${autobuild.dir.release-unit}" includes="*.log" />
+        </delete>
+    </target>
+
+    <target name="-generate-site-xml">
+        <taskdef name="update.site.creator"
+                 classname="com.tibco.devtools.workspace.installer.tasks.UpdateSiteCreatorTask"
+                 classpath="${autobuild.dir.workspace.installer}" />
+        <update.site.creator
+            sitedirectory="${autobuild.dir.output.jars.release}" />
+        <update.site.creator
+            sitedirectory="${autobuild.dir.output.jars.debug}" />
+    </target>
+
+</project>

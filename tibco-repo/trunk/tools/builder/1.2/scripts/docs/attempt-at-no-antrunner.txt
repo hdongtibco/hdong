@@ -1,0 +1,43 @@
+
+This attempt failed because any use of BuildTimeSiteFactory ultimately does
+
+    UpdateCore.getPlugin().getBundle().getSymbolicName();
+    
+deep inside org.eclipse.update.core.model.DefaultSiteParser
+
+
+
+    <path id="builder.tasks.path">
+        <fileset dir="${autobuild.builder.extloc}/eclipse/plugins" includes="com.tibco.devtools.builder_*/builder-ant.jar"/>
+        <dirset dir="${autobuild.builder.extloc}/eclipse/plugins">
+            <include name="com.tibco.devtools.builder_*"/>
+        </dirset>
+        <fileset dir="${devtools.builder.installdir}/plugins" casesensitive="yes">
+            <include name="org.eclipse.core.*.jar"/>
+            <include name="org.eclipse.ant.core*.jar"/>
+            <include name="org.eclipse.equinox.*.jar"/>
+            <include name="org.eclipse.pde.core*.jar"/>
+            <include name="org.eclipse.pde.build*/pdebuild.jar"/>
+            <include name="org.eclipse.update.core*.jar"/>
+            <include name="org.eclipse.update.configurator*.jar"/>
+            <include name="org.eclipse.jdt.core*.jar"/>
+            <include name="org.eclipse.jdt.debug*.jar"/>
+            <include name="org.eclipse.jdt.launching*.jar"/>
+            <include name="org.eclipse.debug.core*.jar"/>
+            <include name="com.ibm.icu*.jar"/>
+            <include name="org.eclipse.text*.jar"/>
+            <include name="org.eclipse.osgi*.jar"/>
+        </fileset>
+    </path>   
+
+    
+    
+ This is how I debugged the builder.tasks.path above:
+ 
+     <!--   
+        <pathconvert property="_builder.tasks.path" pathsep="       ">
+            <path refid="builder.tasks.path" />
+        </pathconvert>
+        <echoproperties prefix="_builder.tasks.path"/>
+      -->
+    

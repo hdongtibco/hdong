@@ -1,0 +1,252 @@
+<project name="Single-Feature Builder" default="export-one-feature">
+
+    <!-- TODO: add descriptions of things that should be visible via ant -projecthelp -->
+    <!-- NOTE: however, in general this script is never invoked directly, i think. -->
+
+    <!-- CALL SEQUENCE (target "export-one-feature"):
+         3. _pre-clean
+         4. clean
+         5. invoke the build script generator (creates build.xml for each plugin and feature,
+            and assemble.xml for the whole mess)
+         6. invoke build.xml in the feature folder, targets clean and build.jars
+         7. invoke assemble.xml in the root folder (containing features and plugins)
+            (assemble.xml was created by the build script generator)
+         8. clean
+     -->
+
+    <target name="export-one-feature" depends="-verify-manifest"
+         description="build and export a single Eclipse feature project">
+
+        <echo>"        ********************************************&#10;
+        BUILDING ${autobuild.feature-id}&#10;
+        Using:&#10; ${autobuild.dir.eclipse.extensions}&#10;
+        ************************************************************"</echo>
+
+        <available file="${autobuild.dir.release-unit}/features/${autobuild.feature-folder}/build.xml"
+            property="_build_xml_available" type="file" />
+        <antcall target="_pre-clean"/>
+
+        <trycatch property="error_message">
+            <try>
+                <devtools.buildscripts featureName="${autobuild.feature-id}"
+                    featureType="${autobuild.feature-type}"
+                    hasAuxiliaries="${_feature.has-auxiliaries}"
+                    eclipseDir="${autobuild.dir.eclipse.target}"
+                    extensionLocation="${autobuild.dir.eclipse.extensions}"
+                    localUpdateSiteLocation="${autobuild.workspace.update-sites.local}"
+                    localDebugUpdateSiteLocation="${autobuild.workspace.update-sites.local-debug}"
+                    srcDir="${autobuild.dir.release-unit}"
+                    destDir="${autobuild.dir.output.release}"
+                    debugDestDir="${autobuild.dir.output.debug}"
+                    jarDestDir="${autobuild.dir.output.jars.release}"
+                    debugJarDestDir="${autobuild.dir.output.jars.debug}"
+                    testResultsFolder="${autobuild.dir.output.test-results}"
+                    javadocDestination="${autobuild.feature-javadoc}"
+                    sourcesDestination="${autobuild.feature-sources}"
+                    logLocation="${autobuild.dir.output.logs}"
+                    logLevel="${autobuild.loglevel}"
+                    obfuscationStyle="${autobuild.obfuscator.style}"
+                    obfuscatorType="${autobuild.obfuscator.type}"
+                    buildTimestamp="${touch.time}"
+                    allowBinaryCycles="${allow.binary.cycles}"
+                />
+            </try>
+            <catch>
+                <property name="candidates.http.mapping" value="http://reldist.na.tibco.com/candidates" />
+                <property name="release.candidates.path" value="/tsi/root/tibco/builder/tibco-build.linux/candidates" />
+                <propertyregex property="error_message" override="true" input="${error_message}"
+                               regexp="${release.candidates.path}" replace="${candidates.http.mapping}" />
+                <fail>!!!
+${error_message}
+                </fail>
+            </catch>
+        </trycatch>
+
+        <!-- a workaround for an eclipse bug which occured in using jdk 1.7 on MacOS -->
+        <if>
+            <and>
+                <istrue value="${_is_OS_X}" />
+                <not>
+                    <available file="${_dir.java-classes}/classes.jar" type="file" />
+                </not>
+            </and>
+            <then>
+                <for param="a-plugin">
+                    <dirset id="autobuild.plugin-list" dir="${autobuild.dir.release-unit}/plugins">
+                        <include name="*" />
+                    </dirset>
+                    <sequential>
+                        <devtools.replaceFileContent filePath="@{a-plugin}/build.xml" keyword="{java.home}/../Classes" skipLines="2" />
+                    </sequential>
+                </for>
+                <devtools.ValidateJars ruPath="${autobuild.dir.release-unit}" />
+                <if>
+                    <available file="${autobuild.dir.release-unit}/validateJar.log" />
+                    <then>
+                        <fail>!!!
+                        
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Some jar files can't be read by MacOS JDK 1.7 API because these jar files contained 
+emptry zipEntry. The list for jar files is recorded in 
+${autobuild.dir.release-unit}/validateJar.log.
+Please repackage those jars and execute clean task before running the build again.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+                        </fail>
+                    </then>
+                </if>
+            </then>
+        </if>
+
+        <zip destfile="${autobuild.dir.build-artifacts}/build-${autobuild.feature-id}.zip"
+             basedir="${autobuild.dir.release-unit}"
+             includes="assemble.xml, obfuscation.xml, javadoc.xml, **/build.xml" />
+
+        <record name="${autobuild.dir.output.logs}/feature-${autobuild.feature-id}.log"
+            action="start" loglevel="${autobuild.loglevel}" />
+        
+        <ant antfile="build.xml"
+             dir="${autobuild.dir.release-unit}/features/${autobuild.feature-folder}">
+             <target name="clean"/>
+             <target name="build.jars"/>
+        </ant>
+
+        <ant antfile="assemble.xml" dir="${autobuild.dir.release-unit}" />
+
+        <antcall target="clean"/>
+        <record name="${autobuild.dir.output.logs}/feature-${autobuild.feature-id}.log"
+            action="stop" />
+    </target>
+
+    <target name="_pre-clean" if="_build_xml_available">
+        <!-- available if past build failed; we don't want 'clean' to fail-->
+        <antcall target="clean">
+            <param name="_clean" value="true" />
+        </antcall>
+    </target>
+
+    <condition property="_clean">
+        <equals arg1="${autobuild.clean}" arg2="-clean"/>
+    </condition>
+
+    <target name="clean" if="_clean">
+        <trycatch property="_clean_errors">
+            <try>
+                <ant antfile="build.xml" target="clean"
+                     dir="${autobuild.dir.release-unit}/features/${autobuild.feature-folder}" />
+                <ant antfile="assemble.xml" target="clean" dir="${autobuild.dir.release-unit}/" />
+                <delete file="${autobuild.dir.release-unit}/features/${autobuild.feature-folder}/build.xml" quiet="true"/>
+                <delete file="${autobuild.dir.release-unit}/assemble.xml" quiet="true"/>
+                <for param="plugin.id">
+                    <dirset  dir="${autobuild.dir.release-unit}/plugins" >
+                        <include name="*" />
+                    </dirset>
+                    <sequential>
+                        <save.compiling.log plugin.id="@{plugin.id}" />
+                        <delete file="@{plugin.id}/@dot.log" quiet="true" />
+                        <delete dir="@{plugin.id}/${buildDirectory}" quiet="true" />
+                    </sequential>
+                </for>
+            </try>
+            <catch>
+                <echo level="verbose">Caught a problem running the "clean" target:</echo>
+                <echo level="verbose">${_clean_errors}</echo>
+                <echo level="verbose">Ignoring it.</echo>
+            </catch>
+        </trycatch>
+    </target>
+    
+    <!-- Verify MANIFEST.MF content (now it will check Import-Package and Export-Package) -->
+    <target name="-verify-manifest" unless="express-build">
+        <get.plugins.path plugins.name="_all_plugins_id" />
+        <if>
+            <isset property="_all_plugins_id" />
+            <then>
+                <for param="check-plugin" list="${_all_plugins_id}">
+                    <sequential>
+                       <!--error log file -->
+                        <check.manifest.content plugin.location="${autobuild.dir.release-unit}/plugins/@{check-plugin}" />
+                    </sequential>
+                </for>
+            </then>
+        </if>   
+    </target>
+    
+    <!-- Verify MANIFEST.MF -->
+    <macrodef name="check.manifest.content" >
+        <attribute name="plugin.location" />
+       <sequential>
+           <if>
+               <available file="@{plugin.location}/META-INF/MANIFEST.MF" />
+               <then>        
+                   <!--error log file -->
+              <tempfile property="_mf_temp_file" />
+             <devtools.verifier.verifyManifest manifestLocation="@{plugin.location}/META-INF/MANIFEST.MF" propertyFile="${_mf_temp_file}"  propertyName="_mferror" />
+            <property file="${_mf_temp_file}" />
+            <if>
+                <isset property="_mferror" />
+                <then>
+                    <fail>!!!
+Please check @{plugin.location}/META-INF/MANIFEST.MF. 
+Following attributes wrong ${_mferror}
+                            </fail>
+                </then>
+            </if>
+
+        </then>
+      </if>
+    </sequential>
+    </macrodef>
+    
+    <!-- this macro is same as which in autobuild-private.xml -->
+    <macrodef name="get.plugins.path">
+        <attribute name="plugins.name" />
+        <sequential>
+            <for param="feature.id" list="${feature},${feature}.test,${feature}.source,${feature}.devdocs">
+                <sequential>
+                    <if>
+                        <available file="${autobuild.dir.release-unit}/features/@{feature.id}" type="dir" />
+                        <then>
+                            <tempfile property="_plugins_temp_file" />
+                            <xslt in="${autobuild.dir.release-unit}/features/@{feature.id}/feature.xml" out="${_plugins_temp_file}"
+                                style="${autobuild.dir.scripts}/private/extractPlugins.xsl">
+                                <param name="feature_id" expression="${feature.id}" />
+                            </xslt>
+                            <property file="${_plugins_temp_file}" prefix="_plugins_in_release_unit." />
+                            <delete file="${_plugins_temp_file}" quiet="true" />
+                        </then>
+                    </if>
+                </sequential>
+            </for>
+            <propertyselector property="@{plugins.name}"
+                match="_plugins_in_release_unit\.plugin_[^-]*-(.*)"
+                override="true"
+                select="\1" />              
+        </sequential>
+    </macrodef>
+
+    <macrodef name="save.compiling.log">
+        <attribute name="plugin.id" />
+        <sequential>
+            <if>
+                <and>
+                    <equals arg1="${compilerArg}" arg2="-Xlint" />
+                    <available file="@{plugin.id}/@dot.log" />
+                </and>
+                <then>
+                    <propertyregex property="simple.plugin.id"
+                        input="@{plugin.id}"
+                        regexp=".*[\\/](.*)"
+                        replace="\1"
+                        override="true"
+                    />
+                    <echo>Cope compiling file @{plugin.id}/@dot.log to ${autobuild.dir.build-artifacts}/compiling-logs/ directory</echo>
+                    <copy file="@{plugin.id}/@dot.log" tofile="${autobuild.dir.build-artifacts}/compiling-logs/${simple.plugin.id}.log" />
+                </then>
+            </if>
+        </sequential>
+    </macrodef>
+
+</project>

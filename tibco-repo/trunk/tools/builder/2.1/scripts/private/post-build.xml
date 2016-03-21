@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<project name="Builder Post-Build Manipulation/Integration Targets">
+
+    <import file="${latest-build-file}" optional="true" />
+    <condition property="_latest_succeeded">
+        <and>
+            <available file="${latest-build-file}" />
+            <istrue value="${autobuild.build.latest.success}" />
+        </and> 
+    </condition>
+
+    <target name="generate-artifacts-list" if="_latest_succeeded"
+            depends="-check-properties">
+        <propertycopy property="_latest_source_location" from="${latest-source-location-property}" />
+        <condition property="_project_name" value="${autobuild.workspace.project} artifacts"
+                   else="${release-unit} artifacts">
+            <isset property="autobuild.workspace.project" />
+        </condition>
+        <echo file="${autobuild.build.latest.artifacts-file}">&lt;?xml version="1.0"?>
+&lt;project name="${_project_name}">
+    &lt;!-- THIS IS A GENERATED FILE.  Any changes you make will be destroyed. -->
+</echo>
+        <for param="built-feature">
+            <dirset id="autobuild.build.latest.features"
+                    dir="${_latest_source_location}/features">
+                <include name="*" />
+            </dirset>
+            <sequential>
+          <propertyregex property="built-feature-name" override="true" input="@{built-feature}" 
+                                       regexp="([^/\\]*$)" select="\1" />
+                <propertyregex property="built-feature-id" override="true" input="${built-feature-name}"
+                               regexp="(.*)_(\d+\.\d+\.\d+)" select="\1" />
+                <propertyregex property="built-feature-version" override="true" input="${built-feature-name}"
+                               regexp="${built-feature-id}_(.*)" select="\1" />
+                <echo file="${autobuild.build.latest.artifacts-file}" append="true">    &lt;property name="feature_${built-feature-id}" value="${built-feature-version}" />
+</echo>
+                <tempfile property="_plugins_temp_file" />
+                <xslt in="@{built-feature}/feature.xml" out="${_plugins_temp_file}"
+                      style="${autobuild.dir.scripts}/private/extractPlugins.xsl">
+                    <param name="feature_id" expression="${built-feature-id}" />
+                </xslt>
+                <property file="${_plugins_temp_file}" />
+                <delete file="${_plugins_temp_file}" quiet="true"/>
+                <property name="_plugins_list" value="" />
+                <propertyselector property="_plugins_list" override="true"
+                                  match="plugin_${built-feature-id}-.*" />
+                <for param="built-plugin" list="${_plugins_list}" >
+                    <sequential>
+                        <propertycopy property="_plugin_version" from="@{built-plugin}"
+                                      override="true" />
+                        <echo file="${autobuild.build.latest.artifacts-file}" append="true">    &lt;property name="@{built-plugin}" value="${_plugin_version}" />
+</echo>
+                    </sequential>
+                </for>
+            </sequential>
+        </for>
+        <echo file="${autobuild.build.latest.artifacts-file}" append="true">&lt;/project>
+</echo>
+    </target>
+
+    <!-- replacement for above target "generate-artifacts-list"-->
+    <macrodef name="generate.artifacts.list">
+        <sequential>
+            <propertycopy property="_latest_source_location" from="autobuild.dir.output.release" />
+            <condition property="_project_name" value="${autobuild.workspace.project} artifacts"
+                else="${release-unit} artifacts">
+                <isset property="autobuild.workspace.project" />
+            </condition>
+            
+            <echo file="${autobuild.build.latest.artifacts-file}">&lt;?xml version="1.0"?>
+&lt;project name="${_project_name}">
+&lt;!-- THIS IS A GENERATED FILE.  Any changes you make will be destroyed. -->
+</echo>
+            <for param="built-feature">
+                <dirset id="autobuild.build.latest.features"
+                    dir="${_latest_source_location}/features">
+                <include name="*" />
+                </dirset>
+                <sequential>
+                    <propertyregex property="built-feature-name" override="true" input="@{built-feature}" 
+                        regexp="([^/\\]*$)" select="\1" />
+                    <propertyregex property="built-feature-id" override="true" input="${built-feature-name}"
+                        regexp="(.*)_(\d+\.\d+\.\d+)" select="\1" />
+                    <propertyregex property="built-feature-version" override="true" input="${built-feature-name}"
+                        regexp="${built-feature-id}_(.*)" select="\1" />
+                    <echo file="${autobuild.build.latest.artifacts-file}" append="true">    &lt;property name="feature_${built-feature-id}" value="${built-feature-version}" />
+</echo>
+                    <tempfile property="_plugins_temp_file" />
+                    <xslt in="@{built-feature}/feature.xml" out="${_plugins_temp_file}"
+                        style="${autobuild.dir.scripts}/private/extractPlugins.xsl">
+                        <param name="feature_id" expression="${built-feature-id}" />      
+                    </xslt>
+                    <property file="${_plugins_temp_file}" />
+                    <delete file="${_plugins_temp_file}" quiet="true"/>
+                    <property name="_plugins_list" value="" />
+                    <propertyselector property="_plugins_list" override="true"
+                        match="plugin_${built-feature-id}-.*" />
+                    <for param="built-plugin" list="${_plugins_list}" >
+                        <sequential>
+                            <propertycopy property="_plugin_version" from="@{built-plugin}"
+                                override="true" />
+                            <echo file="${autobuild.build.latest.artifacts-file}" append="true">    &lt;property name="@{built-plugin}" value="${_plugin_version}" />
+</echo>
+                        </sequential>
+                    </for>
+                </sequential>
+            </for>
+            <echo file="${autobuild.build.latest.artifacts-file}" append="true">&lt;/project>
+</echo>
+        </sequential>
+    </macrodef>
+</project>

@@ -1,0 +1,108 @@
+<project name="antRunner macro def">
+
+    <macrodef name="autobuild.antrunner">
+
+        <!-- required attributes -->
+        <attribute name="buildFile"/>
+        <attribute name="propertyFile"/>
+
+        <!-- optional but seldom required, if the corresponding properties are set -->
+        <attribute name="antArguments" default="${autobuild.antrunner.arguments}"/>
+        <attribute name="clean" default="${autobuild.clean}" />
+        <!-- set -Dautobuild.log.console="-consoleLog" on the command line to get traces -->
+        <attribute name="consoleLog" default="${autobuild.log.console}" />
+ 
+        <attribute name="eclipse" default="${autobuild.dir.eclipse.install}"/>
+        <attribute name="config" default="${autobuild.dir.eclipse.config}"/>
+        <attribute name="workspace" default="${autobuild.dir.temp}/antrunner-workspace"/>
+        <attribute name="maxMemory" default="${autobuild.max.memory}"/>
+
+        <sequential>
+            <java classname="org.eclipse.core.launcher.Main"
+                maxMemory="@{maxMemory}" fork="true" failonerror="on" logerror="on">
+                <syspropertyset>
+                    <propertyset>
+                        <propertyset>
+                            <propertyref prefix="javac" />
+                            <propertyref name="bootclasspath" />
+                        </propertyset>
+                    </propertyset>
+                </syspropertyset>
+                <classpath>
+                    <pathelement
+                        location="${autobuild.dir.eclipse.startup}" />
+                </classpath>
+                <assertions/>
+
+                <jvmarg
+                    value="-Dosgi.bundles=org.eclipse.equinox.simpleconfigurator@1:start, org.eclipse.equinox.common@2:start, org.eclipse.update.configurator@3:start, org.eclipse.core.runtime@start" />
+                
+                <!--jvmarg value="-Xdebug" />
+                <jvmarg value="-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5432" /-->
+
+                <jvmarg value="-XX:PermSize=${autobuild.perm.size}" />
+                <jvmarg value="-XX:MaxPermSize=${autobuild.max.perm.size}" />
+                
+                <arg line='@{clean}
+                    @{consoleLog}
+                    -install "@{eclipse}" -configuration "@{config}" -data "@{workspace}"
+                    -application org.eclipse.ant.core.antRunner
+                    -buildfile "@{buildFile}"
+                    -propertyfile "@{propertyFile}"
+                    @{antArguments}
+                    '/>
+            </java>
+        </sequential>
+    </macrodef>
+
+    <!-- have to make new macrodef because the new @{osgiDebugOptions}=-bogus options will cause the failure for running the target "ant properties" -->
+    <macrodef name="autobuild.debug.antrunner">
+
+        <!-- required attributes -->
+        <attribute name="buildFile"/>
+        <attribute name="propertyFile"/>
+
+        <!-- optional but seldom required, if the corresponding properties are set -->
+        <attribute name="antArguments" default="${autobuild.antrunner.arguments}"/>
+        <attribute name="clean" default="${autobuild.clean}" />
+        <!-- set -Dautobuild.log.console="-consoleLog" on the command line to get traces -->
+        <attribute name="consoleLog" default="${autobuild.log.console}" />
+        <attribute name="osgiDebugOptions" default="${osgi.debug.options}" />
+
+        <attribute name="eclipse" default="${autobuild.dir.eclipse.install}"/>
+        <attribute name="config" default="${autobuild.dir.eclipse.config}"/>
+        <attribute name="workspace" default="${autobuild.dir.temp}/antrunner-workspace"/>
+        <attribute name="maxMemory" default="${autobuild.max.memory}"/>
+
+        <sequential>
+            <java classname="org.eclipse.core.launcher.Main"
+                maxMemory="@{maxMemory}" fork="true" failonerror="on" logerror="on">
+                <syspropertyset>
+                    <propertyset>
+                        <propertyset>
+                            <propertyref prefix="javac" />
+                            <propertyref name="bootclasspath" />
+                        </propertyset>
+                    </propertyset>
+                </syspropertyset>
+                <classpath>
+                    <pathelement
+                        location="${autobuild.dir.eclipse.startup}" />
+                </classpath>
+                <assertions/>
+
+                <jvmarg
+                     value="-Dosgi.bundles=org.eclipse.equinox.simpleconfigurator@1:start, org.eclipse.equinox.common@2:start, org.eclipse.update.configurator@3:start, org.eclipse.core.runtime@start" />
+                <arg line='@{clean}
+                    @{consoleLog}
+                    -install "@{eclipse}" -configuration "@{config}" -data "@{workspace}"
+                    -application org.eclipse.ant.core.antRunner
+                    -buildfile "@{buildFile}"
+                    -propertyfile "@{propertyFile}"
+                    @{osgiDebugOptions}
+                    @{antArguments}
+                    '/>
+            </java>
+        </sequential>
+    </macrodef>
+</project>

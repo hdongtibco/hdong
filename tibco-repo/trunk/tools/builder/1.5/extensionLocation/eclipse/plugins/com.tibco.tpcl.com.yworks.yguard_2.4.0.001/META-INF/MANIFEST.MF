@@ -1,0 +1,30 @@
+Manifest-Version: 1.0
+Export-Package: com.yworks.yguard;version="2.4.0"; uses:="org.apache.t
+ ools.ant.types,  org.xml.sax,  com.yworks.yguard.common.ant,  org.apa
+ che.tools.ant,  javax.swing.tree,  com.yworks.yguard.obf,  com.yworks
+ .yguard.obf.classfile,  com.yworks.c.d,  com.yworks.yguard.common,  c
+ om.yworks.yguard.b,  javax.swing",com.yworks.yguard.common;version="2
+ .4.0";uses:="b.b.b.b.c.c",com.yworks.yguard.common.ant;version="2.4.0
+ "; uses:="b.b.b.b.c.c,  org.apache.tools.ant.types,  com.yworks.c.d, 
+  org.apache.tools.ant,  com.yworks.yguard.common,  com.yworks.yguard.
+ b",com.yworks.yguard.obf;version="2.4.0";uses:="com.yworks.yguard.obf
+ .classfile,com.yworks.yguard",com.yworks.yguard.obf.classfile;version
+ ="2.4.0",com.yworks.yguard.yshrink;version="2.4.0"; uses:="org.apache
+ .tools.ant.types,  com.yworks.c.d,  com.yworks.yguard.common.ant,  or
+ g.apache.tools.ant,  com.yworks.yguard.common,  com.yworks.c.e,  com.
+ yworks.yguard,  com.yworks.yguard.b"
+Bundle-Vendor: %providerName
+Bundle-Version: 2.4.0.001
+Bundle-Localization: plugin
+Bundle-Name: %pluginName
+Bundle-ManifestVersion: 2
+Import-Package: javax.xml.parsers,org.apache.tools.ant,org.apache.tool
+ s.ant.types,org.apache.tools.ant.types.selectors,org.apache.tools.ant
+ .util,org.apache.tools.zip,org.xml.sax,com.yworks.yguard.yshrink;vers
+ ion="[2.4.0,3.0.0)",com.yworks.yguard.obf.classfile;version="[2.4.0,3
+ .0.0)",com.yworks.yguard.obf;version="[2.4.0,3.0.0)",com.yworks.yguar
+ d.common.ant;version="[2.4.0,3.0.0)",com.yworks.yguard.common;version
+ ="[2.4.0,3.0.0)",com.yworks.yguard;version="[2.4.0,3.0.0)"
+Bundle-SymbolicName: com.tibco.tpcl.com.yworks.yguard;singleton:=true
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+

@@ -1,0 +1,14 @@
+#Tue, 28 Jul 2015 23:31:47 -0700
+
+
+com.tibco.sample.plugin=001
+com.tibco.sample.plugin,0.0.0=001
+
+docs.com.tibco.sample=001
+docs.com.tibco.sample,0.0.0=001
+
+sources.com.tibco.sample=001
+sources.com.tibco.sample,0.0.0=001
+
+tests.com.tibco.sample.plugin=001
+tests.com.tibco.sample.plugin,0.0.0=001

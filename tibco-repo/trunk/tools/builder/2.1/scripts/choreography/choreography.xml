@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="choreography-core">
+
+    <!-- IMPORTS
+         This section imports the choreography overrides.
+         It should not "pre-import" overrides in autobuild-main, however.
+    -->
+    <import file="${autobuild.dir.scripts}/private/workspace-load.xml" />
+    <!-- default username for various purposes, most importantly developer build qualifiers -->
+    <property name="autobuild.user.name" value="${user.name}"/>
+
+    <!-- per-user-per-release-unit overrides.  not often used. -->
+    <property name="autobuild.user-project.overrides" location="${autobuild.dir.project}/${autobuild.user.name}.xml" />
+    <import file="${autobuild.user-project.overrides}" optional="true" />
+
+    <property name="autobuild.project.overrides" location="${autobuild.dir.project}/build-overrides.xml" />
+    <available file="${autobuild.project.overrides}" property="_project_overrides_exists" type="file" />
+    <fail unless="_project_overrides_exists">
+No choreography configuration information was found.
+The default location for the file is ${autobuild.project.overrides}.
+Please generate (or copy the boilerplate and modify) this file, or set the property
+"autobuild.project.overrides" to identify the file on the ant command line.</fail>
+    <import file="${autobuild.project.overrides}" />
+
+    <import file="${autobuild.dir.project}/targets.xml" optional="true" />
+
+    <!-- WORKSPACE PROPERTIES
+         These properties are needed before the import of the dependencies script,
+         so need to be defined before it is imported.
+    -->
+    <!-- PROPERTIES
+         This section defines any properties that we really really need.
+    -->
+
+    <target name="-set-choreography-properties" depends="-set-choreo-timestamp">
+        <property name="autobuild.workspace.project.dir" value="${autobuild.dir.project}" />
+
+        <!-- force the property to always be set (with else), and allow setting from the command line as well -->
+        <condition property="autobuild.build-latest"
+                   else="false">
+            <isset property="latest" />
+        </condition>
+
+        <condition property="_build_variant_text" value="latest" else="lblm">
+            <istrue value="${autobuild.build-latest}" />
+        </condition>
+
+        <property name="autobuild.dir.project.configuration" value="${autobuild.dir.user}/configurations/${_build_variant_text}/${autobuild.repository}/${autobuild.workspace.project}" />
+        <property name="autobuild.workspace.output" location="${autobuild.dir.project.configuration}" /> 
+        <property name="autobuild.dir.eclipse.config" location="${autobuild.workspace.output}/configuration" />
+        <property name="autobuild.dir.eclipse.extensions" location="${autobuild.workspace.output}/extensionLoc/eclipse" />
+
+        <property name="autobuild.loglevel" value="verbose" />
+        <property name="autobuild.workspace.feature-order-output" location="${autobuild.workspace.project.dir}/${autobuild.workspace.project}-feature-list.xml" />
+        <property name="autobuild.script.choreo-workspace" location="${autobuild.dir.scripts}/choreography/choreo-workspace.xml" />
+    </target>
+
+    <!-- PUBLIC TARGETS
+         Visible targets.  Mostly "build", "test", "clean", and "conf-clean".
+    -->
+    <target name="build"
+            depends="-set-choreography-properties, choreograph"
+            description="Build this choreography, release unit by release unit.">
+        <condition property="_build_list" value="${targets.list}" else="build">
+            <isset property="targets.list" />
+        </condition>
+        <antcall target="-invoke">
+            <param name="targets.list" value="${_build_list}" />
+        </antcall>
+    </target>
+
+    <target name="veryclean"
+            depends="-set-choreography-properties, choreograph"
+            description="Veryclean this choreography, release unit by release unit.">
+        <condition property="_build_list" value="${targets.list}" else="veryclean">
+            <isset property="targets.list" />
+        </condition>
+        <antcall target="-invoke">
+            <param name="targets.list" value="${_build_list}" />
+        </antcall>
+    </target>
+
+    <target name="usage">
+        <echo>See http://wiki.tibco.com/FrameworksWiki/BuildTools</echo>
+    </target>
+
+    <target name="clean" depends="-set-choreography-properties, choreograph"
+            description="Clean the choreography and its release units.">
+        <condition property="_clean_list" value="${targets.list}" else="clean">
+            <isset property="targets.list" />
+        </condition>
+        <antcall target="-invoke">
+            <param name="targets.list" value="${_clean_list}" />
+        </antcall>
+        <delete file="${autobuild.workspace.feature-order-output}" quiet="true" />
+    </target>
+
+    <target name="conf-clean" depends="-set-choreography-properties, choreograph"
+            description="Clean the choreography and its release units, including dependencies.">
+        <condition property="_cc_list" value="${targets.list}" else="conf-clean">
+            <isset property="targets.list" />
+        </condition>
+        <antcall target="-invoke">
+            <param name="targets.list" value="${_cc_list}" />
+        </antcall>
+        <delete file="${autobuild.workspace.feature-order-output}" quiet="true" />
+    </target>
+
+    <target name="test"
+            depends="-set-choreography-properties, choreograph"
+            description="Run tests in each release unit of this choreography">
+        <condition property="_test_list" value="${targets.list}" else="test">
+            <isset property="targets.list" />
+        </condition>
+        <antcall target="-invoke">
+            <param name="targets.list" value="${_test_list}" />
+        </antcall>
+   </target>
+
+    <target name="gather-dependencies" depends="-set-choreography-properties"
+            description="Invoke workspace installer to collect the required features and plugins for a build.">
+        <ant antfile="${autobuild.script.choreo-workspace}" target="gather-dependencies" inheritrefs="true" />
+    </target>
+
+    <target name="workspace" depends="-set-choreography-properties, choreograph"
+            description="Create a workspace for this project">
+        <ant antfile="${autobuild.script.choreo-workspace}" target="workspace" inheritrefs="true" />
+    </target>
+
+    <target name="clear-cache" depends="-set-choreography-properties"
+            description="Clear the cache associated with this eclipse target version">
+        <ant antfile="${autobuild.script.choreo-workspace}" target="clear-cache" />
+    </target>
+
+    <target name="remove-configuration" depends="-set-choreography-properties"
+            description="Remove the configuration created by gather-dependencies">
+        <ant antfile="${autobuild.script.choreo-workspace}" target="remove-configuration" />
+    </target>
+
+    <!-- PRIVATE TARGETS
+         Uncallably-named targets, used as dependencies by public or
+         by other private targets.
+    -->
+
+    <target name="-invoke"
+            depends="-load-ant-contrib, -parse-choreography"
+            if="_feature_order_available">
+        <echo>Each target will be executed in the following release unit directories,</echo>
+        <echo>  in the order specified:</echo>
+        <echo>${_trimmed_list.display}</echo>
+        <echo>Targets: ${targets.list}</echo>
+        <foreach list="${_trimmed_list}" target="-invocation-targets"
+                 param="_release_unit_dir" inheritall="true"
+                 delimiter="," trim="true" />
+        <antcall target="-report-choreography" />
+    </target>
+
+    <target name="-invocation-targets">
+        <foreach list="${targets.list}" target="-invocation-step"
+                 param="_target_name" inheritall="true"
+                 delimiter="," trim="true" />
+    </target>
+
+    <target name="-invocation-step">
+        <echo>*** Invoking target "${_target_name}" in ${_release_unit_dir} ***</echo>
+        <ant dir="${_release_unit_dir}" inheritall="false" target="${_target_name}">
+        </ant>
+        <echo>*** Finished target "${_target_name}" in ${_release_unit_dir} ***</echo>
+    </target>
+
+    <target name="-check-feature-order">
+        <available file="${autobuild.workspace.feature-order-output}" property="_feature_order_available" />
+        <fail unless="_feature_order_available">
+The order in which to build (or target) features in this choreography has not
+been established.  Either build the choreography (command: "ant"), or set the
+choreography order (command: "ant choreograph").</fail>
+    </target>
+
+    <target name="-parse-choreography" depends="-check-feature-order"
+            if="_feature_order_available">
+        <!-- read the file, turn it into something we can cope with.
+             _release_units_list, delimited by commas -->
+        <tempfile property="releaseunits.property.temp.file" />
+        <xslt in="${autobuild.workspace.feature-order-output}" out="${releaseunits.property.temp.file}"
+              style="${autobuild.dir.scripts}/choreography/release-units.xsl" />
+        <property file="${releaseunits.property.temp.file}" />
+        <echo level="verbose">Loaded _release_units_list: ${_release_units_list}</echo>
+        <delete file="${releaseunits.property.temp.file}" quiet="true"/>
+        <propertyregex property="_trimmed_list" input="${_release_units_list}"
+                       regexp="(.*), *$" select="\1" />
+        <propertyregex property="_trimmed_list.display" input="&#x9;${_trimmed_list}"
+                       regexp=", " replace="&#xA;&#x9;" />
+        <propertyregex property="_last_release_unit" input="${_trimmed_list}"
+                       regexp="(.*, )+(.*)$" select="\2" />
+    </target>
+
+    <target name="-report-choreography">
+        <echo>-+-+-+-+-+-+-+-+-+- -+-+-+-+-+-+-+-+-+- -+-+-+-+-+-+-+-+-+-</echo>
+        <echo>Choregraphy: ${autobuild.workspace.project}</echo>
+        <echo />
+        <echo>Executed targets: ${targets.list}</echo>
+        <echo />
+        <echo>In directories: </echo>
+        <echo>${_trimmed_list.display}</echo>
+        <echo />
+        <echo>Choreography started: ${choreo.display.time}</echo>
+        <echo>-+-+-+-+-+-+-+-+-+- -+-+-+-+-+-+-+-+-+- -+-+-+-+-+-+-+-+-+-</echo>
+    </target>
+
+    <target name="-set-choreo-timestamp">
+        <tstamp>
+            <!-- a common timezone and not local one! -->
+            <format property="choreo.touch.time" pattern="yyyy-MM-dd-HHmm" timezone="GMT"/>
+            <format property="choreo.display.time" pattern="hh:mm aa d MMMM yyyy"/>
+        </tstamp>
+    </target>
+
+    <target name="-load-ant-contrib">
+        <taskdef resource="net/sf/antcontrib/antlib.xml">
+            <classpath>
+                <fileset dir="${autobuild.dir.builder}" includes="ant-contrib-1.0b3.jar"/>
+            </classpath>
+        </taskdef>
+    </target>
+
+    <target name="choreograph"
+            description="Set the build order for a choreography">
+        <create.feature.order
+               featureOrderOutput="${autobuild.workspace.feature-order-output}"
+               outputFolder="${autobuild.workspace.output}">
+            <featureSearchPath refid="autobuild.workspace.path.search.features" />
+        </create.feature.order>
+    </target>
+
+</project>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="findbugs" basedir="." default="findbugs">
+
+    <import file="${latest-build-file}" optional="true" />
+    
+    <target name="find-bugs" description="Run the free software FindBugs to use static analysis to look for bugs in Java code." depends="-check-version, -check-build, -load-ant-contrib, -get-platform">
+        <property name="findbugs-jar" value="${autobuild.dir.findbugs.root}/lib/findbugs.jar"/>
+        <property name="findbugs-html" value="${autobuild.dir.release-unit}/findbugs.html"/>
+        <property name="findbugs-options" value="-textui -html"/>
+        <tempfile property="findbugs-full-list" />
+     
+        <if>
+            <isset property="official-release-build" />
+            <then>
+                <property file="${autobuild.dir.build-artifacts}/release-build.properties" />
+                <property name="jars-dir" value="${local.debug.update-site}/plugins" />
+            </then>
+            <else>
+                <property name="jars-dir" value="${autobuild.build.latest.debug-site}/plugins" />
+            </else>
+        </if>
+        <echo file="${findbugs-full-list}" append="false">source-jars=</echo>
+        <for param="each-plugin-jar">
+            <fileset id="plugin-list" dir="${jars-dir}">
+                <include name="*.jar" />
+            </fileset>
+            <sequential>
+                <propertyregex property="e-plugin-jar" override="true" input="@{each-plugin-jar}"  regexp="\\" replace="/" />
+                <if>
+                    <isset property="_is_windows" />
+                    <then>
+		        <echo file="${findbugs-full-list}" append="true">${e-plugin-jar} </echo>
+                    </then>
+                    <else>
+		        <echo file="${findbugs-full-list}" append="true">@{each-plugin-jar} </echo>
+                    </else>
+                </if>
+            </sequential>
+        </for>
+	<loadproperties srcFile="${findbugs-full-list}"/>
+        <delete file="${findbugs-full-list}" quiet="true"/>
+        <exec executable="java" logerror="on" failonerror="on" outputproperty="findbugs.content">
+            <arg line="-Xmx256m -jar ${findbugs-jar} ${findbugs-options} ${source-jars}" />
+        </exec>
+        <echo file="${findbugs-html}">${findbugs.content}</echo>
+        <echo>
+==============================================================================
+
+Please view the generated FindBugs report which was written into
+${findbugs-html}.
+ 
+==============================================================================
+        </echo>
+    </target>
+
+</project>

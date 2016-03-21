@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="load-generators">
+
+    <!-- has to be done as a taskdef, 'cause we're not inside eclipse -->
+
+    <target name="-load-generator-tasks">
+        <path id="autobuild.path.builder-generators">
+            <pathelement location="${autobuild.dir.builder}/builder-ant.jar"/>
+            <pathelement location="${autobuild.dir.builder}/builder-core.jar"/>
+        </path>
+        <taskdef name="devtools.generator.docfeature"
+                 classname="com.tibco.devtools.builder.task.codegen.DocFeatureGeneratorTask"
+                 classpathref="autobuild.path.builder-generators"/>
+        <taskdef name="devtools.generator.srcfeature"
+                 classname="com.tibco.devtools.builder.task.codegen.SrcFeatureGeneratorTask"
+                 classpathref="autobuild.path.builder-generators"/>
+        <taskdef name="devtools.generator.testfeature"
+                 classname="com.tibco.devtools.builder.task.codegen.TestFeatureGeneratorTask"
+                 classpathref="autobuild.path.builder-generators"/>
+    </target>
+</project>

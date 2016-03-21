@@ -1,0 +1,678 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="dependencies">
+
+    <!-- define property defaults.  most of these can be overridden, and
+         perhaps ought to be. -->
+    <target name="-set-workspace-properties" depends="-load-ant-contrib">
+
+        <!-- need these because the workspace target doesn't call -set-build-properties -->
+        <property name="autobuild.max.memory" value="512m"/>
+        <property name="autobuild.svn.tags-prefix" value="" />
+        <property name="autobuild.svn.tags-suffix" value="" />
+
+        <property name="autobuild.workspace.project" value="${release-unit}" />
+        <property name="autobuild.workspace.project.dir" location="${autobuild.dir.release-unit}" />
+        <property name="autobuild.workspace.eclipse-target" location="${autobuild.dir.eclipse.target}" />
+
+        <property name="autobuild.workspace.output" location="${autobuild.dir.release-unit.configuration}" />
+        <property name="autobuild.workspace.workspace" location="${autobuild.workspace.output}/workspace" />
+
+        <property name="autobuild.workspace.update-sites.local" location="${autobuild.dir.user}/workspaceInstaller/local-builds-site" />
+        <property name="autobuild.workspace.update-sites.local-debug" location="${autobuild.dir.user}/workspaceInstaller/local-builds-site-debug" />
+        
+        <property name="autobuild.mappings.file" value="${_spin_url}/milestones/release/eclipse-nature-mappings.txt" />
+        
+        <!-- porperty for installing plugins -->
+        <eclipse.startup eclipseLocation="${autobuild.dir.eclipse-3.7}" />
+        <property name="launcher.location" value="${autobuild.dir.eclipse.startup}" />
+        <!-- default the version of Eclipse to 3.7 -->
+        <property name="autobuild.version.developer.eclipse" value="3.7" />
+        <propertycopy property="autobuild.dir.developer.eclipse.install" from="autobuild.dir.eclipse-${autobuild.version.developer.eclipse}" silent="true"/>
+        <!-- Update site for eclipse plugins -->
+        <condition property="plugins.update.site"
+            value="http://spin.tibco.com:${autobuild.spin.port}/devtools/tool-downloads"
+            else="http://spin.tibco.com/devtools/tool-downloads">
+            <isset property="autobuild.spin.port" />
+        </condition>
+        
+        <property name="mylyn.features" value="org.eclipse.mylyn_feature.feature.group,org.eclipse.mylyn.commons.feature.group,org.eclipse.mylyn.context_feature.feature.group,org.eclipse.mylyn.ide_feature.feature.group,org.eclipse.mylyn.java_feature.feature.group,org.eclipse.mylyn.pde_feature.feature.group,org.eclipse.mylyn.team_feature.feature.group,org.eclipse.mylyn.trac_feature.feature.group,org.eclipse.mylyn.wikitext_feature.feature.group" />
+        <property name="findbugs.features" value="edu.umd.cs.findbugs.plugin.eclipse.feature.group" />
+        <property name="subclipse.features" value="com.collabnet.subversion.merge.feature.feature.group,net.java.dev.jna.feature.group,org.tigris.subversion.clientadapter.feature.feature.group,org.tigris.subversion.clientadapter.javahl.feature.feature.group,org.tigris.subversion.clientadapter.svnkit.feature.feature.group,org.tigris.subversion.subclipse.feature.group,org.tmatesoft.svnkit.feature.group,org.tigris.subversion.subclipse.graph.feature.feature.group" />
+        <property name="gef.features" value="org.eclipse.draw2d.sdk.feature.group,org.eclipse.draw2d.source.feature.group,org.eclipse.draw2d.feature.group,org.eclipse.gef.all.feature.group,org.eclipse.gef.examples.source.feature.group,org.eclipse.gef.examples.feature.group,org.eclipse.gef.sdk.feature.group,org.eclipse.gef.source.feature.group,org.eclipse.gef.feature.group,org.eclipse.zest.sdk.feature.group,org.eclipse.zest.source.feature.group,org.eclipse.zest.feature.group"/>
+        <property name="i18n.features" value="com.tibco.devtools.i18nsupport.feature.group" />
+        <if>
+            <equals arg1="${site.type}" arg2="release" />
+            <then>
+                <file.to.url
+                    pathproperty="autobuild.workspace.update-sites.local"
+                    urlproperty="autobuild.workspace.update-sites.local.url" />
+            </then>
+            <else>
+                <file.to.url
+                    pathproperty="autobuild.workspace.update-sites.local-debug"
+                    urlproperty="autobuild.workspace.update-sites.local.url" />
+            </else>
+        </if>
+
+        <!-- our original notion of caching only had two states, now we support three - "local", "remote", and "both"
+           "both", and "local" map to our old support for "use-remote-sites". -->
+        <property name="autobuild.workspace.use-remote-sites" value="true" />
+        <condition property="autobuild.workspace.cache-choice" value="both" else="local">
+          <istrue value="${autobuild.workspace.use-remote-sites}" />
+        </condition>
+
+        <property name="autobuild.workspace.log" location="${autobuild.workspace.project.dir}/dependencies-${autobuild.workspace.project}.log" />
+        <if>
+            <isset property="ignore-local-builds" />
+            <then>
+                <updatesites id="autobuild.workspace.update-sites.local.id" />
+            </then>
+            <else>
+                <updatesites id="autobuild.workspace.update-sites.local.id">
+                    <updatesite url="${autobuild.workspace.update-sites.local.url}" />
+                </updatesites>
+            </else>
+        </if>
+        <property name="autobuild.workspace.local-cache" location="${autobuild.dir.user}/workspaceInstaller/local-cache-site" />
+    </target>
+
+    <target name="-which-features-are-needed">
+        <available property="found.project.file" file="${autobuild.dir.release-unit}/.project" />
+        <fail if="found.project.file">!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The file ${autobuild.dir.release-unit}/.project was detected.
+This .project file at the top level has to be removed. The build fails now!
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        </fail>
+        <find.features id="gather-dependencies.features.id">
+          <path refid="autobuild.workspace.path.search.features" />
+          <path>
+            <pathelement path="${autobuild.workspace.extra-feature}" />
+          </path>
+        </find.features>
+    </target>
+    
+    <target name="gather-p2-dependencies" depends="gather-dependencies" description="Generate the property file for Maven+Tycho." >
+        <mkdir dir="${autobuild.dir.build-artifacts}" />
+        <propertyfile file="${autobuild.dir.build-artifacts}/gather-dependencies.properties" comment="p2 source property">
+        <entry  key="configuration-extension.for.p2" value="${autobuild.dir.eclipse.extensions}"/>
+        </propertyfile>
+    </target>
+    
+    <target name="gather-dependencies"
+            depends="-check-properties, -set-workspace-properties,
+                     -check-builds-site, -which-features-are-needed ,-dual-build-and-substitutions-sites, -create-local-update-site"
+            unless="_bypass_gather_dependencies"
+            description="Invoke workspace installer to collect the required features and plugins for a build.">
+
+        <echo message="Gathering to cache at: ${autobuild.workspace.local-cache}"/>
+
+        <!-- delete the marker file that indicates that we've successfully installed files. -->
+        <delete file="${autobuild.dir.eclipse.extensions}/gather-success-marker.txt" quiet="true" />
+        <record name="${autobuild.workspace.log}" action="start" loglevel="${autobuild.loglevel}" />
+
+        <if>
+            <isset property="reldist.download.enable" />
+            <then>
+                <updatesites id="autobuild.workspace.update-sites.default">
+                    <updatesite url="${_spin_url}/milestones/${site.type}" />
+                    <updatesite url="${_spin_url}/milestones/thirdparty" />
+                    <updatesite url="${autobuild.url.update-site.eclipse}" />
+                    <updatesite url="${reldist.update.sites}/${site.type}" />
+                </updatesites>
+            </then>
+            <else>
+                <updatesites id="autobuild.workspace.update-sites.default">
+                    <updatesite url="${_spin_url}/milestones/${site.type}" />
+                    <updatesite url="${_spin_url}/milestones/thirdparty" />
+                    <updatesite url="${autobuild.url.update-site.eclipse}" />
+                </updatesites>
+            </else>
+        </if>
+
+        <if>
+            <istrue value="${local.update.site}"/>
+            <then>
+                <updatesites id="autobuild.workspace.update-site-box">
+                    <updatesite url="file:///${autobuild.dir.user}/workspaceInstaller/local-update-site" />
+                    <otherurllist refid="autobuild.workspace.update-sites.local.id" />
+                    <updatesite url="${autobuild.url.update-site.eclipse}" />
+                </updatesites>
+            </then>
+            <else>
+                <updatesites id="autobuild.workspace.update-site-box">
+                    <otherurllist refid="autobuild.workspace.update-sites.default" />
+                    <otherurllist refid="autobuild.workspace.update-sites.default.list" />
+                    <otherurllist refid="autobuild.workspace.update-sites.list" />
+                    <otherurllist refid="autobuild.workspace.update-sites.local.id" />
+                </updatesites>
+            </else>
+        </if>
+
+        <evaluate.dependencies
+          algorithm="${_build_variant_text}"
+          refidname="autobuild.gather.dependencies.result"
+          localsitecache="${autobuild.workspace.local-cache}"
+          caching="${autobuild.workspace.cache-choice}">
+            <fixedfeaturepath>
+                <pathelement path="${autobuild.workspace.eclipse-target}" />
+            </fixedfeaturepath>
+            <features refid="gather-dependencies.features.id" />
+            <updatesites refid="autobuild.workspace.update-site-box" />
+            <contingentconstraints refid="autobuild.contingent.constraints" />
+        </evaluate.dependencies>
+
+        <install.targets
+          refid="autobuild.gather.dependencies.result"
+          dir="${autobuild.dir.eclipse.extensions}"
+          localsitecache="${autobuild.workspace.local-cache}"
+          caching="${autobuild.workspace.cache-choice}"
+          featuremappingurl="${autobuild.mappings.file}"
+          dualnatureextension=".eclipse">
+            <updatesites refid="autobuild.workspace.update-site-box" />
+        </install.targets>
+
+        <create.configuration
+            eclipseLocation="${autobuild.dir.eclipse.install}"
+            toolsExtensionLocation="${autobuild.dir.tools}"
+            workspaceLocation="${autobuild.workspace.workspace}"
+            configurationLocation="${autobuild.dir.eclipse.config}"
+        />
+        <!-- create .link file because of P2 -->
+        <extension.plugins.link dropins.folder="${autobuild.dir.release-unit.configuration}" plugin.location="${autobuild.dir.tools}" link.name="toolsExtensionLocation.link" />
+
+        <antcall target="-generate-dependencies-list" />
+        <record name="${autobuild.workspace.log}" action="stop" />
+
+        <copy file="${autobuild.dir.release-unit}/features/${feature}/feature.xml" todir="${autobuild.dir.release-unit.configuration}/xml" />
+        <echo file="${autobuild.dir.eclipse.extensions}/gather-success-marker.txt">
+Gathered required targets successfully.
+</echo>
+
+    </target>
+    <!-- Install extra plugins by P2 API after generated workspace-->
+    <target name="workspace" depends="-create-workspace" description="Create a workspace for this project." >
+
+        <echo>Shortcut to the new workspace can be found in ${autobuild.workspace.dev.output}</echo>  
+
+    </target>
+    
+    <target name="-create-workspace"
+            depends="-check-configuration, gather-dependencies,
+                     -load-ant-contrib" >
+                     
+        <!-- if we haven't defaulted the 3.7 version of eclipse, do so here -->
+        <property name="autobuild.dir.eclipse-3.7" value="${autobuild.dir.eclipse}" />
+
+        <if>
+            <isset property="reldist.download.enable" />
+            <then>
+                <updatesites id="autobuild.workspace.dev.update-sites.default">
+                    <updatesite url="${_spin_url}/milestones/${site.type}" />
+                    <updatesite url="${_spin_url}/milestones/thirdparty" />
+                    <updatesite url="${_spin_url}/devtools" />
+                    <updatesite url="${autobuild.url.update-site.eclipse}" />
+                    <updatesite url="${reldist.update.sites}/${site.type}" />
+                </updatesites>
+            </then>
+            <else>
+                <updatesites id="autobuild.workspace.dev.update-sites.default">
+                    <updatesite url="${_spin_url}/milestones/${site.type}" />
+                    <updatesite url="${_spin_url}/milestones/thirdparty" />
+                    <updatesite url="${_spin_url}/devtools" />
+                    <updatesite url="${autobuild.url.update-site.eclipse}" />
+                </updatesites>
+            </else>
+        </if>
+
+        <if>
+            <istrue value="${local.update.site}"/>
+            <then>
+                <updatesites id="autobuild.workspace.update-site-box-evaluate">
+                    <updatesite url="file:///${autobuild.dir.user}/workspaceInstaller/local-update-site" />
+                    <otherurllist refid="autobuild.workspace.update-sites.local.id" />
+                    <updatesite url="${autobuild.url.update-site.eclipse}" />
+                </updatesites>
+            </then>
+            <else>
+                <updatesites id="autobuild.workspace.update-site-box-evaluate">
+                    <otherurllist refid="autobuild.workspace.dev.update-sites.default" />
+                    <otherurllist refid="autobuild.workspace.update-sites.list" />
+                    <otherurllist refid="autobuild.workspace.update-sites.local.id" />
+                </updatesites>
+            </else>
+        </if>
+
+        <if>
+            <istrue value="${local.update.site}"/>
+            <then>
+                <updatesites id="autobuild.workspace.update-site-box-install">
+                    <updatesite url="file:///${autobuild.dir.user}/workspaceInstaller/local-update-site" />
+                    <otherurllist refid="autobuild.workspace.update-sites.local.id" />
+                    <updatesite url="${autobuild.url.update-site.eclipse}" />
+                </updatesites>
+            </then>
+            <else>
+                <updatesites id="autobuild.workspace.update-site-box-install">
+                    <otherurllist refid="autobuild.workspace.dev.update-sites.default" />
+                    <otherurllist refid="autobuild.workspace.update-sites.list" />
+                </updatesites>
+            </else>
+        </if>
+
+
+        <evaluate.dependencies
+            algorithm="latest"
+            refidname="autobuild.gather.dev.dependencies.result"
+            localsitecache="${autobuild.workspace.local-cache}"
+            caching="${autobuild.workspace.cache-choice}">
+            <fixedfeaturepath>
+                <pathelement path="${autobuild.dir.developer.eclipse.install}" />
+            </fixedfeaturepath>
+            <features>
+                <!-- note that we don't use "find-features" here, because we don't need to find and feature.xml files,
+                we're point right at what we need. -->
+                <fileset dir="${basedir}" includes="devFeatures.xml" />
+            </features>
+            <updatesites refid="autobuild.workspace.update-site-box-evaluate" />
+        </evaluate.dependencies>
+
+        <!-- workspaces generated with the "workspace" target will be put in the following folder, which
+             by default is ~/tibco-build/workspaces. -->
+        <property name="autobuild.dir.generated.workspaces" location="${autobuild.dir.user}/workspaces" />
+
+        <property name="autobuild.workspace.dev.output" location="${autobuild.dir.generated.workspaces}/${autobuild.repository}-${_build_variant_text}${autobuild.svn.tags-prefix}${autobuild.svn.tags-suffix}/${autobuild.workspace.project}" />
+        <property name="autobuild.workspace.dev.extension" location="${autobuild.workspace.dev.output}/extensionLoc/eclipse" />
+
+        <install.targets
+            refid="autobuild.gather.dev.dependencies.result"
+            dir="${autobuild.workspace.dev.extension}"
+            localsitecache="${autobuild.workspace.local-cache}"
+            caching="${autobuild.workspace.cache-choice}">
+            <updatesites refid="autobuild.workspace.update-site-box-install" />
+        </install.targets>
+
+        <!-- copy over any shared preferences the user might have -->
+        <property name="autobuild.workspace.dev.workspace" location="${autobuild.workspace.dev.output}/workspace" />
+        <property name="_workspace.prefs.dir" value="${autobuild.workspace.dev.workspace}/.metadata/.plugins/org.eclipse.core.runtime/.settings" />
+        <mkdir dir="${_workspace.prefs.dir}" />
+        <copy failonerror="false" overwrite="false" todir="${_workspace.prefs.dir}">
+          <fileset dir="${autobuild.dir.generated.workspaces}/sharedPreferences" includes="*" />
+        </copy>
+
+        <property name="autobuild.workspace.dev.configuration" location="${autobuild.workspace.dev.output}/configuration" />
+        
+        <create.configuration
+            eclipseLocation="${autobuild.dir.developer.eclipse.install}"
+            extensionLocation="${autobuild.workspace.dev.extension}"
+            workspaceLocation="${autobuild.workspace.dev.workspace}"
+            configurationLocation="${autobuild.workspace.dev.configuration}"
+        />
+        
+        <property name="dev.settings.dir" value="${autobuild.workspace.dev.workspace}/.metadata/.plugins/org.eclipse.core.runtime/.settings" />
+        <mkdir dir="${dev.settings.dir}" />
+
+        <!-- note that the properties file has to be written out this way so as to properly escape
+             and encode characters. -->
+        <propertyfile file="${dev.settings.dir}/org.eclipse.pde.core.prefs" >
+            <entry key="eclipse.preferences.version" value="1"  />
+            <entry key="target_mode" value="useOther" />
+            <entry key="additional_locations" value="${autobuild.dir.eclipse.extensions}" />
+            <entry key="platform_path" value="${autobuild.workspace.eclipse-target}" />
+        </propertyfile>
+
+        <create.workspace
+               projectName="${autobuild.workspace.project}"
+               eclipseLocation="${autobuild.dir.developer.eclipse.install}"
+               outputFolder="${autobuild.workspace.dev.output}"
+               workspaceLocation="${autobuild.workspace.dev.workspace}"
+               configurationLocation="${autobuild.workspace.dev.configuration}"
+               >
+            <featureSearchPath refid="autobuild.workspace.path.search.features" />
+        </create.workspace>  
+    </target>
+
+    <target name="remove-configuration"
+            depends="-check-properties, -set-workspace-properties"
+            description="Remove the configuration created by gather-dependencies.">
+        <delete dir="${autobuild.workspace.output}" quiet="true"/>
+        <!-- clean up for the dual-build configuration -->
+        <delete dir="${autobuild.workspace.output}.eclipse" quiet="true"/>
+    </target>
+
+    <target name="clear-cache"
+            description="Clear the cache associated with this eclipse target version."
+            depends="-check-properties">
+        <delete dir="${autobuild.workspace.local-cache}" quiet="true" />
+    </target>
+
+    <target name="-check-configuration" depends="-check-properties" unless="express-build">
+        <!-- if the feature.xml files are different, it won't bypass the gather-dependencies step. -->
+        <if>
+            <available file="${autobuild.dir.release-unit.configuration}/xml/feature.xml" />
+            <then>
+                <diff source="${autobuild.dir.release-unit.configuration}/xml"
+                    dest="${autobuild.dir.release-unit}/features/${feature}"
+                    outputProperty="_diff_feature_xml"
+                    includes="feature.xml"
+                    outputTypes="different"
+                    onlyFilePath="true" />
+                <if>
+                    <equals arg1="${_diff_feature_xml}" arg2="" />
+                    <then>
+                        <available property="_bypass_gather_dependencies" file="${autobuild.dir.eclipse.extensions}/gather-success-marker.txt" />
+                    </then>
+                </if>
+            </then>
+        </if>
+    </target>
+
+    <target name="-generate-dependencies-list">
+        <taskdef name="featurexml.creator"
+                 classname="com.tibco.devtools.workspace.installer.tasks.FeatureXmlCreatorTask"
+                 classpath="${autobuild.dir.workspace.installer}" />
+        <featurexml.creator
+            sitedirectory="${autobuild.dir.eclipse.extensions}"
+            filename="dependenciesFeature.xml"
+            featurelabel="${autobuild.workspace.project} Dependencies Feature"
+            featureid="${autobuild.workspace.project}.extension.site"
+            featureversion="${autobuild.version.builder}.${touch.time}" />
+    </target>
+
+    <target name="-create-debug-builds-site">
+        <file.to.url
+            pathproperty="autobuild.workspace.update-sites.local-debug"
+              urlproperty="autobuild.workspace.update-sites.local-debug.url" />
+
+        <mkdir dir="${autobuild.workspace.update-sites.local-debug}/features" />
+        <mkdir dir="${autobuild.workspace.update-sites.local-debug}/plugins" />
+        <update.site.creator
+            sitedirectory="${autobuild.workspace.update-sites.local-debug}" fastupdatesitexml="${fast.update.site.xml}" />
+    </target>
+
+    <target name="-check-builds-site"
+            depends="-create-debug-builds-site">
+
+        <mkdir dir="${autobuild.workspace.update-sites.local}/features" />
+        <mkdir dir="${autobuild.workspace.update-sites.local}/plugins" />
+        <!-- TODO - to we really need to create this update site every time - did a reorg that
+            revealed this to be unconditional -->
+        <update.site.creator
+            sitedirectory="${autobuild.workspace.update-sites.local}" fastupdatesitexml="${fast.update.site.xml}" />
+    </target>
+    
+    <target name="-dual-build-and-substitutions-sites" depends="-set-and-spin" >
+        <!-- more sites map for dual release-unit build and release-substitution. -->
+        <if>
+            <isset property="reldist.download.enable" />
+            <then>
+                <updatesites id="autobuild.workspace.update-sites.default.list">
+                    <updatesite url="${_spin_url}/GA/${site.type}" />
+                    <updatesite url="${_spin_url}/GA/thirdparty" />
+                    <updatesite url="${reldist.update.sites}/${site.type}" />
+                </updatesites>
+            </then>
+            <else>
+                <updatesites id="autobuild.workspace.update-sites.default.list">
+                    <updatesite url="${_spin_url}/GA/${site.type}" />
+                    <updatesite url="${_spin_url}/GA/thirdparty" />
+                </updatesites>
+            </else>
+        </if>
+    </target>
+    
+    <target name="install-plugins-help" description="Install plugins help.">
+      <echo>**************************************************************************</echo>
+      <echo>Now we support install following third-party plugins into eclispe 3.5,3.6,3.7.</echo>
+      <echo> Mylyn, Subclipse, Findbugs ,i18n</echo>
+      <echo> </echo>
+      <echo>Install plugins tip:</echo>
+      <echo>Use "ant/tbuild install-all-plugins" install all four plugins.</echo>
+      <echo>Use "ant/tbuild install-mylyn" install Mylyn plugins.</echo>
+      <echo>Use "ant/tbuild install-subclipse" install Subclipse plugin.</echo>
+      <echo>Use "ant/tbuild install-findbugs" install Findbugs plugin.</echo>
+      <echo>Use "ant/tbuild install-i18n" install Findbugs plugin.</echo>
+      <echo> </echo>
+      <echo>unInstall plugins tip:</echo>
+      <echo>Use "ant/tbuild uninstall-all-plugins" uninstall all four plugins.</echo>
+      <echo>Use "ant/tbuild uninstall-mylyn" uninstall Mylyn plugins.</echo>
+      <echo>Use "ant/tbuild uninstall-subclipse" uninstall Subclipse plugin.</echo>
+      <echo>Use "ant/tbuild uninstall-findbugs" uninstall Findbugs plugin.</echo>
+      <echo>Use "ant/tbuild uninstall-i18n" uninstall Findbugs plugin.</echo>
+      <echo>**************************************************************************</echo>
+    </target>
+    
+    <!-- Install plugins by useing p2 API -->
+    <target name="install-all-plugins" description="Install all the plugins." depends="install-mylyn, install-subclipse, install-findbugs, install-i18n" />
+    
+    <target name="install-mylyn" description="Install Mylyn plugin." depends="-set-workspace-properties" >
+        <echo>Install Plugins: Mylyn into ${autobuild.dir.developer.eclipse.install}</echo>
+        <!-- Support eclipse  3.5 ,3.6 ,3.7-->
+        <install.plugin plugin.feature="${mylyn.features}" plugin.name="eclipse-plugins" />
+    </target>
+    
+    <target name="install-subclipse" description="Install Subclipse plugin." depends="-set-workspace-properties,install-gef" >
+        <echo>Install Plugins: Subclipse into ${autobuild.dir.developer.eclipse.install}</echo>
+         <!-- Support eclipse  3.5 ,3.6 ,3.7-->
+      <install.plugin plugin.feature="${subclipse.features}" plugin.name="subclipse"  />
+    </target>
+    
+    <target name="install-gef" description="Install gef plugin." depends="-set-workspace-properties" >
+        <echo>Install Plugins: GEF into ${autobuild.dir.developer.eclipse.install}</echo>
+         <!-- Support eclipse  3.5 ,3.6 ,3.7-->
+      <install.plugin plugin.feature="${gef.features}" plugin.name="gef"  />
+    </target>
+    
+    <target name="install-findbugs" description="Install Findbugs plugin." depends="-set-workspace-properties" >
+        <echo>Install Plugins: Findbugs into ${autobuild.dir.developer.eclipse.install}</echo>
+         <!-- Support eclipse  3.5 ,3.6 ,3.7-->
+        <install.plugin plugin.feature="${findbugs.features}" plugin.name="eclipse-plugins" />
+    </target>
+    
+    <target name="show-features-list" description="Show site features." depends="-set-workspace-properties" >
+        <echo>show site features list.</echo>
+        <java classname="org.eclipse.core.launcher.Main"
+                maxMemory="${autobuild.max.memory}" fork="true" failonerror="on" logerror="on">
+            <classpath>
+                <pathelement location="${autobuild.dir.eclipse.startup}" />
+            </classpath>
+            <arg line='-application org.eclipse.equinox.p2.director  
+                  -repository ${plugins.update.site}
+                  -list' />
+        </java> 
+    </target>
+    
+      <target name="install-i18n" description="Install i18n plugin." depends="-set-workspace-properties" >
+        <if>
+            <equals arg1="${autobuild.version.developer.eclipse}" arg2="3.7" />
+            <then>
+                <echo>Install Plugins: i18n into ${autobuild.dir.developer.eclipse.install}</echo>
+                <install.plugin plugin.feature="${i18n.features}" plugin.name="eclipse-plugins" />
+            </then>
+            <else>
+                 <echo>!!!
+=======================================================================================================================================
+
+Currently this plugin is only installed for the eclipse 3.7 but the autobuild.version.developer.eclipse is set to "${autobuild.version.developer.eclipse}".
+Please set autobuild.version.developer.eclipse=3.7 if you want to install the plugin to it.
+
+=======================================================================================================================================
+                 </echo>
+            </else>
+        </if>
+    </target>
+    
+    
+    <!-- Uninstall plugins by useing p2 API !! only effected for eclipse 3.5 3.6 3.7 now-->
+    <target name="uninstall-all-plugins" description="Uninstall all the plugins." depends="-set-workspace-properties">
+        <echo>Uninstall Plugins: mylyn,Findbugs,subclipse,i18n from ${autobuild.dir.developer.eclipse.install}</echo>
+        <java classname="org.eclipse.core.launcher.Main"
+                maxMemory="${autobuild.max.memory}" fork="true" failonerror="on" logerror="on">
+            <classpath>
+                <pathelement location="${autobuild.dir.eclipse.startup}" />
+            </classpath>
+            <arg line='-application org.eclipse.equinox.p2.director  
+                 -destination ${autobuild.dir.developer.eclipse.install}
+                 -uninstallIU ${mylyn.features},${findbugs.features},${subclipse.features},${i18n.features},${gef.features}' />
+        </java>    
+    </target>
+    
+    <target name="uninstall-mylyn" description="Uninstall Mylyn plugin." depends="-set-workspace-properties" >
+        <echo>Uninstall Plugins: Mylyn from ${autobuild.dir.developer.eclipse.install}</echo>
+         <!-- Support eclipse  3.5 ,3.6 ,3.7-->
+        <uninstall.plugin plugin.feature="${mylyn.features}" />
+    </target>
+    
+    <target name="uninstall-subclipse" description="Uninstall Subclipse plugin." depends="-set-workspace-properties" >
+        <echo>Uninstall Plugins: Subclipse from ${autobuild.dir.developer.eclipse.install}</echo>
+         <!-- Support eclipse  3.5 ,3.6 ,3.7-->
+      <uninstall.plugin plugin.feature="${subclipse.features},${gef.features}" />
+    </target>
+    
+    <target name="uninstall-gef" description="Uninstall GEF plugin." depends="-set-workspace-properties" >
+        <echo>Uninstall Plugins: GEF from ${autobuild.dir.developer.eclipse.install}</echo>
+         <!-- Support eclipse  3.5 ,3.6 ,3.7-->
+      <uninstall.plugin plugin.feature="${gef.features}" />
+    </target>
+    
+    <target name="uninstall-findbugs" description="Uninstall Findbugs plugin." depends="-set-workspace-properties" >
+        <echo>Uninstall Plugins: Findbugs from ${autobuild.dir.developer.eclipse.install}</echo>
+         <!-- Support eclipse  3.5 ,3.6 ,3.7-->
+        <uninstall.plugin plugin.feature="${findbugs.features}" />
+    </target>
+    
+    <target name="uninstall-i18n" description="Uninstall i18n plugin." depends="-set-workspace-properties" >
+        <echo>Uninstall Plugins: i18n from ${autobuild.dir.developer.eclipse.install}</echo>
+         <!-- Support eclipse  3.5 ,3.6 ,3.7-->
+        <uninstall.plugin plugin.feature="${i18n.features}" />
+    </target>
+    
+    <macrodef name="install.plugin" description="install plugin">
+        <attribute name="plugin.feature" />
+        <attribute name="plugin.name" />
+        <sequential>
+            <java classname="org.eclipse.core.launcher.Main"
+                maxMemory="${autobuild.max.memory}" fork="true" failonerror="on" logerror="on">
+            <classpath>
+                <pathelement location="${autobuild.dir.eclipse.startup}" />
+            </classpath>
+            <arg line='-application org.eclipse.equinox.p2.director 
+             -destination ${autobuild.dir.developer.eclipse.install}
+             -repository ${plugins.update.site}/@{plugin.name}
+             -installIU @{plugin.feature}' />
+        </java>
+        </sequential>
+    </macrodef>
+     
+    <macrodef name="uninstall.plugin" description="install plugin">
+        <attribute name="plugin.feature" />
+        <sequential>
+            <property file="${autobuild.dir.eclipse-3.7}/configuration/config.ini" />
+            <java classname="org.eclipse.core.launcher.Main"
+                  maxMemory="${autobuild.max.memory}" fork="true" failonerror="on" logerror="on">
+                <classpath>
+                    <pathelement location="${autobuild.dir.eclipse.startup}" />
+                </classpath>
+                <arg line='-application org.eclipse.equinox.p2.director 
+                 -destination ${autobuild.dir.developer.eclipse.install}
+                 -uninstallIU @{plugin.feature}' />
+            </java>
+            <java classname="org.eclipse.core.launcher.Main"
+                  maxMemory="${autobuild.max.memory}" fork="true" failonerror="on" logerror="on">
+                 <classpath>
+                    <pathelement location="${autobuild.dir.eclipse.startup}" />
+                 </classpath>
+                 <arg line='-application org.eclipse.equinox.p2.garbagecollector.application 
+                 -profile ${eclipse.p2.profile}' />
+            </java>
+        </sequential>
+    </macrodef>
+
+    <!-- create a link for custom extension plugins --> 
+    <macrodef name="extension.plugins.link" description="create extension plugins link file in dropins folder">
+        <attribute name="dropins.folder" />
+        <attribute name="plugin.location" />
+        <attribute name="link.name" />
+        <sequential>
+            <propertyregex property="_plugin.location" override="true" input="@{plugin.location}" regexp="(\\)" replace="/" />
+            <property name="extension_link_folder" value="@{dropins.folder}/dropins" />
+            <mkdir dir="${extension_link_folder}" />
+            <if>
+                <isset property="_plugin.location" />
+                <then>
+                    <echo file="${extension_link_folder}/@{link.name}">path=${_plugin.location}</echo>
+                </then>
+                <else>
+                    <echo file="${extension_link_folder}/@{link.name}">path=@{plugin.location}</echo>
+                </else>
+            </if>
+        </sequential>
+    </macrodef>
+
+    <!-- create update site from ${tibco-build}/components/shared/1.0.0 -->
+    <macrodef name="publish.p2.repo" description="generating p2 repository">
+        <attribute name="components.dir" />
+        <attribute name="p2.target.dir" />
+        <sequential>
+            <exec executable="java">
+                <arg line='
+                 -cp ${local.update.site.eclipse.startup} org.eclipse.core.launcher.Main
+                 -application org.eclipse.equinox.p2.publisher.FeaturesAndBundlesPublisher
+                 -metadataRepository file:///@{p2.target.dir}
+                 -artifactRepository file:///@{p2.target.dir}
+                 -source @{components.dir}
+                 -compress -publishArtifacts' />
+            </exec>
+        </sequential>
+    </macrodef>
+
+    <macrodef name="create-local-update-site-repo">
+        <sequential>
+            <delete dir="${local.update.site.location}" />
+            <if>
+                <available file="${local.build.components}" type="dir" />
+                <then>
+                    <publish.p2.repo components.dir="${local.build.components}" p2.target.dir="${local.update.site.location}" />
+                    <touch file="${local.update.site.location}/normal.site.flag" />
+                </then>
+                <else>
+                    <mkdir dir="${local.update.site.location}" />
+                    <mkdir dir="${local.update.site.location}/features" />
+                    <mkdir dir="${local.update.site.location}/plugins" />
+                </else>
+            </if>
+        </sequential>
+    </macrodef>
+
+    <target name="-create-local-update-site" depends="-load-ant-contrib, -local-update-site-check" if="to.create.local.update.site">
+        <echo>You can run "${autobuild.dir.eclipse-3.7}/eclipse -clean" when an error has occurred.</echo>
+        <eclipse.startup eclipseLocation="${autobuild.dir.eclipse-3.7}" property="local.update.site.eclipse.startup" />
+        <create-local-update-site-repo />
+        <update.site.creator siteDirectory="${local.update.site.location}" fastupdatesitexml="${fast.update.site.xml}" />
+    </target>
+
+    <target name="-local-update-site-check">
+        <fail unless="autobuild.dir.eclipse-3.7">
+!!!
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+If you want to create local-update-site, you have to set property autobuild.dir.eclipse-3.7.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        </fail>
+        <property name="local.update.site.location" location="${autobuild.dir.user}/workspaceInstaller/local-update-site" />
+        <condition property="to.create.local.update.site">
+            <and>
+                <not>
+                    <available file="${local.update.site.location}/normal.site.flag"/>
+                </not>
+                <istrue value="${local.update.site}" />
+            </and>
+        </condition>
+    </target>
+
+</project>

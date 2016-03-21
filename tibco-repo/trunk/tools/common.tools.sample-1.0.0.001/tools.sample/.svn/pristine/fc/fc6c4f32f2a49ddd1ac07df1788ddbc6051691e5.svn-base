@@ -1,0 +1,13 @@
+#Tue, 28 Jul 2015 17:27:57 -0700
+
+com.tibco.sample.feature=001
+com.tibco.sample.feature,0.0.0=001
+
+com.tibco.sample.feature.devdocs=001
+com.tibco.sample.feature.devdocs,0.0.0=001
+
+com.tibco.sample.feature.source=001
+com.tibco.sample.feature.source,0.0.0=001
+
+com.tibco.sample.feature.test=001
+com.tibco.sample.feature.test,0.0.0=001

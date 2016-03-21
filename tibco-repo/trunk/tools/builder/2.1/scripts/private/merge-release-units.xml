@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="merge-release-unites">
+
+    <property name="merged.ru" value="${autobuild.dir.release-unit}/features/${feature}" />
+    <available file="${autobuild.dir.release-unit}/features/${feature}/feature.xml.template" property="_it_is_meregeru" />
+    <taskdef resource="com/tibco/devtools/mergeru/taskdef.properties" classpath="${autobuild.dir.mergeru}/mergeru.jar:${autobuild.dir.mergeru}/jdom.jar" />
+    <taskdef resource="aQute/bnd/ant/taskdef.properties" classpath="${autobuild.dir.mergeru}/bnd.jar" />
+
+    <!--targets-->
+    <target name="-generate-merged-jar" if="merge.release-units" >
+     	<delete.others.dir rootDir="${autobuild.dir.output.debug}/plugins/bin" excludeDir="com" />
+        <delete.others.dir rootDir="${autobuild.dir.output.release}/plugins/bin" excludeDir="com" />
+        <bnd classpath="${autobuild.dir.output.debug}/plugins/bin" eclipse="false" failok="false" output="${autobuild.dir.release-unit}/download/debug" exceptions="true" files="${autobuild.dir.build-artifacts}/bnd.bnd" />
+        <bnd classpath="${autobuild.dir.output.release}/plugins/bin" eclipse="false" failok="false" output="${autobuild.dir.release-unit}/download/release" exceptions="true" files="${autobuild.dir.build-artifacts}/bnd.bnd" />
+        <adjust.generated.jar sourceJarDir="${autobuild.dir.release-unit}/download/debug" destDir="${autobuild.dir.output.debug}/plugins" pluginName="${version-plugin-jar}" toUnpack="true" mergedru="${merged.ru}" />
+        <adjust.generated.jar sourceJarDir="${autobuild.dir.release-unit}/download/release" destDir="${autobuild.dir.output.release}/plugins" pluginName="${version-plugin-jar}" toUnpack="true" mergedru="${merged.ru}" />
+        <adjust.generated.jar sourceJarDir="${autobuild.dir.release-unit}/download/debug" destDir="${autobuild.dir.output.jars.debug}/plugins" pluginName="${version-plugin-jar}" toUnpack="false" mergedru="${merged.ru}" />
+        <adjust.generated.jar sourceJarDir="${autobuild.dir.release-unit}/download/release" destDir="${autobuild.dir.output.jars.release}/plugins" pluginName="${version-plugin-jar}" toUnpack="false" mergedru="${merged.ru}" />
+    </target>
+
+    <target name="generate-feature-xml" description="To collect all imported features and included plugin." if="_it_is_meregeru">
+		<mkdir dir="${autobuild.dir.release-unit}/build-artifacts/" /> 
+		<generate.feature.xml mergedru="${merged.ru}" sourceFeaturesDir="${autobuild.dir.release-unit}/download/debug/features" downloadInfo="${autobuild.dir.release-unit}/build-artifacts/download.xml"/>
+    </target>
+
+    <target name="-merge-release-units" depends="-merge-features, -merge-plugins, -generate-merged-jar" if="_it_is_meregeru">
+        <delete file="${merged.ru}/feature.xml.tmp" />
+    </target>
+     
+    <target name="-merge-features" if="merge.features" >
+        <merge.features mergedru="${merged.ru}" sourcePluginsDir="${autobuild.dir.release-unit}/download/debug/plugins" destPluginsDir="${autobuild.dir.output.jars.debug}" toUnpack="false" />
+        <merge.features mergedru="${merged.ru}" sourcePluginsDir="${autobuild.dir.release-unit}/download/release/plugins" destPluginsDir="${autobuild.dir.output.jars.release}" toUnpack="false"  />
+        <merge.features mergedru="${merged.ru}" sourcePluginsDir="${autobuild.dir.release-unit}/download/debug/plugins" destPluginsDir="${autobuild.dir.output.debug}" toUnpack="true" />
+        <merge.features mergedru="${merged.ru}" sourcePluginsDir="${autobuild.dir.release-unit}/download/release/plugins" destPluginsDir="${autobuild.dir.output.release}" toUnpack="true" />
+    </target>
+
+    <target name="-merge-plugins" if="merge.release-units" >
+      	<property name="proper.feature.xml" value="${merged.ru}/feature.xml.tmp" />
+        <property name="bnd.file" value="${autobuild.dir.release-unit}/plugins/${_all_plugins_id}/bnd.bnd" />
+   	<if>
+            <available file="${autobuild.dir.output.jars.release}/plugins" type="dir" />
+            <then>
+                <for param="ver-plugin-jar">
+                    <fileset id="feature-plugin-list" dir="${autobuild.dir.output.jars.release}/plugins">
+                        <include name="*.jar" />
+                    </fileset>
+                    <sequential>
+                        <propertyregex property="version-plugin-jar" override="true" input="@{ver-plugin-jar}"
+                                       regexp="([^/\\]*(?=\.jar\b))" select="\1" />
+                    </sequential>
+                </for>
+            </then>
+        </if>
+        <merge.plugins sourceDir="${autobuild.dir.release-unit}/download/debug/plugins"  destDir="${autobuild.dir.output.debug}/plugins/bin" 
+                       properFeatureXML="${proper.feature.xml}" bndFile="${bnd.file}" pluginName="${version-plugin-jar}" artifacts="${autobuild.dir.build-artifacts}" />
+        <merge.plugins sourceDir="${autobuild.dir.release-unit}/download/release/plugins"  destDir="${autobuild.dir.output.release}/plugins/bin"  
+                       properFeatureXML="${proper.feature.xml}" bndFile="${bnd.file}" pluginName="${version-plugin-jar}" artifacts="${autobuild.dir.build-artifacts}" />
+    </target>
+
+    <target name="download-release-units" if="_it_is_meregeru">
+        <move file="${autobuild.dir.release-unit}/features/${feature}/feature.xml.template" tofile="${autobuild.dir.release-unit}/features/${feature}/feature.xml" />
+        <ant dir="${autobuild.dir.release-unit}" target="-download-release-units" inheritall="false" >
+            <property name="site.type" value="debug" />
+        </ant>
+        <ant dir="${autobuild.dir.release-unit}" target="-download-release-units" inheritall="false" >
+            <property name="site.type" value="release" />
+        </ant>
+        <move file="${autobuild.dir.release-unit}/features/${feature}/feature.xml" tofile="${autobuild.dir.release-unit}/features/${feature}/feature.xml.template" />
+    </target>
+
+
+    <!-- download features/plugins for merging rus -->
+    <target name="-download-release-units" depends="-check-properties, -set-workspace-properties, -which-features-are-needed" 
+                  unless="_bypass_gather_dependencies" >
+
+        <property name="merge.download" value="${autobuild.dir.release-unit}/download/${site.type}" />
+        <mkdir dir="${merge.download}" />
+        <echo message="download to cache at: ${merge.download}"/>
+
+        <!-- delete the marker file that indicates that we've successfully installed files. -->
+        <delete file="${autobuild.dir.eclipse.extensions}/gather-success-marker.txt" quiet="true" />
+        <record name="${autobuild.workspace.log}" action="start" loglevel="${autobuild.loglevel}" />
+        <updatesites id="autobuild.download.merging.rus.default">
+            <updatesite url="${_spin_url}/milestones/${site.type}" />
+            <updatesite url="${_spin_url}/milestones/thirdparty" />
+            <updatesite url="${autobuild.url.update-site.eclipse}" />
+            <updatesite url="${reldist.update.sites}/${site.type}" />
+            <updatesite url="${_spin_url}/devtools" />
+            <updatesite url="${_spin_url}/GA/${site.type}" />
+            <updatesite url="${_spin_url}/GA/thirdparty" />
+        </updatesites>
+
+        <evaluate.dependencies
+            algorithm="${_build_variant_text}"
+            refidname="autobuild.gather.dependencies.result"
+            localsitecache="${autobuild.workspace.local-cache}"
+            caching="${autobuild.workspace.cache-choice}">
+            <fixedfeaturepath>
+                <pathelement path="${autobuild.workspace.eclipse-target}" />
+            </fixedfeaturepath>
+            <features refid="gather-dependencies.features.id" />
+            <updatesites refid="autobuild.download.merging.rus.default" />
+            <updatesites refid="autobuild.workspace.update-sites.list" />
+            <contingentconstraints refid="autobuild.contingent.constraints" />
+        </evaluate.dependencies>
+
+        <install.targets
+            refid="autobuild.gather.dependencies.result"
+            dir="${merge.download}"
+            localsitecache="${autobuild.workspace.local-cache}"
+            caching="${autobuild.workspace.cache-choice}"
+            featuremappingurl="${autobuild.mappings.file}"
+            dualnatureextension=".eclipse">
+
+           <updatesites refid="autobuild.download.merging.rus.default" />
+           <updatesites refid="autobuild.workspace.update-sites.list" />
+        </install.targets>
+    </target>
+
+</project>
+

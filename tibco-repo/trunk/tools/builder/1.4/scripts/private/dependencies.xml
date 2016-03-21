@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="dependencies">
+
+    <!-- define property defaults.  most of these can be overridden, and
+         perhaps ought to be. -->
+    <target name="-set-workspace-properties" depends="-set-cache-location">
+
+        <!-- workspaces generated with the "workspace" target will be put in the following folder, which
+             by default is ~/tibco-build/workspaces. -->
+        <property name="autobuild.dir.generated.workspaces" location="${autobuild.dir.user}/workspaces" />
+
+        <property name="autobuild.workspace.project" value="${release-unit}" />
+        <property name="autobuild.workspace.project.dir" location="${autobuild.dir.release-unit}" />
+        <property name="autobuild.workspace.eclipse" location="${autobuild.dir.eclipse.install}" />
+        <property name="autobuild.workspace.eclipse-target" location="${autobuild.dir.eclipse.target}" />
+        <property name="autobuild.workspace.output" location="${autobuild.dir.release-unit.configuration}" />
+        <property name="autobuild.workspace.dev.output" location="${autobuild.dir.generated.workspaces}/${autobuild.repository}-${autobuild.workspace.project}-${_build_variant_text}" />
+
+        <property name="autobuild.workspace.workspace" location="${autobuild.workspace.output}/workspace" />
+        <property name="autobuild.workspace.configuration" location="${autobuild.dir.eclipse.config}" />
+        <property name="autobuild.workspace.extension" location="${autobuild.dir.eclipse.extensions}" />
+
+        <property name="autobuild.workspace.dev.workspace" location="${autobuild.workspace.dev.output}/workspace" />
+        <property name="autobuild.workspace.dev.configuration" location="${autobuild.workspace.dev.output}/configuration" />
+        <property name="autobuild.workspace.dev.extension" location="${autobuild.workspace.dev.output}/extensionLoc/eclipse" />
+
+        <property name="autobuild.workspace.use-remote-sites" value="true" />
+        <property name="autobuild.workspace.force-equivalent" value="false" />
+
+        <property name="autobuild.workspace.debug.output" value="${autobuild.workspace.project.dir}/gatherDependencies.config" />
+
+        <property name="autobuild.workspace.log" location="${autobuild.workspace.project.dir}/dependencies-${autobuild.workspace.project}.log" />
+
+    </target>
+
+    <target name="gather-dependencies"
+            depends="-check-properties, -set-workspace-properties,
+                     -display-parameters"
+            unless="_bypass_gather_dependencies"
+            description="Invoke workspace installer to collect the required features and plugins for a build.">
+
+        <echo message="gathering to cache at: ${autobuild.workspace.local-cache}"/>
+
+        <record name="${autobuild.workspace.log}" action="start" loglevel="${autobuild.loglevel}" />
+        <gather.dependencies
+               baseEclipse="${autobuild.workspace.eclipse-target}"
+               projectName="${autobuild.workspace.project}"
+               destDir="${autobuild.workspace.output}"
+               workspace="${autobuild.workspace.workspace}"
+               configuration="${autobuild.workspace.configuration}"
+               extensionLocation="${autobuild.workspace.extension}"
+               toolsExtensionLocation="${autobuild.dir.tools}"
+               localSiteCache="${autobuild.workspace.local-cache}"
+               useRemoteSites="${autobuild.workspace.use-remote-sites}"
+               matchLatest="${autobuild.build-latest}"
+               featureOrderOutput="${autobuild.workspace.feature-order-output}"
+               debugOutputLocation="${autobuild.workspace.debug.output}">
+            <featureSearchPath refid="autobuild.workspace.path.search.features" />
+            <projectSearchPath refid="autobuild.workspace.path.search.projects" />
+            <otherFeature path="${autobuild.workspace.extra-feature}" />
+            <updatesites id="autobuild.workspace.update-sites.default">
+                <updatesite url="${_spin_url}/milestones/release" />
+                <updatesite url="${_spin_url}/milestones/thirdparty" />
+                <updatesite url="${autobuild.url.update-site.eclipse}" />
+            </updatesites>
+            <updatesites refid="autobuild.workspace.update-sites.list" />
+            <excludedfeatures refid="autobuild.workspace.excluded-features.list" />
+        </gather.dependencies>
+        <!-- original 1.4 invocation, supplies the extension location -->
+        <!--create.configuration
+            eclipseLocation="${autobuild.workspace.eclipse}"
+            extensionLocation="${autobuild.workspace.extension}"
+            toolsExtensionLocation="${autobuild.dir.tools}"
+            workspaceLocation="${autobuild.workspace.workspace}"
+            configurationLocation="${autobuild.workspace.configuration}"
+        /-->
+        <!-- fix eclipse 3.3's brain-dead algorithm for locating ant by hiding the ant tpcl;
+             we give a null extension location, which means that it's not in the generated config.
+             we still find it, in the script generator, but we break the workspace -->
+        <create.configuration
+            eclipseLocation="${autobuild.workspace.eclipse}"
+            toolsExtensionLocation="${autobuild.dir.tools}"
+            workspaceLocation="${autobuild.workspace.workspace}"
+            configurationLocation="${autobuild.workspace.configuration}"
+        />
+        <antcall target="-generate-dependencies-list" />
+        <record name="${autobuild.workspace.log}" action="stop" />
+    </target>
+
+    <target name="workspace"
+            depends="-check-output, -check-configuration, gather-dependencies, -load-ant-contrib,
+                     -gather-dev-features"
+            description="Create a workspace for this project">
+
+        <!-- copy over any shared preferences the user might have -->
+        <property name="_workspace.prefs.dir" value="${autobuild.workspace.dev.workspace}/.metadata/.plugins/org.eclipse.core.runtime/.settings" />
+        <mkdir dir="${_workspace.prefs.dir}" />
+        <copy failonerror="false" overwrite="false" todir="${_workspace.prefs.dir}">
+          <fileset dir="${autobuild.dir.generated.workspaces}/sharedPreferences" includes="*" />
+        </copy>
+
+        <create.configuration
+            eclipseLocation="${autobuild.dir.developer.eclipse.install}"
+            extensionLocation="${autobuild.workspace.dev.extension}"
+            workspaceLocation="${autobuild.workspace.dev.workspace}"
+            configurationLocation="${autobuild.workspace.dev.configuration}"
+        />
+        <property name="dev.settings.dir" value="${autobuild.workspace.dev.workspace}/.metadata/.plugins/org.eclipse.core.runtime/.settings" />
+        <mkdir dir="${dev.settings.dir}" />
+
+        <!-- note that the properties file has to be written out this way so as to properly escape
+             and encode characters. -->
+        <property name="eclipse.preferences.version" value="1" />
+        <property name="target_mode" value="useOther" />
+        <property name="additional_locations" value="${autobuild.workspace.extension}" />
+        <property name="platform_path" value="${autobuild.workspace.eclipse}" />
+        <echoproperties destfile="${dev.settings.dir}/org.eclipse.pde.core.prefs">
+          <propertyset>
+            <propertyref name="eclipse.preferences.version" />
+            <propertyref name="target_mode" />
+            <propertyref name="additional_locations" />
+            <propertyref name="platform_path" />
+          </propertyset>
+        </echoproperties>
+
+        <create.workspace
+               projectName="${autobuild.workspace.project}"
+               eclipseLocation="${autobuild.dir.developer.eclipse.install}"
+               outputFolder="${autobuild.workspace.dev.output}"
+               workspaceLocation="${autobuild.workspace.dev.workspace}"
+               configurationLocation="${autobuild.workspace.dev.configuration}"
+               >
+            <featureSearchPath refid="autobuild.workspace.path.search.features" />
+        </create.workspace>
+    </target>
+
+    <target name="remove-configuration"
+            depends="-check-properties, -set-workspace-properties, -display-parameters"
+            description="Remove the configuration created by gather-dependencies">
+        <delete dir="${autobuild.workspace.output}" />
+    </target>
+
+    <target name="clear-cache" depends="-check-properties, -set-cache-location">
+        <delete dir="${autobuild.workspace.local-cache}" failonerror="false" />
+    </target>
+
+    <target name="-gather-dev-features-check">
+        <!-- default the version of Eclipse to 3.2 for now - Eclipse 3.2.2 is more stable on
+             the Mac than 3.3.1 -->
+        <property name="autobuild.version.developer.eclipse" value="3.2" />
+
+        <!-- if we haven't defaulted the 3.2 version of eclipse, do so here -->
+        <property name="autobuild.dir.eclipse-3.2" value="${autobuild.dir.eclipse}" />
+        <propertycopy property="autobuild.dir.developer.eclipse.install" from="autobuild.dir.eclipse-${autobuild.version.developer.eclipse}" silent="true"/>
+
+    </target>
+
+    <target name="-gather-dev-features" depends="-gather-dev-features-check">
+      <!-- set the subversion client choice, if not set -->
+      <property name="autobuild.option.eclipse.subversion.client" value="subclipse" />
+
+      <property name="_subversion_client_feature" location="${autobuild.dir.scripts}/private/${autobuild.option.eclipse.subversion.client}-feature.xml" />
+
+      <available property="found.eclipse.subversion.client" file="${_subversion_client_feature}" />
+      <fail unless="found.eclipse.subversion.client">
+Unable to find your choice of subversion client at ${_subversion_client_feature}
+      </fail>
+
+      <gather.dependencies
+                          baseEclipse="${autobuild.dir.developer.eclipse.install}"
+                          projectName="${autobuild.workspace.project}"
+                          destDir="${autobuild.workspace.dev.output}"
+                          workspace="${autobuild.workspace.dev.workspace}"
+                          configuration="${autobuild.workspace.dev.configuration}"
+                          extensionLocation="${autobuild.workspace.dev.extension}"
+                          localSiteCache="${autobuild.workspace.local-cache}"
+                          useRemoteSites="${autobuild.workspace.use-remote-sites}"
+                          matchLatest="true"
+                          debugOutputLocation="${autobuild.workspace.debug.output}">
+          <otherFeature path="${_subversion_client_feature}" />
+          <otherFeature path="devFeatures.xml" />
+          <updatesites id="autobuild.workspace.update-sites.default">
+            <updatesite url="${_spin_url}/milestones/release" />
+            <updatesite url="${_spin_url}/milestones/thirdparty" />
+            <updatesite url="${_spin_url}/devtools" />
+            <updatesite url="${autobuild.url.update-site.eclipse}" />
+          </updatesites>
+          <updatesites refid="autobuild.workspace.update-sites.list" />
+        </gather.dependencies>
+    </target>
+
+    <target name="-set-cache-location" depends="-load-ant-contrib">
+        <property name="_cache_base" location="${autobuild.dir.user}/workspaceInstaller/local-cache-site" />
+        <if>
+            <isset property="autobuild.version.eclipse" />
+            <then>
+                <property name="autobuild.workspace.local-cache" location="${_cache_base}-${autobuild.version.eclipse}" />
+            </then>
+            <else>
+                <property name="autobuild.workspace.local-cache" location="${_cache_base}-3.2" />
+            </else>
+        </if>
+    </target>
+
+    <target name="-check-configuration" if="_output_is_configured">
+        <echo level="verbose">Found ${autobuild.workspace.feature-order-output}</echo>
+        <!--  this is only set if called from the build target;
+              calling gather-dependencies directly is unconditional -->
+        <available file="${autobuild.workspace.feature-order-output}" property="_bypass_gather_dependencies" value="true" type="file" />
+    </target>
+
+    <target name="-generate-dependencies-list">
+        <taskdef name="featurexml.creator"
+                 classname="com.tibco.devtools.workspace.installer.tasks.FeatureXmlCreatorTask"
+                 classpath="${autobuild.dir.workspace.installer}" />
+        <featurexml.creator
+            sitedirectory="${autobuild.workspace.extension}"
+            filename="dependenciesFeature.xml"
+            featurelabel="${autobuild.workspace.project} Dependencies Feature"
+            featureid="${autobuild.workspace.project}.extension.site"
+            featureversion="${autobuild.version.builder}.${touch.time}" />
+    </target>
+
+    <target name="-check-output"
+            depends="-check-properties, -set-workspace-properties" >
+        <available property="_output_is_configured" file="${autobuild.workspace.output}" type="dir" />
+    </target>
+
+</project>

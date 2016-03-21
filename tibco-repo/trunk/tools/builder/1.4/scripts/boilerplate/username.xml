@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="[user/release unit or user/choreography] Overrides">
+
+    <!-- sample property:
+    <property name="name" value="value" />
+    -->
+    <!--
+    this one is a common cause of needing per-user per-ru or per-choreo overrides:
+    <updatesites id="autobuild.workspace.update-sites.list">
+        <updatesite url="" />
+    </updatesites>
+    -->
+
+</project>

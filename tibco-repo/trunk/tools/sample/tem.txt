@@ -1,0 +1,53 @@
+Buildfile: D:\work\repo\builder\devtools\trunk\tools\sample\build.xml
+     [echo] ------> D:/work/repo/builder/tt/user-overrides.xml 
+
+-load-ant-contrib:
+
+-pre-custom-actions:
+
+download-release-units:
+
+generate-feature-xml:
+
+-set-timestamp:
+
+-set-pdehost:
+
+-set-express-build-properties:
+
+-set-build-properties:
+
+-feature-set:
+
+-release-unit-set:
+
+-release-discover-tagsURL:
+     [echo] ------> svn info --xml D:\work\repo\builder\devtools\trunk\tools\sample
+     [echo] ------> Got SVN info from working copy:
+     [echo]     		<?xml version="1.0" encoding="UTF-8"?>
+     [echo] <info>
+     [echo] <entry
+     [echo]    path="."
+     [echo]    revision="9065"
+     [echo]    kind="dir">
+     [echo] <url>https://svn.tibco.com:8443/svn/devtools/trunk/tools/sample</url>
+     [echo] <relative-url>^/trunk/tools/sample</relative-url>
+     [echo] <repository>
+     [echo] <root>https://svn.tibco.com:8443/svn/devtools</root>
+     [echo] <uuid>594592ff-7b02-0410-a8bb-846e1f26e343</uuid>
+     [echo] </repository>
+     [echo] <wc-info>
+     [echo] <wcroot-abspath>D:/work/repo/builder/devtools</wcroot-abspath>
+     [echo] <schedule>normal</schedule>
+     [echo] <depth>infinity</depth>
+     [echo] </wc-info>
+     [echo] <commit
+     [echo]    revision="9047">
+     [echo] <author>mqian</author>
+     [echo] <date>2015-07-23T22:20:43.159701Z</date>
+     [echo] </commit>
+     [echo] </entry>
+     [echo] </info>
+     [xslt] Processing D:\work\repo\builder\devtools\trunk\tools\sample\null284189179 to D:\work\repo\builder\devtools\trunk\tools\sample\null609263992
+     [xslt] Loading stylesheet D:\work\repo\builder\tt\tools\tibco-tools-088\builder\2.1\scripts\private\svnInfo.xsl
+Terminate batch job (Y/N)? 

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="updater" basedir=".">
+    
+    <property name="version.v.u.a" value="2.0.2.005" />
+    <property name="version.v.u" value="2.0.1.010" />
+    
+    <path id="autobuild.path.updater">
+        <pathelement location="${autobuild.dir.updater.root}/lib/com.tibco.devtools.version.updater.ant_${version.v.u.a}/version-updater-ant.jar"/>
+        <pathelement location="${autobuild.dir.updater.root}/lib/com.tibco.devtools.version.updater_${version.v.u}.jar"/>
+        
+        <path refid="autobuild.path.archivist"/>
+    </path>
+
+    <taskdef name="diff"
+             classname="com.tibco.devtools.versionupdater.tasks.DiffTask"
+             classpathref="autobuild.path.updater"/>
+
+    <target name="-load-updater-libs">
+    
+        <pathconvert targetos="unix" pathsep="${line.separator}" property="updater.classpath" refid="autobuild.path.updater"/>
+    
+        <taskdef name="updater.sweepChanges"
+                 classname="com.tibco.devtools.versionupdater.tasks.SweepChangesTask"
+                 classpathref="autobuild.path.updater"/>
+        <taskdef name="updater.updateVersions"
+                 classname="com.tibco.devtools.versionupdater.tasks.UpdateVersionsTask"
+                 classpathref="autobuild.path.updater"/>
+        <taskdef name="updater.bumpVersions"
+                 classname="com.tibco.devtools.versionupdater.tasks.BumpVersionTask"
+                 classpathref="autobuild.path.updater"/>
+    </target>
+
+    
+    <!-- preflight sweep-versions, no real changes -->
+    <target name="try-sweep-versions" depends="-load-updater-libs">
+        <updater.sweepChanges infoOnly="true">
+            <analyzedFiles name="${autobuild.dir.release-unit}" />
+        </updater.sweepChanges>
+    </target>
+
+    
+    <!-- preflight bump-versions, no real changes -->
+    <target name="try-bump-versions" depends="-load-updater-libs">
+        <updater.updateVersions infoOnly="true">
+            <analyzedFiles name="${autobuild.dir.release-unit}" />
+        </updater.updateVersions>
+    </target>
+    
+    
+    <!-- reset version CHANGES for a release unit, after GA -->
+    <target name="sweep-versions" depends="-load-updater-libs">
+        <updater.sweepChanges>
+            <analyzedFiles name="${autobuild.dir.release-unit}" />
+        </updater.sweepChanges>
+    </target>
+
+    
+    <!-- adjust version numbers to match CHANGES for a release unit (idempotent) -->
+    <target name="bump-versions" depends="-load-updater-libs">
+        <updater.updateVersions>
+            <analyzedFiles name="${autobuild.dir.release-unit}" />
+        </updater.updateVersions>
+    </target>
+    
+    <target name="bump-major" depends="-load-updater-libs"
+            description="bump the major version of the release version">
+        <updater.bumpVersions projectDir="${autobuild.dir.release-unit}" bumpType="1" />
+    </target>
+
+    <target name="bump-minor" depends="-load-updater-libs"
+            description="bump the minor version of the release version">
+        <updater.bumpVersions projectDir="${autobuild.dir.release-unit}" bumpType="2" />
+    </target>
+
+    <target name="bump-sp" depends="-load-updater-libs"
+            description="bump the service pack version of the release version">
+        <updater.bumpVersions projectDir="${autobuild.dir.release-unit}" bumpType="3" />
+    </target>
+
+    <target name="bump-hf" depends="-load-updater-libs"
+            description="bump the hotfix version of the release version">
+        <updater.bumpVersions projectDir="${autobuild.dir.release-unit}" bumpType="4" />
+    </target>
+</project>

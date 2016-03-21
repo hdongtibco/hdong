@@ -1,0 +1,117 @@
+<project name="Single-Feature Builder" default="export-one-feature">
+
+    <!-- TODO: add descriptions of things that should be visible via ant -projecthelp -->
+    <!-- NOTE: however, in general this script is never invoked directly, i think. -->
+
+    <!-- CALL SEQUENCE (target "export-one-feature"):
+         3. _pre-clean
+         4. clean
+         5. invoke the build script generator (creates build.xml for each plugin and feature,
+            and assemble.xml for the whole mess)
+         6. invoke build.xml in the feature folder, targets clean and build.jars
+         7. invoke assemble.xml in the root folder (containing features and plugins)
+            (assemble.xml was created by the build script generator)
+         8. clean
+     -->
+
+    <target name="export-one-feature" depends="-set-obfuscation-level"
+         description="build and export a single Eclipse feature project">
+
+        <mkdir dir="${autobuild.dir.output.logs}"/>
+        <record name="${autobuild.dir.output.logs}/feature-${autobuild.feature-id}.log"
+            action="start" loglevel="${autobuild.loglevel}" />
+
+        <echo message="        ********************************************&#10;
+        BUILDING ${autobuild.feature-id}&#10;
+        Using:&#10; ${autobuild.dir.eclipse.extensions}&#10;
+        ************************************************************"/>
+
+        <available file="${autobuild.dir.release-unit}/features/${autobuild.feature-folder}/build.xml"
+            property="_build_xml_available" type="file" />
+        <antcall target="_pre-clean"/>
+
+        <devtools.buildscripts featureName="${autobuild.feature-id}"
+            eclipseDir="${autobuild.dir.eclipse.install}"
+            extensionLocation="${autobuild.dir.eclipse.extensions}"
+            logLocation="${autobuild.dir.output.logs}"
+            srcDir="${autobuild.dir.release-unit}"
+            destDir="${autobuild.dir.output.release}"
+            debugDestDir="${autobuild.dir.output.debug}"
+            jarDestDir="${autobuild.dir.output.jars.release}"
+            debugJarDestDir="${autobuild.dir.output.jars.debug}"
+            testResultsFolder="${autobuild.dir.output.test-results}"
+            featureType="${autobuild.feature-type}"
+            hasAuxiliaries="${_feature.has-auxiliaries}"
+            javadocLocation="${autobuild.feature-javadoc}"
+            obfuscationLevel="${autobuild.obfuscator.level}"
+            obfuscatorProguard="${autobuild.obfuscator.proguard}"
+/><!--            usenewgenerator="${autobuild.builder.generator.new}"
+        />-->
+
+        <zip destfile="${autobuild.dir.output.logs}/build-${autobuild.feature-id}.zip"
+             basedir="${autobuild.dir.release-unit}"
+             includes="assemble.xml, **/build.xml" />
+
+        <ant antfile="build.xml"
+             dir="${autobuild.dir.release-unit}/features/${autobuild.feature-folder}">
+             <target name="clean"/>
+             <target name="build.jars"/>
+        </ant>
+
+        <ant antfile="assemble.xml" dir="${autobuild.dir.release-unit}" />
+
+        <antcall target="clean"/>
+        <record name="${autobuild.dir.output.logs}/feature-${autobuild.feature-id}.log"
+            action="stop" />
+    </target>
+
+   <!-- horribly complex.  in this order because lax is set by default;
+        check it last to make sure it can be overridden. -->
+    <target name="-set-obfuscation-level">
+        <condition property="autobuild.obfuscator.level" value="full">
+            <and>
+                <not>
+                    <istrue value="${autobuild.obfuscator.lax}" />
+                </not>
+                <not>
+                    <istrue value="${autobuild.obfuscator.none}" />
+                </not>
+            </and>
+        </condition>
+        <condition property="autobuild.obfuscator.level" value="none">
+            <istrue value="${autobuild.obfuscator.none}" />
+        </condition>
+        <property name="autobuild.obfuscator.level" value="lax" />
+        <echo>autobuild.obfuscator.level: ${autobuild.obfuscator.level}</echo>
+    </target>
+
+    <target name="_pre-clean" if="_build_xml_available">
+        <!-- available if past build failed; we don't want 'clean' to fail-->
+        <antcall target="clean">
+            <param name="_clean" value="true" />
+        </antcall>
+    </target>
+
+    <condition property="_clean">
+        <equals arg1="${autobuild.clean}" arg2="-clean"/>
+    </condition>
+
+    <target name="clean" if="_clean">
+        <trycatch property="_clean_errors">
+            <try>
+                <ant antfile="build.xml" target="clean"
+                     dir="${autobuild.dir.release-unit}/features/${autobuild.feature-folder}" />
+                <ant antfile="assemble.xml" target="clean" dir="${autobuild.dir.release-unit}/" />
+                <delete file="${autobuild.dir.release-unit}/features/${autobuild.feature-folder}/build.xml" />
+                <delete file="${autobuild.dir.release-unit}/assemble.xml"/>
+            </try>
+            <catch>
+                <echo>Caught a problem running the "clean" target:</echo>
+                <echo>${_clean_errors}</echo>
+                <echo>Ignoring it.</echo>
+            </catch>
+        </trycatch>
+    </target>
+
+
+</project>

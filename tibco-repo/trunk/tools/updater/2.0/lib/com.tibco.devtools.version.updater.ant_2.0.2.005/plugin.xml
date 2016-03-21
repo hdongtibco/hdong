@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+    <extension point="org.eclipse.ant.core.antTasks">
+          <antTask
+                class="com.tibco.devtools.versionupdater.tasks.SweepChangesTask"
+                library="version-updater-ant.jar"
+                name="updater.sweepChanges"/>
+    </extension>
+    <extension point="org.eclipse.ant.core.antTasks">
+          <antTask
+                class="com.tibco.devtools.versionupdater.tasks.UpdateVersionsTask"
+                library="version-updater-ant.jar"
+                name="updater.updateVersions"/>
+    </extension>
+</plugin>

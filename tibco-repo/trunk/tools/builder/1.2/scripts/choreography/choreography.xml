@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="choreography-core">
+
+    <!-- IMPORTS
+         This section imports the choreography overrides.
+         It should not "pre-import" overrides in autobuild-main, however.
+    -->
+    <!-- default username for various purposes, most importantly developer build qualifiers -->
+    <property name="autobuild.user.name" value="${user.name}"/>
+
+    <!-- per-user-per-project overrides.  not often used. -->
+    <property name="autobuild.user-project.overrides" location="${autobuild.dir.project}/${autobuild.user.name}.xml" />
+    <import file="${autobuild.user-project.overrides}" optional="true" />
+
+    <property name="autobuild.project.overrides" location="${autobuild.dir.project}/build-overrides.xml" />
+    <available file="${autobuild.project.overrides}" property="_project_overrides_exists" type="file" />
+    <fail unless="_project_overrides_exists">
+No choreography configuration information was found.
+The default location for the file is ${autobuild.project.overrides}.
+Please generate (or copy the boilerplate and modify) this file, or set the property
+"autobuild.project.overrides" to identify the file on the ant command line.</fail>
+    <import file="${autobuild.project.overrides}" />
+
+    <!-- WORKSPACE PROPERTIES
+         These properties are needed before the import of the dependencies script,
+         so need to be defined before it is imported.
+    -->
+    <property name="autobuild.dir.scripts.dependencies" location="${autobuild.dir.scripts}/private/dependencies.xml" />
+    <available file="${autobuild.dir.scripts.dependencies}" property="_dependencies_script_located" type="file" />
+    <fail unless="_dependencies_script_located">
+The script which is used to gather dependencies,
+${autobuild.dir.scripts.dependencies}
+does not appear to exist or is not a file.
+Please check your configuration and try again.</fail>
+
+    <import file="${autobuild.dir.scripts.dependencies}" />
+
+    <target name="-load-ant-contrib">
+        <taskdef resource="net/sf/antcontrib/antlib.xml">
+            <classpath>
+                <!-- this path is why we have to have builder installed in eclipse. -->
+                <fileset dir="${autobuild.dir.builder}" includes="ant-contrib-1.0b3.jar"/>
+            </classpath>
+        </taskdef>
+    </target>
+
+    <!-- PROPERTIES
+         This section defines any properties that we really really need.
+    -->
+
+    <target name="-set-time-stamp" unless="touch.time">
+        <tstamp>
+            <!-- a common timezone and not local one! -->
+            <format property="touch.time" pattern="yyyy-MM-dd-HHmm" timezone="GMT"/>
+        </tstamp>
+    </target>
+
+    <target name="-set-choreography-properties" depends="-set-time-stamp">
+        <property name="autobuild.workspace.project.dir" value="${autobuild.dir.project}" />
+
+        <property name="autobuild.dir.project.configuration" location="${autobuild.dir.user}/configurations/${autobuild.repository}/${autobuild.workspace.project}" />
+        <available property="_output_is_configured" file="${autobuild.dir.project.configuration}" type="dir" />
+        <property name="autobuild.workspace.output" location="${autobuild.dir.project.configuration}" />
+
+        <property name="autobuild.loglevel" value="verbose" />
+        <property name="autobuild.workspace.feature-order-output" location="${autobuild.workspace.project.dir}/${autobuild.workspace.project}-feature-list.xml" />
+    </target>
+
+    <!-- PUBLIC TARGETS
+         Visible targets.  Mostly "build".
+    -->
+    <target name="build"
+            depends="-check-properties, -check-configuration, gather-dependencies,
+                     -load-ant-contrib, -parse-choreography"
+            description="Build this choreography, release unit by release unit.">
+        <!-- using ant contrib, again. -->
+        <propertyregex property="_trimmed_list" input="${_release_units_list}"
+                       regexp="(.*), *$" select="\1" />
+        <echo>This choreography will build in the following release unit directories,</echo>
+        <echo>in the order specified:</echo>
+        <echo>${_trimmed_list}</echo>
+        <foreach list="${_trimmed_list}" target="-build-step"
+                 param="release-unit-dir" inheritall="true"
+                 delimiter="," trim="true">
+        </foreach>
+        <!-- and allow for custom post-choreo scripts -->
+        <if>
+            <and>
+                <isset property="autobuild.extension.choreo.script" />
+                <available file="${autobuild.extension.choreo.script}" />
+            </and>
+            <then>
+                <if>
+                    <isset property="autobuild.extension.choreo.target" />
+                    <then>
+                        <ant antfile="${autobuild.extension.choreo.script}"
+                             target="${autobuild.extension.choreo.target}">
+                            <property name="autobuild.extension.overrides" location="${autobuild.project.overrides}" />
+                        </ant>
+                    </then>
+                    <else>
+                        <ant antfile="${autobuild.extension.choreo.script}">
+                            <property name="autobuild.extension.overrides" location="${autobuild.project.overrides}" />
+                        </ant>
+                    </else>
+                </if>
+            </then>
+        </if>
+    </target>
+
+    <target name="usage">
+        <echo>See http://wiki.tibco.com/FrameworksWiki/Componentization/Builder/Choreography</echo>
+    </target>
+
+    <target name="clean"
+            depends="-check-properties, -display-parameters, -load-ant-contrib">
+        <delete file="${autobuild.workspace.feature-order-output}" />
+        <delete dir="${autobuild.workspace.output}" />
+        <!-- TODO: finish this by cleaning *everything*, if possible -->
+        <echo>The clean target is incomplete</echo>
+    </target>
+
+    <!-- PRIVATE TARGETS
+         Uncallably-named targets, used as dependencies by public or
+         by other private targets.
+    -->
+
+    <target name="-display-parameters">
+        <echo>Project: ${autobuild.workspace.project}</echo>
+        <echo>Project directory: ${autobuild.workspace.project.dir}</echo>
+        <echo>Project overrides: ${autobuild.project.overrides}</echo>
+        <echo>Output/Extension site: ${autobuild.workspace.output}</echo>
+        <echo>Feature list: ${autobuild.workspace.feature-order-output}</echo>
+        <echo>Update sites: ${autobuild.workspace.update-sites}</echo>
+        <!--echo>feature search path?  htf do you display that?</echo-->
+        <echo>Extra feature: ${autobuild.workspace.extra-feature}</echo>
+        <!--echo>Excluded features: ugh.  dunno.</echo-->
+    </target>
+
+    <!-- it is important that this have this unintuitive name;
+          it must match the name of a target in autobuild-main.xml
+          (gather-dependencies depends on a target of this name) -->
+    <target name="-check-properties"
+            depends="-set-choreography-properties">
+    </target>
+
+    <target name="-parse-choreography">
+        <!-- read the file, turn it into something we can cope with.
+             _release_units_list, delimited by commas -->
+        <tempfile property="releaseunits.property.temp.file" />
+        <xslt in="${autobuild.workspace.feature-order-output}" out="${releaseunits.property.temp.file}"
+              style="${autobuild.dir.scripts}/choreography/release-units.xsl" />
+        <property file="${releaseunits.property.temp.file}" />
+        <echo level="verbose">Loaded _release_units_list: ${_release_units_list}</echo>
+        <delete file="${releaseunits.property.temp.file}" />
+    </target>
+
+    <target name="-build-step">
+        <!-- this looks way too simple, but it's because we *only*
+             support builder 1.2-compatible release units with this
+             choreography architecture.  build.xml and default target,
+             inheriting properties -->
+        <echo>Release unit dir: ${release-unit-dir}</echo>
+        <ant dir="${release-unit-dir}" inheritall="false">
+            <property name="autobuild.dir.release-unit.configuration"
+                      value="${autobuild.dir.project.configuration}" />
+            <property name="autobuild.dir.eclipse.extensions"
+                      value="${autobuild.workspace.extension}" />
+            <property name="autobuild.dir.output.release"
+                      value="${autobuild.workspace.extension}" />
+            <property name="autobuild.workspace.log"
+                      value="${autobuild.workspace.log}"/>
+            <property name="autobuild.workspace.feature-order-output"
+                      value="${autobuild.workspace.feature-order-output}" />
+            <property name="touch.time"
+                      value="${touch.time}" />
+        </ant>
+        <!-- allow customization with a per-ru script
+             note that this one is called in *choreography* context -->
+        <if>
+            <and>
+                <isset property="autobuild.extension.post-ru.script" />
+                <available file="${autobuild.extension.post-ru.script}" />
+            </and>
+            <then>
+                <if>
+                    <isset property="autobuild.extension.post-ru.target" />
+                    <then>
+                        <ant antfile="${autobuild.extension.post-ru.script}"
+                             target="${autobuild.extension.post-ru.target}">
+                            <property name="autobuild.extension.overrides" location="${release-unit-dir}/build-overrides.xml" />
+                        </ant>
+                    </then>
+                    <else>
+                        <ant antfile="${autobuild.extension.post-ru.script}">
+                            <property name="autobuild.extension.overrides" location="${release-unit-dir}/build-overrides.xml" />
+                        </ant>
+                    </else>
+                </if>
+            </then>
+        </if>
+    </target>
+</project>

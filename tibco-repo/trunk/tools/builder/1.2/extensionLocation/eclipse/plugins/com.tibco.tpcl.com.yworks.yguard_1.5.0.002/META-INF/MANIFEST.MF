@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Bundle-Name: %pluginName
+Bundle-ManifestVersion: 2
+Bundle-Vendor: %providerName
+Bundle-SymbolicName: com.tibco.tpcl.com.yworks.yguard;singleton:=true
+Bundle-Localization: plugin
+Require-Bundle: org.apache.ant;bundle-version="[1.6.5,2.0.0)"
+Bundle-Version: 1.5.0.002
+

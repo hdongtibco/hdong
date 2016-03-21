@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="PROJECT_NAME Overrides">
+
+    <!-- Each choreography should change the project name above and the two
+         property definitions below. -->
+    <property name="autobuild.workspace.project" value="PROJECT_NAME" />
+    <path id="autobuild.workspace.path.search.features">
+        <pathelement path="." /> <!-- default works for many simple choreographies -->
+    </path>
+    <path id="autobuild.workspace.path.search.projects" refid="autobuild.workspace.path.search.features" />
+    <!-- a single "other feature" may be defined:
+         property autobuild.workspace.extra-feature -->
+    <!-- for more complex choreographies, see the wiki page -->
+
+    <!-- The repository name is only used to separate release unit configurations,
+         preventing confusion of thirdparty common with neo common, for instance. -->
+    <property name="autobuild.repository" value="REPOSITORY_NAME" />
+
+    <!-- these two can be used to automatically initiate a post-build processing
+         step, which will be invoked on successful completion of each release unit build. -->
+    <!-- property name="autobuild.extension.post-ru.script" location="SCRIPT_NAME" /-->
+    <!-- property name="autobuild.extension.post-ru.target" value="TARGET_NAME" /-->
+
+    <!-- these two can be used to automatically initiate a post-build processing
+         step, which will be invoked on successful completion of the entire choreography build. -->
+    <!-- property name="autobuild.extension.post-choreo.script" location="SCRIPT_NAME" /-->
+    <!-- property name="autobuild.extension.post-choreo.target" value="TARGET_NAME" /-->
+
+    <!-- for additional information on properties commonly overridden by project choreographies, see:
+         http://wiki.tibco.com/FrameworksWiki/Componentization/Builder -->
+
+</project>

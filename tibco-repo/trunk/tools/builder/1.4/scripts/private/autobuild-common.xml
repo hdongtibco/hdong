@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="builder-common">
+<!-- contains common targets from autobuild-main and choreography. -->
+
+    <available property="_builder_is_identified" file="${autobuild.dir.builder}" type="dir" />
+
+    <target name="-load-ant-contrib">
+        <fail unless="_builder_is_identified">
+The path to builder, ${autobuild.dir.builder}
+does not exist or is not a directory;
+the required ant-contrib library cannot be loaded.</fail>
+        <taskdef resource="net/sf/antcontrib/antlib.xml">
+            <classpath>
+                <fileset dir="${autobuild.dir.builder}" includes="ant-contrib-1.0b3.jar"/>
+            </classpath>
+        </taskdef>
+    </target>
+
+    <target name="-set-timestamp" unless="touch.time">
+        <tstamp>
+            <!-- a common timezone and not local one! -->
+            <format property="touch.time" pattern="yyyy-MM-dd-HHmm" timezone="GMT"/>
+            <format property="display.time" pattern="hh:mm aa d MMMM yyyy"/>
+        </tstamp>
+    </target>
+
+    <target name="-fail-if-insane" unless="target-is-sane">
+        <fail>
+
+The setting for ${_property-name} in
+${autobuild.user.overrides} is:
+${_property-value}
+However, either this directory does not exist, or it does not contain the
+signature directories (features and plugins) that indicate a genuine eclipse
+installation.  Please correct your configuration and try again.</fail>
+    </target>
+
+    <target name="-check-eclipse-version" if="target-is-sane">
+        <!-- there's only one in the set, but we have to get the dirset to do this -->
+        <for param="platform-feature">
+            <dirset id="_eclipse_features" dir="${_property-value}/features">
+                <include name="org.eclipse.platform_*" />
+            </dirset>
+            <sequential>
+                <propertyregex property="_platform_version" override="true" input="@{platform-feature}"
+                               regexp="org.eclipse.platform_(.\..)\..*" select="\1" />
+            </sequential>
+        </for>
+        <condition property="_version_valid">
+            <equals arg1="${_platform_version}" arg2="${target-version}" />
+        </condition>
+        <fail unless="_version_valid">
+
+The property "${_property-name}" in
+${autobuild.user.overrides} is set to:
+${_property-value}
+However, this location does not appear to contain Eclipse ${target-version}.
+It appears to be Eclipse ${_platform_version}.
+This is not a supported configuration.
+Please do one of the following:
+  * install Eclipse ${target-version}.x in ${_property-value} ; or
+  * point "${_property-name}" at an Eclipse ${target-version}.x installation ; or
+  * remove the property "${_property-name}" from user-overrides.
+</fail>
+    </target>
+
+    <target name="-check-3.2" if="autobuild.dir.eclipse">
+        <var name="target-is-sane" unset="true" />
+        <condition property="target-is-sane">
+            <and>
+                <available file="${autobuild.dir.eclipse}" type="dir" />
+                <available file="${autobuild.dir.eclipse}/features" type="dir" />
+                <available file="${autobuild.dir.eclipse}/plugins" type="dir" />
+            </and>
+        </condition>
+        <antcall target="-fail-if-insane">
+            <param name="_property-value" value="${autobuild.dir.eclipse}" />
+            <param name="_property-name" value="autobuild.dir.eclipse" />
+        </antcall>
+        <antcall target="-check-eclipse-version">
+            <param name="_property-value" value="${autobuild.dir.eclipse}" />
+            <param name="_property-name" value="autobuild.dir.eclipse" />
+            <param name="target-version" value="3.2" />
+        </antcall>
+    </target>
+
+    <target name="-check-3.3" if="autobuild.dir.eclipse-3.3">
+        <var name="target-is-sane" unset="true" />
+        <condition property="target-is-sane">
+            <and>
+                <available file="${autobuild.dir.eclipse-3.3}" type="dir" />
+                <available file="${autobuild.dir.eclipse-3.3}/features" type="dir" />
+                <available file="${autobuild.dir.eclipse-3.3}/plugins" type="dir" />
+            </and>
+        </condition>
+        <antcall target="-fail-if-insane">
+            <param name="_property-value" value="${autobuild.dir.eclipse-3.3}" />
+            <param name="_property-name" value="autobuild.dir.eclipse-3.3" />
+        </antcall>
+        <antcall target="-check-eclipse-version">
+            <param name="_property-value" value="${autobuild.dir.eclipse-3.3}" />
+            <param name="_property-name" value="autobuild.dir.eclipse-3.3" />
+            <param name="target-version" value="3.3" />
+        </antcall>
+    </target>
+
+    <target name="-check-3.4" if="autobuild.dir.eclipse-3.4">
+        <var name="target-is-sane" unset="true" />
+        <condition property="target-is-sane">
+            <and>
+                <available file="${autobuild.dir.eclipse-3.4}" type="dir" />
+                <available file="${autobuild.dir.eclipse-3.4}/features" type="dir" />
+                <available file="${autobuild.dir.eclipse-3.4}/plugins" type="dir" />
+            </and>
+        </condition>
+        <antcall target="-fail-if-insane">
+            <param name="_property-value" value="${autobuild.dir.eclipse-3.4}" />
+            <param name="_property-name" value="autobuild.dir.eclipse-3.4" />
+        </antcall>
+        <antcall target="-check-eclipse-version">
+            <param name="_property-value" value="${autobuild.dir.eclipse-3.4}" />
+            <param name="_property-name" value="autobuild.dir.eclipse-3.4" />
+            <param name="target-version" value="3.4" />
+        </antcall>
+    </target>
+
+    <target name="-set-and-spin">
+        <condition property="_spin_host" value="${autobuild.spin.host}"
+            else="spin.tibco.com">
+            <isset property="autobuild.spin.host" />
+        </condition>
+
+        <condition property="_spin_scheme" value="${autobuild.spin.scheme}"
+            else="http">
+            <isset property="autobuild.spin.scheme" />
+        </condition>
+
+        <condition property="_spin_url"
+            value="${_spin_scheme}://${_spin_host}:${autobuild.spin.port}"
+            else="${_spin_scheme}://${_spin_host}">
+            <isset property="autobuild.spin.port" />
+        </condition>
+    </target>
+
+    <target name="-set-eclipse-targets" depends="-set-and-spin">
+        <!-- if we get a set of consistently-named eclipse update sites, each
+             ending in a version number, then we can remove these property
+             definitions, and use the alternative (commented out) bits that
+             set the eclipse update site URL below -->
+        <property name="autobuild.url.update-site.eclipse-3.2"
+                  value="${_spin_url}/eclipse-3.2/thirdparty" />
+        <property name="autobuild.url.update-site.eclipse-3.3"
+                  value="${_spin_url}/eclipse-3.3/thirdparty" />
+        <property name="autobuild.url.update-site.eclipse-3.4"
+                  value="${_spin_url}/eclipse-3.4/thirdparty" />
+        <!-- first, set the target, using the old autobuild.version.eclipse. -->
+        <if>
+            <isset property="autobuild.version.eclipse" />
+            <then>
+                <if> <!-- some damfool explicitly specifies 3.2 -->
+                    <equals arg1="${autobuild.version.eclipse}" arg2="3.2" />
+                    <then>
+                        <fail unless="autobuild.dir.eclipse">
+
+The eclipse target version is set to 3.2, but the corresponding property,
+autobuild.dir.eclipse, has not been set in
+${autobuild.user.overrides}.</fail>
+                        <propertycopy property="autobuild.dir.eclipse.target" from="autobuild.dir.eclipse" />
+                        <property name="autobuild.dir.target.property.name" value="autobuild.dir.eclipse" />
+                        <property name="autobuild.url.update-site.eclipse" value="${autobuild.url.update-site.eclipse-3.2}" />
+                    </then>
+                    <else> <!-- normal case: specifying 3.3+ -->
+                        <!-- oh ... *joy*  we can't fail with a reasonable message!
+                             we can't "unless" our way around the propertycopy. -->
+                        <propertycopy property="autobuild.dir.eclipse.target" from="autobuild.dir.eclipse-${autobuild.version.eclipse}" silent="true" />
+                        <property name="autobuild.dir.target.property.name" value="autobuild.dir.eclipse-${autobuild.version.eclipse}" />
+                        <fail unless="autobuild.dir.eclipse.target">
+
+The eclipse target version is set to ${autobuild.version.eclipse}, but the corresponding property,
+${autobuild.dir.target.property.name}, has not been set in
+${autobuild.user.overrides}.</fail>
+                        <propertycopy property="autobuild.url.update-site.eclipse" from="autobuild.url.update-site.eclipse-${autobuild.version.eclipse}" />
+                        <!-- since we now *know* that this isn't 3.2, we can set the value of eclipse-host to
+                             3.3, which will keep us going until the next version of Eclipse appears&mdash;or someone
+                             decides they want some other damned idiocy implemented. -->
+                        <property name="autobuild.version.eclipse-host" value="3.3" />
+                    </else>
+                </if>
+            </then>
+            <else>
+                <fail unless="autobuild.dir.eclipse">
+
+The eclipse target version is set to 3.2, but the corresponding property,
+autobuild.dir.eclipse, has not been set in
+${autobuild.user.overrides}.</fail>
+                <propertycopy property="autobuild.dir.eclipse.target" from="autobuild.dir.eclipse" />
+                <property name="autobuild.dir.target.property.name" value="autobuild.dir.eclipse" />
+                <property name="autobuild.url.update-site.eclipse" value="${autobuild.url.update-site.eclipse-3.2}" />
+            </else>
+        </if>
+        <if>
+            <isset property="autobuild.version.eclipse-host" />
+            <then>
+                <if>
+                    <equals arg1="${autobuild.version.eclipse-host}" arg2="3.2" />
+                    <then>
+                        <fail unless="autobuild.dir.eclipse">
+
+The eclipse host version is set to 3.2, but the corresponding property,
+autobuild.dir.eclipse, has not been set in
+${autobuild.user.overrides}.</fail>
+                        <propertycopy property="autobuild.dir.eclipse.install" from="autobuild.dir.eclipse" />
+                        <property name="autobuild.dir.eclipse.property.name" value="autobuild.dir.eclipse" />
+                    </then>
+                    <else>
+                        <!-- could set host to 3.4, but if it does, we'll fail later -->
+                        <propertycopy property="autobuild.dir.eclipse.install" from="autobuild.dir.eclipse-${autobuild.version.eclipse-host}" silent="true" />
+                        <property name="autobuild.dir.eclipse.property.name" value="autobuild.dir.eclipse-${autobuild.version.eclipse-host}" />
+                        <fail unless="autobuild.dir.eclipse.install">
+
+The eclipse host version is set to ${autobuild.version.eclipse-host}, but the corresponding property,
+${autobuild.dir.eclipse.property.name}, has not been set in
+${autobuild.user.overrides}.</fail>
+                    </else>
+                </if>
+            </then>
+            <else>
+                <fail unless="autobuild.dir.eclipse">
+
+The eclipse host version is set to 3.2, but the corresponding property,
+autobuild.dir.eclipse, has not been set in
+${autobuild.user.overrides}.</fail>
+                <propertycopy property="autobuild.dir.eclipse.install" from="autobuild.dir.eclipse" />
+                <property name="autobuild.dir.eclipse.property.name" value="autobuild.dir.eclipse" />
+            </else>
+        </if>
+    </target>
+
+    <target name="-check-eclipse"
+            depends="-load-ant-contrib, -check-3.2, -check-3.3, -check-3.4, -set-eclipse-targets">
+        <condition property="_host_34">
+            <equals arg1="${autobuild.version.eclipse-host}" arg2="3.4" />
+        </condition>
+        <fail if="_host_34">
+
+The host for antrunner has been set to Eclipse 3.4.  Please set the value of the
+property "autobuild.version.eclipse-host" to 3.2 or 3.3 in build-overrides.xml.
+Builder cannot use Eclipse 3.4 as an antrunner host (even when Eclipse 3.4 is
+the target version to compile against).</fail>
+    </target>
+
+    <target name="-set-startup-property">
+        <!-- use default property name autobuild.dir.eclipse.startup -->
+        <eclipse.startup eclipseLocation="${autobuild.dir.eclipse.install}" />
+        <!-- temporary -->
+        <echo level="verbose">Eclipse startup jar: ${autobuild.dir.eclipse.startup}</echo>
+    </target>
+
+</project>

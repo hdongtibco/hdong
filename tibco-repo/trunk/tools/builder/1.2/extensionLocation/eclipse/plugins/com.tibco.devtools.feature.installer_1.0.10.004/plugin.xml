@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+
+   <extension
+         id="featureClosureInstall"
+         point="org.eclipse.core.runtime.applications">
+      <application>
+         <run
+               class="com.tibco.devtools.feature.installer.InstallRequiredFeaturesApplication">
+         </run>
+      </application>
+   </extension>
+
+</plugin>

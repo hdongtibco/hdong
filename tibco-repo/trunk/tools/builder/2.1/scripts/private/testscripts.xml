@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<project name="qa-testscripts" default="-testscripts">
+    <target name="-testscripts">
+        <devtools.testscripts
+            featureName="${feature}.test"
+            featureType="test"
+            eclipseDir="${autobuild.dir.eclipse.target}"
+            extensionLocation="${autobuild.dir.eclipse.extensions}"
+            localUpdateSiteLocation="${autobuild.workspace.update-sites.local}"
+            srcDir="${autobuild.dir.release-unit}"
+            destDir="${autobuild.dir.output.release}"
+            debugDestDir="${autobuild.dir.output.debug}"
+            jarDestDir="${autobuild.dir.output.jars.release}"
+            debugJarDestDir="${autobuild.dir.output.jars.debug}"
+            testResultsFolder="${autobuild.dir.output.test-results}"
+            logLocation="${autobuild.dir.output.logs}"
+            logLevel="${autobuild.loglevel}"
+            obfuscationStyle="none"
+            buildTimestamp="${touch.time}"
+            allowBinaryCycles="${allow.binary.cycles}"
+        />
+    </target>
+</project>

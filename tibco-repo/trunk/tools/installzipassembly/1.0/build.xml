@@ -1,0 +1,61 @@
+<project name="common" basedir=".">
+  <property environment="env" />
+  <property name="SVN_ROOT" value="http://svn.tibco.com"/>
+  <property name="ASSEMBLY_ARCHIVE" value="/tsi/pkg/assembly_archive" />
+  
+  <target name="zip-dist-assembly-contents" depends="setzipfilenamedist,zip-new-assembly" />
+  <target name="zip-assembly-contents" depends="setzipfilename,zip-new-assembly" />
+
+  <target name="setzipfilenamedist" >
+    <property name="zipfilename" value="${ASSEMBLY_ID}_${env.VERSION_MAJOR}.${env.VERSION_MINOR}.${env.VERSION_MAINT}.${env.VERSION_UPDATE}_${dist_platform}.zip" />
+  </target>
+  <target name="setzipfilename" >
+    <property name="zipfilename" value="${ASSEMBLY_ID}_${env.VERSION_MAJOR}.${env.VERSION_MINOR}.${env.VERSION_MAINT}.${env.VERSION_UPDATE}.zip" />
+    <property name="dist_platform" value="" />
+  </target>
+  <target name="zip-new-assembly" depends="zipfile">
+    <echo>Archiving assembly...</echo>
+    <zip destfile="${ZIPFILE_ASSEMBLY_ARCHIVE}/${zipfilename}"
+      basedir="${ZIPFILE_ASSEMBLY_GALLERY}"
+      whenempty="fail"
+      includes="*/**"/>
+    <echo>Checking if ${ZIPFILE_ASSEMBLY_ARCHIVE}/${zipfilename} exists...</echo>
+  </target>
+
+  <target name="zipfile">
+    <tstamp>
+      <format property="touch.time" pattern="MM-dd-yyyy-hh-mm-aa"/>
+    </tstamp>
+    <property name="buildType" value="formal" />
+    <property name="ZIPFILE_ASSEMBLY_GALLERY" value="${env.TSI_ROOT}/tibco/new_assembly_gallery/staging/${PROJECT_ID}/${env.VERSION_MAJOR}.${env.VERSION_MINOR}.${env.VERSION_MAINT}.${env.VERSION_UPDATE}/${dist_platform}" />
+    <delete dir="${ZIPFILE_ASSEMBLY_GALLERY}" />
+    <mkdir dir="${ZIPFILE_ASSEMBLY_GALLERY}"/>
+    <property name="ZIPFILE_ASSEMBLY_ARCHIVE" value="/tsi/pkg/new_assembly_archive" />
+    <mkdir dir="${ZIPFILE_ASSEMBLY_ARCHIVE}"/>
+    <property name="registryFileName" value="registry_file.xml" />
+    <property name="prod_registry_info" value="" />
+    <echo>"Calling to zip the file"...</echo>
+    <java classname="com.tibco.installer.util.AssemblyZipFile" fork="true" failonerror="true">
+      <arg  value="${env.EXPORT_DIR}" />
+      <arg  value="${PROJECT_ID}"/>
+      <arg  value="${env.PORT}"/>
+      <arg  value="${env.VERSION_MAJOR}.${env.VERSION_MINOR}.${env.VERSION_MAINT}.${env.VERSION_UPDATE}"/>
+      <arg  value="${ASSEMBLY_ID}"/>
+      <arg  value="${registryFileName}"/>
+      <arg  value="${buildType}"/>
+      <arg  value="${touch.time}"/>
+      <arg  value="${prod_registry_info}"/>
+      <classpath>
+        <pathelement path="."/>
+        <pathelement location="${autobuild.dir.installzipassembly.root}/lib/TIBCOBuildInfo.jar"/>
+        <pathelement location="${autobuild.dir.installzipassembly.root}/lib/TIBCOInstallXMLParser.jar"/>
+      </classpath>
+    </java>
+    <!-- TODO: Let us copy the registry_file.xml into ZIPFILE_ASSEMBLY_GALLERY -->
+    <copy file="${registryFileName}" toDir="${ZIPFILE_ASSEMBLY_GALLERY}"/>
+    <!-- TODO: copy the contents of EXPORT_DIR into the ZIPFILE_ASSEMBLY_GALLER -->
+    <copy todir="${ZIPFILE_ASSEMBLY_GALLERY}/source">
+      <fileset dir="${env.EXPORT_DIR}"/>
+    </copy>
+  </target>
+</project>

@@ -1,0 +1,25 @@
+Manifest-Version: 1.0
+Bundle-Name: Apache Jakarta Log4j Logging Library
+Bundle-ClassPath: log4j-1.2.13.jar
+Import-Package: javax.jms;version="[1.1.0,2.0.0)";resolution:=optional
+ ,javax.mail;version="[1.3.0,2.0.0)";resolution:=optional,javax.mail.i
+ nternet;version="[1.3.0,2.0.0)";resolution:=optional
+Bundle-Vendor: The Apache Software Foundation
+Bundle-ManifestVersion: 2
+Bundle-Localization: plugin
+Bundle-SymbolicName: com.tibco.tpcl.org.apache.log4j
+Export-Package: org.apache.log4j;version="1.2.13",org.apache.log4j.cha
+ insaw;version="1.2.13",org.apache.log4j.config;version="1.2.13",org.a
+ pache.log4j.helpers;version="1.2.13",org.apache.log4j.jdbc;version="1
+ .2.13",org.apache.log4j.jmx;version="1.2.13",org.apache.log4j.lf5;ver
+ sion="1.2.13",org.apache.log4j.lf5.util;version="1.2.13",org.apache.l
+ og4j.lf5.viewer;version="1.2.13",org.apache.log4j.lf5.viewer.category
+ explorer;version="1.2.13",org.apache.log4j.lf5.viewer.configure;versi
+ on="1.2.13",org.apache.log4j.net;version="1.2.13",org.apache.log4j.nt
+ ;version="1.2.13",org.apache.log4j.or;version="1.2.13",org.apache.log
+ 4j.or.jms;version="1.2.13",org.apache.log4j.or.sax;version="1.2.13",o
+ rg.apache.log4j.spi;version="1.2.13",org.apache.log4j.varia;version="
+ 1.2.13",org.apache.log4j.xml;version="1.2.13"
+Bundle-Version: 1.2.13.010
+DynamicImport-Package: *
+

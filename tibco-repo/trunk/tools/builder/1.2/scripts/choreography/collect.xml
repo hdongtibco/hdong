@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="gather-choreography" default="gather-release-unit">
+
+    <!-- set the value of this property before calling, and call in the context of
+         a choreography, or results are *undefined*.  Note: "undefined" means "not what you want."
+         the property identifies the release unit's build-overrides. -->
+    <available file="${autobuild.extension.overrides}" property="_extension_overrides_available" />
+    <fail unless="_extension_overrides_available">
+The file ${autobuild.extension.overrides} does not exist.
+This should be the release units override for this release unit.
+Since we don't know what release unit to work with, we can't continue.
+</fail>
+    <import file="${autobuild.extension.overrides}" />
+
+    <target name="gather-release-unit"
+            description="Gather the output of one release unit into the choreography update site"
+            depends="-set-gather-properties, -make-directories, -copy-release-unit, -update-sites">
+    </target>
+
+    <target name="report-choreography-location"
+            description="Reports the location of the choreography on completion."
+            depends="-set-gather-properties">
+        <echo>-+-+-+-+-+-+-+-+-+- -+-+-+-+-+-+-+-+-+- -+-+-+-+-+-+-+-+-+-</echo>
+        <echo>Choregraphy release update site:</echo>
+        <echo>${choreo-dest}/release</echo>
+        <echo />
+        <echo>Choreography debug update site:</echo>
+        <echo>${choreo-dest}/debug</echo>
+        <echo>-+-+-+-+-+-+-+-+-+- -+-+-+-+-+-+-+-+-+- -+-+-+-+-+-+-+-+-+-</echo>
+    </target>
+
+    <target name="-set-gather-properties">
+        <property name="ru-source" location="${autobuild.dir.candidates}/${autobuild.repository}/${release-unit}/${touch.time}.${autobuild.user.name}/jar" />
+        <!-- could also leave out "repository" ? -->
+        <property name="choreo-dest" location="${autobuild.dir.candidates}/${autobuild.repository}/${autobuild.workspace.project}/${touch.time}.${autobuild.user.name}/jar" />
+    </target>
+
+    <target name="-make-directories">
+        <!-- might be unnecessary; test and remove either target or comment -->
+        <mkdir dir="${choreo-dest}/release/features" />
+        <mkdir dir="${choreo-dest}/release/plugins" />
+        <mkdir dir="${choreo-dest}/debug/features" />
+        <mkdir dir="${choreo-dest}/debug/plugins" />
+    </target>
+
+    <target name="-copy-release-unit">
+        <!--copy todir="${choreo-dest}/release/features" dir="${ru-source}/release/features" />
+        <copy todir="${choreo-dest}/release/plugins" dir="${ru-source}/release/plugins" />
+        <copy todir="${choreo-dest}/debug/features" dir="${ru-source}/debug/features" />
+        <copy todir="${choreo-dest}/debug/plugins" dir="${ru-source}/debug/plugins" /-->
+        <copy todir="${choreo-dest}/release">
+            <fileset dir="${ru-source}/release" />
+        </copy>
+        <copy todir="${choreo-dest}/debug">
+            <fileset dir="${ru-source}/debug" />
+        </copy>
+    </target>
+
+    <target name="-update-sites">
+        <taskdef name="update.site.creator"
+                 classname="com.tibco.devtools.workspace.installer.tasks.UpdateSiteCreatorTask"
+                 classpath="${autobuild.dir.workspace.installer}" />
+        <update.site.creator
+            sitedirectory="${choreo-dest}/release" />
+        <update.site.creator
+            sitedirectory="${choreo-dest}/debug" />
+    </target>
+
+
+</project>

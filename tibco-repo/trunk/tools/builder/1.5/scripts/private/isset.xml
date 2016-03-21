@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- $HeadURL: http://svn.tibco.com/release/trunk/builder/scripts/isset.xml $ -->
+<!-- $Revision: 166510 $ -->
+<!-- $Date: 2013-06-24 15:51:08 -0700 (Mon, 24 Jun 2013) $ -->
+
+<!-- Copyright(c) 2012-2013 TIBCO Software Inc. All rights reserved. -->
+
+<project name="isset" default="dual.build.enable" basedir=".">
+
+		<import file="${basedir}/build.xml" optional="true" />
+		<target name="showprop" depends="-print.basedir, dual.build.enable, autobuild.p2.packaging, autobuild.boilerplate.version, autobuild.svn.tagsURL, javacSource, autobuild.jdk.force-15, autobuild.jdk.force-16, autobuild.jdk.force-17, autobuild.dir.java-classes, autobuild.dir.java15-classes, autobuild.dir.java16-classes, autobuild.dir.java17-classes" if="official-release-build">
+		</target>
+
+		<target name="-print.basedir" depends="-load-ant-contrib" if="official-release-build">
+			<echo message="basedir = [${basedir}]" />
+		</target>
+
+        <target name="dual.build.enable" if="official-release-build">
+
+		<echo />
+		<echo message="Checking if dual.build.enable is set" />
+		<echo />
+
+                <if>
+                <isset property="dual.build.enable" />
+                <then>
+                        <echo message="dual.build.enable = [${dual.build.enable}]" />
+                </then>
+                <else>
+                        <echo message="dual.build.enable = [UNDEFINED]" />
+                </else>
+                </if>
+
+        </target>
+
+        <target name="autobuild.p2.packaging" if="official-release-build">
+
+		<echo />
+		<echo message="Checking if autobuild.p2.packaging is set" />
+		<echo />
+
+                <if>
+                <isset property="autobuild.p2.packaging" />
+                <then>
+                        <echo message="autobuild.p2.packaging = [${autobuild.p2.packaging}]" />
+                </then>
+                <else>
+                        <echo message="autobuild.p2.packaging = [UNDEFINED]" />
+                </else>
+                </if>
+
+        </target>
+
+        <target name="autobuild.boilerplate.version" if="official-release-build">
+
+		<echo />
+		<echo message="Checking if autobuild.boilerplate.version is set" />
+		<echo />
+
+                <if>
+                <isset property="autobuild.boilerplate.version" />
+                <then>
+                        <echo message="autobuild.boilerplate.version = [${autobuild.boilerplate.version}]" />
+                </then>
+                <else>
+                        <echo message="autobuild.boilerplate.version = [UNDEFINED]" />
+                </else>
+                </if>
+
+        </target>
+
+        <target name="autobuild.svn.tagsURL" if="official-release-build">
+
+		<echo />
+		<echo message="Checking if autobuild.svn.tagsURL is set" />
+		<echo />
+
+                <if>
+                <isset property="autobuild.svn.tagsURL" />
+                <then>
+                        <echo message="autobuild.svn.tagsURL = [${autobuild.svn.tagsURL}]" />
+                </then>
+                <else>
+                        <echo message="autobuild.svn.tagsURL = [UNDEFINED]" />
+                </else>
+                </if>
+
+        </target>
+
+        <target name="javacSource" if="official-release-build">
+
+		<echo />
+		<echo message="Checking if javacSource is set" />
+		<echo />
+
+                <if>
+                <isset property="javacSource" />
+                <then>
+                        <echo message="javacSource = [${javacSource}]" />
+                </then>
+                <else>
+                        <echo message="javacSource = [UNDEFINED]" />
+                </else>
+                </if>
+
+        </target>
+
+        <target name="autobuild.jdk.force-15" if="official-release-build">
+
+		<echo />
+		<echo message="Checking if autobuild.jdk.force-15 is set" />
+		<echo />
+
+                <if>
+                <isset property="autobuild.jdk.force-15" />
+                <then>
+                        <echo message="autobuild.jdk.force-15 = [${autobuild.jdk.force-15}]" />
+                </then>
+                <else>
+                        <echo message="autobuild.jdk.force-15 = [UNDEFINED]" />
+                </else>
+                </if>
+
+        </target>
+
+        <target name="autobuild.jdk.force-16" if="official-release-build">
+
+		<echo />
+		<echo message="Checking if autobuild.jdk.force-16 is set" />
+		<echo />
+
+                <if>
+                <isset property="autobuild.jdk.force-16" />
+                <then>
+                        <echo message="autobuild.jdk.force-16 = [${autobuild.jdk.force-16}]" />
+                </then>
+                <else>
+                        <echo message="autobuild.jdk.force-16 = [UNDEFINED]" />
+                </else>
+                </if>
+
+        </target>
+
+        <target name="autobuild.jdk.force-17" if="official-release-build">
+
+		<echo />
+		<echo message="Checking if autobuild.jdk.force-17 is set" />
+		<echo />
+
+                <if>
+                <isset property="autobuild.jdk.force-17" />
+                <then>
+                        <echo message="autobuild.jdk.force-17 = [${autobuild.jdk.force-17}]" />
+                </then>
+                <else>
+                        <echo message="autobuild.jdk.force-17 = [UNDEFINED]" />
+                </else>
+                </if>
+
+        </target>
+
+        <target name="autobuild.dir.java-classes" if="official-release-build">
+
+		<echo />
+		<echo message="Checking if autobuild.dir.java-classes is set" />
+		<echo />
+
+                <if>
+                <isset property="autobuild.dir.java-classes" />
+                <then>
+                        <echo message="autobuild.dir.java-classes = [${autobuild.dir.java-classes}]" />
+                </then>
+                <else>
+                        <echo message="autobuild.dir.java-classes = [UNDEFINED]" />
+                </else>
+                </if>
+
+        </target>
+
+        <target name="autobuild.dir.java15-classes" if="official-release-build">
+
+		<echo />
+		<echo message="Checking if autobuild.dir.java15-classes is set" />
+		<echo />
+
+                <if>
+                <isset property="autobuild.dir.java15-classes" />
+                <then>
+                        <echo message="autobuild.dir.java15-classes = [${autobuild.dir.java15-classes}]" />
+                </then>
+                <else>
+                        <echo message="autobuild.dir.java15-classes = [UNDEFINED]" />
+                </else>
+                </if>
+
+        </target>
+
+        <target name="autobuild.dir.java16-classes" if="official-release-build">
+
+		<echo />
+		<echo message="Checking if autobuild.dir.java16-classes is set" />
+		<echo />
+
+                <if>
+                <isset property="autobuild.dir.java16-classes" />
+                <then>
+                        <echo message="autobuild.dir.java16-classes = [${autobuild.dir.java16-classes}]" />
+                </then>
+                <else>
+                        <echo message="autobuild.dir.java16-classes = [UNDEFINED]" />
+                </else>
+                </if>
+
+        </target>
+
+        <target name="autobuild.dir.java17-classes" if="official-release-build">
+
+		<echo />
+		<echo message="Checking if autobuild.dir.java17-classes is set" />
+		<echo />
+
+                <if>
+                <isset property="autobuild.dir.java17-classes" />
+                <then>
+                        <echo message="autobuild.dir.java17-classes = [${autobuild.dir.java17-classes}]" />
+                </then>
+                <else>
+                        <echo message="autobuild.dir.java17-classes = [UNDEFINED]" />
+                </else>
+                </if>
+
+        </target>
+
+</project>
