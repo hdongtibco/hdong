@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xform xmlns="http://www.w3.org/2002/xforms">
+    <link rel="StyleSheet" type="text/css" href="default.css"/>
+
+    <preaction>
+		<action className="com.tibco.tct.admin.SetFactoryCheckBoxAction" />
+	    <action id="factoryaction" className="com.tibco.tct.amx.actions.ConnectionFactoryVisibleAction" optionControlId="factorycontrol" controlId="connectionfactorygroup" />
+	</preaction>
+
+    <body ref="/admin">
+     	<group ref="factoryconfig" style="layout: grid; layout-cols: 2; align: fill; hgrab: true;">
+     		<trigger id="factorycontrol" class="checkbox" ref="enablenewfactory">
+	        	<label>Select New Connection Factory.</label>
+	        	<action refid="factoryaction" event="click"  />
+	   	 	</trigger>
+	    	<group id="connectionfactorygroup" style="layout: grid; layout-cols: 2; align: fill; hgrab: true; disable: true;">
+	    		<select1 id="connectFactoryName" appearance="minimal" ref="/admin/factoryconfig/connectfactoryname">
+                	<label>Connection Factory Name:</label>
+					<validator className="com.tibco.tct.admin.ConnectFactoryValidator"/>
+            	</select1>
+	    	</group>
+		</group>
+    </body>
+</xform>
