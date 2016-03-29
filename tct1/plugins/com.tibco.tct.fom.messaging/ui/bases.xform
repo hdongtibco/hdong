@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xform xmlns="http://www.w3.org/2002/xforms">
+	<link rel="StyleSheet" type="text/css" href="default.css"/>
+	
+	<preaction>
+		
+	</preaction>
+	
+	<postaction>
+		
+    </postaction>
+	
+	<body ref="fom">
+		<group ref="messaging" style="layout: grid; layout-cols: 3; align: fill; hgrab: true;">
+			<input id="emshome" ref="emshome" class="filechooser" >
+				<label>EMS Home:</label>
+				<validator className="com.tibco.tct.fom.messaging.EMSHomeValidator" />
+			</input>
+		</group>
+	</body>
+</xform>

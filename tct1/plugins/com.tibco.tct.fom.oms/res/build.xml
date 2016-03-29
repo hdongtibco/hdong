@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="tct-oms" default="end-to-end">
+	<dirname property="tct.scripts.dir" file="${ant.file.tct-oms}"/>
+	<property name="tct.templates.dir" value="${tct.scripts.dir}/templates"/>
+	<property file="build.properties"/>
+
+	<import file="${tct.templates.dir}/tct-tools.xml"/>
+	
+	<target name="end-to-end" depends="-init, config-oms, -clean-up"/>
+	
+	<target name="config-oms" depends="-init">
+		<taskdef name="updateConfig" classname="com.tibco.tct.fom.oms.UpdateOMSConfigFile">
+			<classpath>
+				<fileset dir="${plugins.home}" includes="com.tibco.tct.fom.oms_*/*.jar"/>
+				<fileset dir="${plugins.home}" includes="com.tibco.tct.fom.database_*/*.jar"/>
+			</classpath>
+		</taskdef>
+		<updateConfig />
+	</target>
+</project>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fom>
+	<EnvConfiguration>
+		<pluginhome>${tibco.home}/tct/components/shared/1.0.0/plugins</pluginhome>
+		<enableocv>false</enableocv>
+		<domain>domain name</domain>
+		<adminhawk>localhost</adminhawk>
+		<rvdaemon>tcp://localhost:7500</rvdaemon>
+		<hawkdaemon>tcp://localhost:7474</hawkdaemon>
+		<trahome>${tibco.home}/tra/5.7/bin</trahome>
+		<!--<host>localhost</host>-->
+		<user>admin</user>
+		<password>ENC(T9aNk07NMsU=)</password>
+	</EnvConfiguration>
+	<CommonConfiguration>
+		<tibcofomhome>${tibco.home}/af/3.0</tibcofomhome>
+	</CommonConfiguration>
+</fom>

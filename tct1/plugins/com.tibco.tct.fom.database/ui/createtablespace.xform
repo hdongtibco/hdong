@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xform xmlns="http://www.w3.org/2002/xforms">
+    <link rel="StyleSheet" type="text/css" href="default.css"/>
+
+	<preaction>
+		<reset/>
+		<action id="usedefaultaction" className="com.tibco.tct.fom.database.DatabaseVisibleAction" optionControlId="useDefaultControl" controlId="createtablespace"/>
+	</preaction>
+
+    <body ref="/fom">
+    	<group ref="databaseConfig/createtablespace" style="layout: grid; layout-cols: 1; align: fill; hgrab: true;">
+            <trigger id="useDefaultControl" class="checkbox" ref="createtablespaceenable">
+				<label>Create TableSpace</label>
+					<action refid="usedefaultaction" event="click" />
+	   		</trigger>
+		</group>
+    <group id="createtablespace" ref="databaseConfig" style="layout: grid; layout-cols: 1; align: fill; hgrab: true;  disable: true;">
+     	<group ref="createtablespace" style="layout: grid; layout-cols: 2; align: fill; hgrab: true;">
+	    	<input id="tablespacename" ref="tablespacename">
+				<label>Tablespace Name:</label>
+				<validator validation="nonempty" />
+				<validator className="com.tibco.tct.fom.database.SpaceNameValidator" />
+				<validator className="com.tibco.tct.fom.common.IllegalCharValidator" />
+	    	</input>
+	    	<input id="tablespaceminsize" ref="tablespaceminsize">
+				<label>Tablespace Min Size (MB):</label>
+				<validator className="com.tibco.tct.fom.database.MinValueValidator" />
+	    	</input>
+	    	<input id="tablespacemaxsize" ref="tablespacemaxsize">
+				<label>Tablespace Max Size (MB):</label>
+				<validator className="com.tibco.tct.fom.database.MaxBigThanMinValidator" />
+	    	</input>
+	   </group>
+<output style="color: #FF0000">[Note:Please make sure that the 'Tablespace Location Folder' you inputted exists in the database server.]</output>
+	   <group ref="createtablespace" style="layout: grid; layout-cols: 3; align: fill; hgrab: true;">
+	    	<input id="tablespacelocation" ref="tablespacelocation" class="filechooser">
+				<label>Tablespace Location Folder:</label>
+				<validator validation="nonempty" />
+			</input>
+			<input id="tablespacedbfilename" ref="tablespacedbfilename">
+				<label>Tablespace db File Name:</label>
+				<validator validation="nonempty" />
+				<validator className="com.tibco.tct.fom.common.IllegalCharValidator" />
+			</input>
+		</group>
+	</group>
+    </body>
+</xform>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wizard productName="FOM" productVersion="3.0" TCTVersion="1.4" sequence="2300" width="900" height="500" title="Configure FOM Messaging" description="This wizard will help configure FOM Messaging" icon="ui/icons/menu.png">
+	<parent id="com.tibco.tct.fom.database" needParentProperty="false"/>   
+	<datamodel file="data.xml" />
+
+    <classloaderfactory className="com.tibco.customwizard.internal.support.URLClassLoaderFactory">
+    	<file path="tct-fom-message.jar" />
+        <file dir="${tibco.home}/tools/lib" pattern=".*\.jar" />
+	</classloaderfactory>
+	
+	 <postaction>
+		<action className="com.tibco.tct.framework.actions.CLIAction" logFileName="config.fom.messaging.log" description="FOM Messaging Setup" />
+	</postaction>
+	
+	<pagegroup id="fom">
+		<page id="welcome" title="TIBCO Fulfillment Order Management Messaging Configuration Wizard" description="Welcome to the TIBCO Fulfillment Order Management Messaging Configuration Wizard." referenceFile="ui/welcome.xform" />
+		<page id="bases" title="Fulfillment Order Management Messaging Configuration: EMS Home" description="Please enter configuration details for the Fulfillment Order Management Messaging" referenceFile="ui/bases.xform" />
+		<page id="message" title="Fulfillment Order Management Messaging Configuration: Notification and Messaging Bus Server" description="Please enter configuration details of the TIBCO Enterprise Message Service server&#x0a;that will be used by the Fulfillment Order Management server to deliver notifications and messages." referenceFile="ui/message.xform" />
+		<page id="summary" title="Fulfillment Order Management Messaging Configuration: summary" description="Please review the Fulfillment Order Management Messaging configuration summary and click Configure to execute." referenceFile="ui/summary.xform" />
+	</pagegroup>
+	
+</wizard>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wizard productName="FOM" productVersion="3.0" TCTVersion="1.4" sequence="2400" width="900" height="500" title="Configure FOM Database" description="This wizard will help configure FOM Database" icon="ui/icons/menu.png">
+    <datamodel file="data.xml" />
+
+    <classloaderfactory className="com.tibco.customwizard.internal.support.URLClassLoaderFactory">
+    	<file path="tct-fom-database.jar" />
+        <file dir="${tibco.home}/tools/lib" pattern=".*\.jar" />
+        <file path="commons-codec-1.4.jar" />
+	</classloaderfactory>
+	<postaction>
+		<action className="com.tibco.tct.framework.actions.CLIAction" logFileName="config.fom.database.log" description="Config FOM Database" />
+	</postaction>
+	<pagegroup id="fom">
+		<page id="welcome" title="TIBCO Fulfillment Order Management Database Configuration Wizard" description="Welcome to the TIBCO Fulfillment Order Management Database Configuration Wizard." referenceFile="ui/welcome.xform" />
+		<page id="database" title="Fulfillment Order Management Database Configuration: Database Details" description="Please enter configuration details for the Fulfillment Order Management database." referenceFile="ui/database.xform" />
+		<page id="createtablespace" title="Fulfillment Order Management Database Configuration: Create TableSpace" description="Please enter configuration details for the Fulfillment Order Management database." referenceFile="ui/createtablespace.xform" />
+		<page id="createuser" title="Fulfillment Order Management Database Configuration: Create DB User" description="Please enter configuration details for the Fulfillment Order Management database." referenceFile="ui/createuser.xform" />
+		<page id="summary" title="Fulfillment Order Management Database Configuration: summary" description="Please review the Fulfillment Order Management Database Configuration summary and click Configure to execute." referenceFile="ui/summary.xform" />
+	</pagegroup>
+	
+</wizard>

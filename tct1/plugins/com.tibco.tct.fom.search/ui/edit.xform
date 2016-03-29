@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xform xmlns="http://www.w3.org/2002/xforms">
+	<link rel="StyleSheet" type="text/css" href="default.css"/>
+	
+	<preaction>
+		<action className="com.tibco.tct.fom.search.SearchKeyAction" />
+	</preaction>
+	
+	<postaction>
+		<action className="com.tibco.tct.fom.search.SaveTableValueAction" />
+	</postaction>
+	
+	<body ref="/fom">
+		<group ref="search" style="layout: grid; layout-cols: 1; align:  ; hgrab: true;">
+			<input id="inputKey" ref="inputkey">
+				<label>Please Enter The Key:</label>
+					<action className="com.tibco.tct.fom.search.InputKeyAction" event="xforms-value-changed" />
+			</input>
+			<input id="propertyTable" ref="propertiesInfo" class="propertiesTable">
+					<action className="com.tibco.tct.fom.search.SaveTableValueAction" event="xforms-value-changed" />
+			</input>
+		</group>
+	</body>
+</xform>

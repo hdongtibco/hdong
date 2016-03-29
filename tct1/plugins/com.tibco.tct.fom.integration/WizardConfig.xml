@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wizard productName="FOM" productVersion="3.0" TCTVersion="1.4" sequence="2200" width="900" height="500" title="Configure FOM Integration" description="This wizard will help configure FOM Integration" icon="ui/icons/menu.png">
+	<parent id="com.tibco.tct.fom.database" needParentProperty="false"/>    
+	<datamodel file="data.xml" />
+
+    <classloaderfactory className="com.tibco.customwizard.internal.support.URLClassLoaderFactory">
+    	<file path="tct-fom-integration.jar" />
+        <file dir="${tibco.home}/tools/lib" pattern=".*\.jar" />
+        
+	</classloaderfactory>
+	
+	 <postaction>
+		<action className="com.tibco.tct.framework.actions.CLIAction" logFileName="config.fom.integration.log" description="Config FOM Integration" />
+	</postaction>
+	
+	<pagegroup id="fom">
+		<page id="welcome" title="TIBCO Fulfillment Order Management Integration Configuration Wizard" description="Welcome to the TIBCO Fulfillment Order Management Integration Configuration Wizard." referenceFile="ui/welcome.xform" />
+		<page id="integrationFP" title="Fulfillment Order Management Integration Configuration: FP Details" description="Please enter configuration details for the Fulfillment Order Management Integration" referenceFile="ui/integrationFP.xform" />
+		<page id="integrationFC" title="Fulfillment Order Management Integration Configuration: FC Details" description="Please enter configuration details for the Fulfillment Order Management Integration" referenceFile="ui/integrationFC.xform" />
+		<page id="summary" title="Fulfillment Order Management Integration Configuration: summary" description="Please review the Fulfillment Order Management Integration configuration summary and click Configure to execute." referenceFile="ui/summary.xform" />
+	</pagegroup>
+	
+</wizard>

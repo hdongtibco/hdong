@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fom>
+	<messaging>
+		<isInit>false</isInit>
+		<pluginhome>${tibco.home}/tct/components/shared/1.0.0/plugins</pluginhome>
+		<emsurls>tcp://${tct.hostname}:7222</emsurls>
+		<user>admin</user>
+		<password>ENC(Muzyh3skr3A=)</password>
+		<emshome>${tibco.home}/ems/8.0</emshome>
+	</messaging>
+	
+	<CommonConfiguration>
+		<tibcofomhome>${tibco.home}/af/3.0</tibcofomhome>
+	</CommonConfiguration>
+</fom>

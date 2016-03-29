@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xform xmlns="http://www.w3.org/2002/xforms">
+  <link rel="StyleSheet" type="text/css" href="default.css"/>
+
+	<preaction>
+		<action id="online" className="com.tibco.tct.framework.actions.AlternativeAction" controlId1="offlinegroups" controlId2="onlinegroups" />
+	</preaction>
+
+	<postaction>
+	</postaction>
+
+  <body ref="fom">
+    <group id="intGroup" ref="integration" style="layout: grid; layout-cols: 1; align: fill; hgrab: true;">
+      <trigger id="optioncontrol" class="radio" ref="isoffline">
+        <label>Offline</label>
+        <action refid="online" event="click" />
+      </trigger>
+      <group id="offlinegroups" style="layout: grid; layout-cols: 3; layout-left: 10; align: fill; hgrab: true;">
+      	<input id="offlineintegrationdir" ref="/fom/integration/offlinedir" class="filechooser">
+          <label>Offline Integration Directory:</label>
+		    <validator validation="nonempty,exist" />
+        </input>
+      </group>
+      
+      <trigger class="radio" ref="isonline">
+        <label>Online</label>
+        <action refid="online" event="click" />
+      </trigger>
+      
+      <group id="onlinegroups" style="layout: grid; layout-cols: 2; layout-left: 10; align: fill; hgrab: true;">
+      	<input id="serverhost" ref="/fom/integration/serverhost">
+				<label>Server Host:</label>
+				<validator className="com.tibco.tct.framework.actions.HostNameValidator" />
+		</input>
+		<input id="serverport" ref="/fom/integration/serverport" >
+				<label>Server Port:</label>
+				<validator className="com.tibco.tct.framework.actions.PortNumValidator" />
+		</input>
+		<input id="enterprise" ref="/fom/integration/enterprise" >
+				<label>Enterprise Name:</label>
+				<validator validation="nonempty" />
+		</input>
+		<input id="username" ref="/fom/integration/username" >
+				<label>User Name:</label>
+				<validator validation="nonempty" />
+		</input>
+        <input id="password" ref="/fom/integration/password" obfuscatorClass="com.tibco.tct.fom.common.PasswordObfuscator" style="control: password; colspan: 1; border: true; align: fill; hgrab: true;">
+		    <label>Password:</label>
+		    <validator validation="nonempty" />
+        </input>
+	  </group>
+	  
+     </group>
+  </body>
+</xform>

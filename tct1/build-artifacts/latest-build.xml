@@ -1,0 +1,26 @@
+<?xml version="1.0" ?>
+<project name="Build 2016-03-28-0905.YANNIS">
+    <!-- THIS IS A GENERATED FILE.  If you change it, fish on you, baby. -->
+    <import file="E:\tct1\build-artifacts\artifacts-list.xml" optional="true" />
+    <!-- booleans for success and the existence of a test feature -->
+    <property name="autobuild.build.latest.success" value="true" />
+    <property name="autobuild.build.latest.has-tests" value="false" />
+
+    <!-- stuff that contributes to locations and qualifiers: timestamp, username -->
+    <property name="autobuild.build.latest.timestamp" value="2016-03-28-0905" />
+    <property name="autobuild.build.latest.username" value="YANNIS" />
+
+    <!-- locations (outputs, configuration) -->
+    <property name="autobuild.build.latest.extension-location"
+              location="E:\work\repo\builder\tt\output\tbuild\candidates\amxext\tools\FOS\2016-03-28-0905.YANNIS\release\eclipse" />
+    <property name="autobuild.build.latest.update-site"
+              location="E:\work\repo\builder\tt\output\tbuild\candidates\amxext\tools\FOS\2016-03-28-0905.YANNIS\jar\release" />
+    <property name="autobuild.build.latest.debug-site"
+              location="E:\work\repo\builder\tt\output\tbuild\candidates\amxext\tools\FOS\2016-03-28-0905.YANNIS\jar\debug" />
+    <property name="autobuild.build.latest.configuration-extension"
+              location="E:\work\repo\builder\tt\output\tbuild\configurations\lblm\amxext\tools\FOS\extensionLoc\eclipse" />
+    <property name="autobuild.build.latest.test-results"
+              location="E:\work\repo\builder\tt\output\tbuild\candidates\amxext\tools\FOS\2016-03-28-0905.YANNIS\junit" />
+    <property name="autobuild.build.latest.eclipse-target"
+              location="E:\work\repo\builder\tt\tools\eclipse-sdk-3.4.2" />
+</project>

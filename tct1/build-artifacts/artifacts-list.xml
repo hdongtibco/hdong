@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<project name="FOS artifacts">
+<!-- THIS IS A GENERATED FILE.  Any changes you make will be destroyed. -->
+    <property name="feature_com.tibco.tct.fos.feature" value="1.1.0.DEV-2016-03-28-0831-YANNIS" />
+    <property name="plugin_com.tibco.tct.fos.feature-com.tibco.tct.fom.database" value="1.1.0.DEV-2016-03-28-0831-YANNIS" />
+    <property name="plugin_com.tibco.tct.fos.feature-com.tibco.tct.fom.messaging" value="1.1.0.DEV-2016-03-28-0831-YANNIS" />
+    <property name="plugin_com.tibco.tct.fos.feature-com.tibco.tct.fom.help.doc" value="1.1.0.DEV-2016-03-28-0831-YANNIS" />
+    <property name="plugin_com.tibco.tct.fos.feature-com.tibco.tct.fom.oms" value="1.1.0.DEV-2016-03-28-0831-YANNIS" />
+    <property name="plugin_com.tibco.tct.fos.feature-com.tibco.tct.fom.integration" value="1.1.0.DEV-2016-03-28-0831-YANNIS" />
+</project>

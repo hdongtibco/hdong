@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xform xmlns="http://www.w3.org/2002/xforms">
+	<link rel="StyleSheet" type="text/css" href="default.css"/>
+	
+	<preaction>
+		
+	</preaction>
+	
+	<postaction>
+		
+    </postaction>
+	
+	<body ref="fom">
+
+	<group style="layout: grid; layout-cols: 1; align: fill; hgrab: true;">
+		<group ref="messaging" style="layout: grid; layout-cols: 2; align: fill; hgrab: true;">
+			
+			<input id="emsurls" ref="emsurls" hint="comma separated list of host:port of notification server instances">
+				<label>EMS URL List:</label>
+				<validator className="com.tibco.tct.framework.actions.EMSHostPortListValidator"/>
+	    	</input>
+			
+			<input id="user" ref="user" >
+				<label>EMS User:</label>
+				<validator className="com.tibco.tct.fom.common.IllegalCharValidator" />
+			</input>
+			
+			<input id="password" ref="password" obfuscatorClass="com.tibco.tct.fom.common.PasswordObfuscator" style="control: password; layout: grid; layout-cols: 2; border: true; align: fill; hgrab: true;">
+				<label>EMS Password:</label>
+			</input>
+	    </group>
+		
+        <output/>
+        <output/>
+        <trigger>
+			<label>Test Connection</label>
+				<action className="com.tibco.tct.fom.messaging.TestEMSConnectionAction" />
+	    </trigger>
+	</group>
+	</body>
+</xform>

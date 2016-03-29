@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xform xmlns="http://www.w3.org/2002/xforms">
+	<link rel="StyleSheet" type="text/css" href="default.css"/>
+	
+	<preaction>
+		
+	</preaction>
+	
+	<postaction>
+    </postaction>
+	
+	<body ref="fom">
+		<group ref="databaseConfig" style="layout: grid; layout-cols: 3; align: fill; hgrab: true;">
+			
+			<select1 id="dbVersion" appearance="minimal" ref="/fom/databaseConfig/dbVersion" hint="Specifies the version of Oracle ." style="colspan: 2; border: true; align: fill; hgrab: true;">
+                <label>Oracle Version:</label>
+                <item>
+					<value>Other versions of oracle</value>
+				</item>
+				<item>
+					<value>Oracle 12c</value>
+				</item>
+				<action className="com.tibco.tct.fom.database.ChangeDBUrlAction" event="modify" />
+        	</select1>
+			
+			<input id="driverpath" ref="driverLocation" class="filechooser" >
+				<label>JDBC Driver Folder:</label>
+				<validator className="com.tibco.tct.fom.database.DriverLocationValidator" />
+			</input>
+			
+			<input id="dburl" ref="dburl"  style="colspan: 2; border: true; align: fill; hgrab: true;">
+				<label>Database URL:</label>
+				<validator className="com.tibco.tct.fom.common.DBUrlValidator" />
+	    	</input>
+			
+			<input id="user" ref="user" style="colspan: 2; border: true; align: fill; hgrab: true;">
+				<label>DBA User Name:</label>
+				<validator validation="nonempty" />
+				<validator className="com.tibco.tct.fom.common.IllegalCharValidator" />
+			</input>
+			
+			<input id="password" ref="password" obfuscatorClass="com.tibco.tct.fom.common.PasswordObfuscator" style="control: password;colspan: 2; border: true; align: fill; hgrab: true;">
+				<label>DBA Password:</label>
+			</input>
+		</group>
+		<group ref="databaseConfig" style="layout: grid; layout-cols: 2; align: fill; hgrab: true;">	
+			<output>
+        	</output>
+        	<output>
+        	</output>
+        	<output>
+        	</output>
+        	<output>
+        	</output>
+			<trigger>
+				<label>Test Connection</label>
+				<action className="com.tibco.tct.fom.database.TestDBConnectionAction"/>
+			</trigger>
+		</group>
+	</body>
+</xform>

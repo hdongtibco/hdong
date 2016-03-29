@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fom>
+	<oms>
+		<isInit>false</isInit>
+		<pluginhome>${tibco.home}/tct/components/shared/1.0.0/plugins</pluginhome>
+		<httpport>8080</httpport>
+		<wsport>8080</wsport>
+		<omshost>localhost</omshost>
+	</oms>
+	<CommonConfiguration>
+		<tibcofomhome>${tibco.home}/af/3.0</tibcofomhome>
+	</CommonConfiguration>
+</fom>

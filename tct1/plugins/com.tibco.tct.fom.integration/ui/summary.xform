@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xform xmlns="http://www.w3.org/2002/xforms">
+    <link rel="StyleSheet" type="text/css" href="default.css"/>
+    
+    <preaction>
+    	<action className="com.tibco.tct.framework.actions.SummaryPagePreAction" />
+    </preaction>
+
+    <postaction>
+    	<action className="com.tibco.tct.framework.actions.CheckSavedDataModelAction" />
+    	<action className="com.tibco.tct.framework.actions.SummaryPagePostAction"  successMessage="Integration config successfully." />
+    </postaction>
+
+    <body>
+    	<group style="layout: grid; layout-cols: 3; align: fill; hgrab: true;">
+	    	<input id="datafile" class="filechooser" buttonText="Browse" dialogMessage="Please select the folder to store session scripts and log">
+				<label>Session Scripts and Log Folder:</label>
+				<action className="com.tibco.tct.framework.actions.SaveDataModelDialogAction" event="xforms-value-changed" />
+	    	</input>
+		</group>
+		<group id="postactions" style="layout: grid; layout-cols: 2; align: fill; hgrab: true;">
+	    	<label>Click Configure to execute the following action</label>
+		</group>
+    </body>
+</xform>

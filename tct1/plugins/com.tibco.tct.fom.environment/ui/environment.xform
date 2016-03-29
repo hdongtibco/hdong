@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xform xmlns="http://www.w3.org/2002/xforms">
+	<link rel="StyleSheet" type="text/css" href="default.css"/>
+	
+	<preaction>
+		<reset />
+        <action id="saveaction" className="com.tibco.tct.fom.environment.SaveAction" optionControlId="enableocv" />
+	</preaction>
+	
+	<postaction>
+		
+	</postaction>
+	
+	<body ref="/fom">
+		
+		<group ref="EnvConfiguration" style="layout: grid; layout-cols: 1; align: fill; hgrab: true;">
+			<trigger id="enableocv" class="checkbox" ref="enableocv">
+				<label>Enable OCV</label>
+				<action refid="saveaction" event="click"  />
+	    	</trigger>
+		</group>
+		<group ref="EnvConfiguration" style="layout: grid; layout-cols: 3; align: fill; hgrab: true;">
+	    	
+			<input id="trahome" ref="trahome" class="filechooser" >
+				<label>TRA Home:</label>
+				<validator className="com.tibco.tct.fom.environment.TraHomeValidator" />
+			</input>
+		
+			<!--<input id="host" ref="host" style="colspan: 2; border: true; align: fill; hgrab: true;">
+				<label>FOM Host:</label>
+				<validator className="com.tibco.tct.framework.actions.HostNameValidator" />
+				<action className="com.tibco.tct.fom.environment.SetHostValueAction" event="xforms-value-changed" />
+			</input>-->
+			
+			<input id="rvdaemon" ref="rvdaemon" style="colspan: 2; border: true; align: fill; hgrab: true;">
+				<label>RV Daemon:</label>
+				<validator className="com.tibco.tct.fom.environment.UrlValidator" />
+				<!--<validator className="com.tibco.tct.fom.environment.HostSameValidator" />-->
+			</input>
+			
+			<input id="hawkdaemon" ref="hawkdaemon" style="colspan: 2; border: true; align: fill; hgrab: true;">
+				<label>Hawk Daemon:</label>
+				<validator className="com.tibco.tct.fom.environment.UrlValidator" />
+				<!--<validator className="com.tibco.tct.fom.environment.HostSameValidator" />-->
+			</input>
+			
+			<input id="adminhawk" ref="adminhawk" style="colspan: 2; border: true; align: fill; hgrab: true;">
+				<label>Hawk Cluster:</label>
+				<validator validation="nonempty" />
+				<validator className="com.tibco.tct.framework.actions.HostNameValidator" />
+			</input>
+			
+			<input id="domain" ref="domain" style="colspan: 2; border: true; align: fill; hgrab: true;">
+				<label>Admin Domain:</label>
+				<validator validation="nonempty" />
+				<validator className="com.tibco.tct.fom.common.IllegalCharValidator" />
+			</input>
+			
+			<input id="user" ref="user" style="colspan: 2; border: true; align: fill; hgrab: true;">
+				<label>Admin User:</label>
+				<validator validation="nonempty" />
+				<validator className="com.tibco.tct.fom.common.IllegalCharValidator" />
+			</input>
+			
+			<input id="password" ref="password" obfuscatorClass="com.tibco.tct.fom.common.PasswordObfuscator" style="control: password; colspan: 2; border: true; align: fill; hgrab: true;">
+				<label>Admin Password:</label>
+			</input>
+		</group>
+	</body>
+</xform>

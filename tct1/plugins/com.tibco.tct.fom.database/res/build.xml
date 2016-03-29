@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="tct-database" default="end-to-end">
+	<dirname property="tct.scripts.dir" file="${ant.file.tct-database}"/>
+	<property name="tct.templates.dir" value="${tct.scripts.dir}/templates"/>
+	<property file="build.properties"/>
+	<import file="${tct.templates.dir}/tct-tools.xml"/>
+	<property name="fom.script.dir" value="${fom.tibco.home}/db/oracle/oms"/>
+	
+	<path id="config.database.path">
+         <fileset dir="${plugins.home}">
+             <include name="com.tibco.tct.fom.database_*/*.jar" />
+         </fileset>
+    </path>
+    
+    <target name="end-to-end" depends="-init, config-database, delete-tct-temp, -clean-up"/>
+	
+	<target name="create-script" depends="-init" description="create scripts">
+		<taskdef name="updateScript" classname="com.tibco.tct.fom.database.ant.UpdateScriptFiles">
+			<classpath>
+				<fileset dir="${plugins.home}" includes="com.tibco.tct.fom.database_*/*.jar"/>
+			</classpath>
+		</taskdef>
+		<updateScript />
+	</target>
+	
+	<target name="run-script" depends="create-script" description="execute created TCT temp scripts">
+		<taskdef name="runScript" classname="com.tibco.tct.fom.database.ant.InvokeSqlTask">
+			<classpath>
+				<fileset dir="${plugins.home}" includes="com.tibco.tct.fom.database_*/*.jar"/>
+			</classpath>
+		</taskdef>
+		<trycatch>
+        	<try>
+				<runScript />
+			</try> 
+ 
+      		<finally>
+    		<echo>delete tct temp scripts....</echo>
+    			<antcall target="delete-tct-temp"/>
+  			</finally>
+    	</trycatch>	
+	</target>
+	
+	<target name="config-database" depends="run-script">
+		<taskdef name="updateConfig" classname="com.tibco.tct.fom.database.ant.UpdateDBConfigFile">
+			<classpath>
+				<fileset dir="${plugins.home}" includes="com.tibco.tct.fom.database_*/*.jar"/>
+			</classpath>
+		</taskdef>
+		<updateConfig />
+	</target>
+	
+	<target name="delete-tct-temp">
+		<delete quiet="true" >
+			<fileset dir="${fom.script.dir}" includes="TCT_TEMP_*.sql"/>
+		</delete>
+	</target>
+</project>

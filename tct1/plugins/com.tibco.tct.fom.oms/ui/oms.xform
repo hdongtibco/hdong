@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xform xmlns="http://www.w3.org/2002/xforms">
+  <link rel="StyleSheet" type="text/css" href="default.css"/>
+
+	<preaction>
+	</preaction>
+
+	<postaction>
+		
+	</postaction>
+
+  <body ref="/fom">
+    <group id="intGroup" ref="oms" style="layout: grid; layout-cols: 2; align: fill; hgrab: true;">
+      
+	  	<input id="httpport" ref="httpport" >
+	  		<label>Http Port:</label>
+			<validator className="com.tibco.tct.framework.actions.PortNumValidator" />
+	  	</input>
+	  	<input id="wsport" ref="wsport" style="layout: grid; layout-cols: 2; align: fill; hgrab: true; border: true;">
+	  		<label>WS Port:</label>
+			<validator className="com.tibco.tct.framework.actions.PortNumValidator" />
+	  	</input>
+	  	<input id="omshost" ref="omshost" style="layout: grid; layout-cols: 2; align: fill; hgrab: true; border: true;">
+	  		<label>FOM OMS host:</label>
+			<validator className="com.tibco.tct.framework.actions.HostNameValidator" />
+	  	</input>
+     </group>
+  </body>
+</xform>

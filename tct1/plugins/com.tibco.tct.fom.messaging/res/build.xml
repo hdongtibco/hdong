@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="tct-message" default="end-to-end">
+	<dirname property="tct.scripts.dir" file="${ant.file.tct-message}"/>
+	<property name="tct.templates.dir" value="${tct.scripts.dir}/templates"/>
+	<property file="build.properties"/>
+	<import file="${tct.templates.dir}/tct-tools.xml"/>
+	<property name="ems.server" value="${mess.ems.servers}"/>
+	<property name="ems.script.file" value="${fom.tibco.home}/ems/AF_CreateEMSChannel.txt"/>
+	
+	<path id="config.database.path">
+         <fileset dir="${plugins.home}">
+             <include name="com.tibco.tct.fom.database_*/*.jar" />
+         </fileset>
+    </path>
+	
+	<target name="end-to-end" depends="-init, run-ems-script, config-message, -clean-up "/>
+	
+	<taskdef name="DecryptPaswdTask" classname="com.tibco.tct.fom.common.DecryptPaswdTask" classpathref="config.database.path" />
+	
+	<target name="decrypt-user-password">
+         <DecryptPaswdTask property="userPassword" prop1="${mess.ems.password}">
+         </DecryptPaswdTask>
+    </target>
+	
+	<target name="run-ems-script" depends="-init, decrypt-user-password">
+		
+		<condition property="paswd-empty">
+    		<equals arg1="" arg2="${userPassword}" casesensitive="false"/>
+		</condition>
+		<echo>run the ${ems.script.file} file...</echo>
+		<if>
+            <istrue value="${paswd-empty}"/>
+            <then>
+                <echo>The user password is empty.</echo>
+                <exec dir="${mess.ems.home}/bin" executable="${mess.ems.home}/bin/tibemsadmin" failonerror="true">
+					<arg line="-user ${mess.ems.user} -server ${ems.server} -ignore -script ${ems.script.file}"/>
+				</exec>         
+            </then>
+            <else>
+        		<echo>The user password is not empty.</echo>
+            	<exec dir="${mess.ems.home}/bin" executable="${mess.ems.home}/bin/tibemsadmin" failonerror="true">
+					<arg line="-user ${mess.ems.user} -password ${userPassword} -server ${ems.server} -ignore -script ${ems.script.file}"/>
+				</exec>      
+        	</else>
+        </if>
+		<echo>exec script successful...</echo>
+	</target>
+	
+	<target name="config-message" depends="-init">
+		<taskdef name="updateConfig" classname="com.tibco.tct.fom.messaging.ant.UpdateConfigFile" classpathref="config.database.path" >
+			<classpath>
+				<fileset dir="${plugins.home}" includes="com.tibco.tct.fom.messaging_*/*.jar"/>
+			</classpath>
+		</taskdef>
+		<updateConfig />
+	</target>
+	
+</project>

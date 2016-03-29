@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wizard productName="FOM" productVersion="3.0" TCTVersion="1.4" sequence="2100" width="900" height="500" title="Configure FOM OMS" description="This wizard will help configure FOM OMS" icon="ui/icons/menu.png">
+    <parent id="com.tibco.tct.fom.database" needParentProperty="false"/>
+	<datamodel file="data.xml" />
+
+    <classloaderfactory className="com.tibco.customwizard.internal.support.URLClassLoaderFactory">
+    	<file path="tct-fom-oms.jar" />
+        <file dir="${tibco.home}/tools/lib" pattern=".*\.jar" />
+	</classloaderfactory>
+	
+	 <postaction>
+		<action className="com.tibco.tct.framework.actions.CLIAction" logFileName="config.fom.oms.log" description="Config FOM OMS" />
+	</postaction>
+	
+	<pagegroup id="fom">
+		<page id="welcome" title="TIBCO Fulfillment Order Management OMS Configuration Wizard" description="Welcome to the TIBCO Fulfillment Order Management OMS Configuration Wizard." referenceFile="ui/welcome.xform" />
+		<page id="oms" title="Fulfillment Order Management OMS Configuration: OMS Ports Details" description="Please enter configuration details for the Fulfillment Order Management OMS." referenceFile="ui/oms.xform" />
+		<page id="summary" title="Fulfillment Order Management OMS Configuration: summary" description="Please review the Fulfillment Order Management OMS configuration summary and click Configure to execute." referenceFile="ui/summary.xform" />
+	</pagegroup>
+	
+</wizard>

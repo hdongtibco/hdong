@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fom>
+	<databaseConfig>
+		<isInit>false</isInit>
+		<pluginhome>${tibco.home}/tct/components/shared/1.0.0/plugins</pluginhome>
+		<dbVersion>Other versions of oracle</dbVersion>
+		<dburl>jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521)))(CONNECT_DATA=(SID=orcl)(SERVER=dedicated)))</dburl>
+		<user>sys as sysdba</user>
+		<password>tools</password>
+		<driverLocation>/opt/software/product/11.2.0/dbhome_1/jdbc/lib</driverLocation>
+		<hasLastestOjdbcDriver>false</hasLastestOjdbcDriver>
+		<createtablespace>
+			<createtablespaceenable>false</createtablespaceenable>
+			<tablespacename>FOM_Tablespace_01</tablespacename>
+			<tablespaceminsize>10</tablespaceminsize>
+			<tablespacemaxsize>100</tablespacemaxsize>
+			<tablespacelocation></tablespacelocation>
+			<tablespacedbfilename>data.dbf</tablespacedbfilename>
+		</createtablespace>
+		<createuser>
+			<createuserenable>false</createuserenable>
+			<createdusername>FOM_User_01</createdusername>
+			<createduserpassword>ENC(Muzyh3skr3A=)</createduserpassword>
+			<existtablespacename></existtablespacename>
+			<existtablespacesize>10</existtablespacesize>
+		</createuser>
+		<runscript>false</runscript>
+	</databaseConfig>
+	
+	<CommonConfiguration>
+		<tibcofomhome>${tibco.home}/af/3.0</tibcofomhome>
+		<tcthome>${tct.home}/data</tcthome>
+	</CommonConfiguration>
+</fom>

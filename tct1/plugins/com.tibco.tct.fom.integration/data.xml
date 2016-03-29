@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fom>
+	<integration>
+		<isInit>false</isInit>
+		<pluginhome>${tibco.home}/tct/components/shared/1.0.0/plugins</pluginhome>
+		<hostname>localhost</hostname>
+		<port>8080</port>
+		<node>node</node>
+		<ownerFP>FP</ownerFP>
+		<enableFPConfig>true</enableFPConfig>
+		<offlinedir>${tibco.home}/af/offline</offlinedir>
+		<serverhost>localhost</serverhost>
+		<serverport>8080</serverport>
+		<enterprise>enterprise</enterprise>
+		<username>FOM21</username>
+		<password>ENC(fhH51/LaMj4=)</password>
+		<isoffline>true</isoffline>
+		<isonline>false</isonline>
+	</integration>
+	
+	<CommonConfiguration>
+		<tibcofomhome>${tibco.home}/af/3.0</tibcofomhome>
+	</CommonConfiguration>
+</fom>

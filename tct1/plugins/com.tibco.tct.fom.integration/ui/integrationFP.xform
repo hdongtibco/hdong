@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xform xmlns="http://www.w3.org/2002/xforms">
+	<link rel="StyleSheet" type="text/css" href="default.css"/>
+	
+	<preaction>
+		<action id="enableFPAction" className="com.tibco.tct.fom.integration.IntegDatabaseVisibleAction" optionControlId="enableFPConfig" controlId="enableFP" />
+	</preaction>
+	
+	<postaction>
+	</postaction>
+	
+	<body ref="fom">
+		<group ref="integration" style="layout: grid; layout-cols: 2; align: fill; hgrab: true;">
+	
+			<trigger id="enableFPConfig" class="checkbox" ref="enableFPConfig">
+				<label>Fulfillment Provisioning Installed</label>
+				<action refid="enableFPAction" event="click" />
+	    	</trigger>
+	    	<group id="enableFP" style="layout: grid; layout-cols: 2; align: fill; hgrab: true;">
+				<input id="hostname" ref="/fom/integration/hostname">
+					<label>FP Host:</label>
+					<validator className="com.tibco.tct.framework.actions.HostNameValidator" />
+				</input>
+	
+				<input id="port" ref="/fom/integration/port" >
+					<label>FP Port:</label>
+					<validator className="com.tibco.tct.framework.actions.PortNumValidator" />
+				</input>
+				
+				<input id="node" ref="/fom/integration/node" >
+					<label>FP Node:</label>
+					<validator validation="nonempty" />
+					<validator className="com.tibco.tct.fom.common.IllegalCharValidator" />
+				</input>
+				
+				<input id="ownerFP" ref="/fom/integration/ownerFP" >
+					<label>Owner For FP:</label>
+					<validator validation="nonempty" />
+					<validator className="com.tibco.tct.fom.common.IllegalCharValidator" />
+				</input>
+			</group>
+			 
+		</group>
+	</body>
+</xform>

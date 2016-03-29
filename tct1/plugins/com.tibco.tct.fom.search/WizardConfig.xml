@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wizard productName="FOM" productVersion="3.0" TCTVersion="1.4" sequence="2500" width="900" height="500" title="TIBCO For FOM Search -1.0" description="This wizard will help you to Config FOM Search" icon="ui/icons/menu.png">
+    <datamodel file="data.xml" />
+
+    <classloaderfactory className="com.tibco.customwizard.internal.support.URLClassLoaderFactory">
+    	<file path="tct-fom-search.jar" />
+        <file dir="${tibco.home}/tools/lib" pattern=".*\.jar" />
+	</classloaderfactory>
+	<postaction>
+		<action className="com.tibco.tct.framework.actions.CLIAction" logFileName="config.fos.log" description="fos setup" />
+	</postaction>
+	<pagegroup id="fos">
+		<page id="welcome" title="TIBCO For FOM-Welcome" description="Please Load a Property File" referenceFile="ui/welcome.xform" />
+		<page id="edit" title="TIBCO For FOM-edit" description="Please Select a Value To Edit" referenceFile="ui/edit.xform" />
+		<page id="summary" title="TIBCO For FOM-summary" description="Please Click Configure to execute" referenceFile="ui/summary.xform" />
+	</pagegroup>
+	
+</wizard>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fom>
+	<search>
+		<isInit>false</isInit>
+		<pluginhome>${tibco.home}/tct/components/shared/1.0.0/plugins</pluginhome>
+		<inputkey></inputkey>
+		<previousfilepath></previousfilepath>
+		<filepath></filepath>
+		<propertiesInfo>KEY,Value</propertiesInfo>
+	</search>
+</fom>

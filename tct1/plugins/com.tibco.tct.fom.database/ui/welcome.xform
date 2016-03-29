@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xform xmlns="http://www.w3.org/2002/xforms">
+    <link rel="StyleSheet" type="text/css" href="default.css"/>
+    <preaction>
+        <action className="com.tibco.tct.framework.actions.SaveDataModelAction" contributoName="fom.database" />
+        <action className="com.tibco.tct.fom.common.GetFOMHomeAction" />
+    </preaction>
+    <postaction>
+		
+	</postaction>
+	
+    <body>
+        <output>
+This wizard will help you to configure some attributes associated with Oracle database.
+And execute scripts to create DB user/tablespace.
+Before proceeding with the wizard, you must start the database server.
+        </output>
+        
+    </body>
+</xform>

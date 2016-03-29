@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="tct-fos" default="end-to-end">
+	<dirname property="tct.scripts.dir" file="${ant.file.tct-fom-search}"/>
+	<property name="tct.templates.dir" value="${tct.scripts.dir}/templates"/>
+	<property file="build.properties"/>
+
+	<import file="${tct.templates.dir}/tct-tools.xml"/>
+	
+	<target name="end-to-end" depends="-init, config-fom-search, -clean-up"/>
+	
+	<target name="config-fom-search" depends="-init">
+		<taskdef name="updateProperties" classname="com.tibco.tct.fom.search.ant.UpdatePropertiesFile">
+			<classpath>
+				<fileset dir="${plugins.home}" includes="com.tibco.tct.fom.search_*/*.jar"/>
+			</classpath>
+		</taskdef>
+		<updateProperties />
+	</target>
+</project>

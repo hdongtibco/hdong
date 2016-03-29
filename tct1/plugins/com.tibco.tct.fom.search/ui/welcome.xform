@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xform xmlns="http://www.w3.org/2002/xforms">
+    <link rel="StyleSheet" type="text/css" href="default.css"/>
+    <preaction>
+    <action className="com.tibco.tct.framework.actions.SaveDataModelAction" contributoName="fom.search" />
+    </preaction>
+    <postaction>
+		<action className="com.tibco.tct.fom.search.SetPropertiesAction" />
+	</postaction>
+	
+    <body ref="/fom">
+        <output>
+This wizard will help you ! FOM-Search
+        </output>
+        
+      <group id="welcomegroup" ref="search" style="layout: grid; layout-cols: 3; align: fill; hgrab: true;">
+	 	<output id="message" style="colspan: 3; align: fill; hgrab: true; wrap: true"></output>
+		<output style="colspan: 3; align: fill; hgrab: true; wrap: true">
+			Please provide a "*.properties" file
+		</output>
+			
+		<input id="filepath" class="filechooser" ref="filepath" browseType="file">
+			<label>Property File:</label>
+			<validator
+				className="com.tibco.tct.fom.search.PropertyFileValidator"/>
+		</input>
+     </group>
+        
+    </body>
+</xform>

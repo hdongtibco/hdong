@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="makejar" default="copy">
+	<property name="target.dir" value="D:\TIBCO\tibco\tct\components\shared\1.0.0\plugins\com.tibco.tct.fom.oms_1.0.0.019"/>
+	
+	<target name="copy">
+		<jar destfile="${target.dir}/tct-fom-oms.jar" update="true">
+			<fileset dir="bin">  
+			</fileset> 
+		</jar>	
+		<copy todir="${target.dir}/ui">
+			<fileset dir="ui">  
+			</fileset> 
+		</copy>	
+		<copy todir="${target.dir}/res">
+			<fileset dir="res">  
+			</fileset> 
+		</copy>	
+		<copy file="data.xml"
+			todir="${target.dir}">
+		</copy>	
+		<copy file="WizardConfig.xml"
+			todir="${target.dir}">
+		</copy>	
+	</target>
+</project>

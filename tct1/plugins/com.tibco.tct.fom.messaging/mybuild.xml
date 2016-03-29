@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="makejar" default="copy">
+	<property name="target.dir" value="E:\TIBCO_install\TIBCO_HOME\tct\components\shared\1.0.0\plugins\com.tibco.tct.fom.messaging_1.0.0.DEV-2013-03-26-0505-admin"/>
+	
+	<target name="copy">
+		<jar destfile="${target.dir}/tct-fom-message.jar" update="true">
+			<fileset dir="bin">  
+			</fileset> 
+		</jar>	
+		<copy todir="${target.dir}/ui">
+			<fileset dir="ui">  
+			</fileset> 
+		</copy>	
+		<copy todir="${target.dir}/res">
+			<fileset dir="res">  
+			</fileset> 
+		</copy>	
+		<copy file="data.xml"
+			todir="${target.dir}">
+		</copy>	
+		<copy file="WizardConfig.xml"
+			todir="${target.dir}">
+		</copy>	
+		<copy file="tibjmsadmin.jar"
+			todir="${target.dir}">
+		</copy>
+		<copy file="jms.jar"
+			todir="${target.dir}">
+		</copy>	
+		<copy file="tibjms.jar"
+			todir="${target.dir}">
+		</copy>	
+	</target>
+</project>

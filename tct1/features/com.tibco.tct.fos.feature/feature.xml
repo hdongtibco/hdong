@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="com.tibco.tct.fos.feature"
+      label="%featureName"
+      version="1.1.0.qualifier"
+      provider-name="%providerName_notrans">
+
+   <description url="http://www.tibco.com/devnet/business_studio/default.jsp">
+      %description
+   </description>
+
+   <copyright>
+      %copyright
+   </copyright>
+
+   <license url="%licenseURL">
+      %license
+   </license>
+
+   <requires>
+      <import feature="com.tibco.tct.framework.feature" version="1.4.0"/>
+   </requires>
+		 
+	<plugin
+         id="com.tibco.tct.fom.database"
+         download-size="0"
+         install-size="0"
+         version="1.1.0.qualifier"
+         unpack="true"/>
+		 
+	<plugin
+         id="com.tibco.tct.fom.messaging"
+         download-size="0"
+         install-size="0"
+         version="1.1.0.qualifier"
+         unpack="true"/>
+
+<!--	
+	<plugin
+         id="com.tibco.tct.fom.environment"
+         download-size="0"
+         install-size="0"
+         version="1.1.0.qualifier"
+         unpack="true"/>
+-->
+		 
+	<plugin
+         id="com.tibco.tct.fom.integration"
+         download-size="0"
+         install-size="0"
+         version="1.1.0.qualifier"
+         unpack="true"/>
+	
+	<plugin
+         id="com.tibco.tct.fom.oms"
+         download-size="0"
+         install-size="0"
+         version="1.1.0.qualifier"
+         unpack="true"/>
+		 
+	<plugin
+         id="com.tibco.tct.fom.help.doc"
+         download-size="0"
+         install-size="0"
+         version="1.1.0.qualifier"
+         unpack="true"/> 
+</feature>

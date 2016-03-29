@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: TCT For FOM Environment
+Bundle-SymbolicName: com.tibco.tct.fom.environment;singleton:=true
+Bundle-Version: 1.1.0.qualifier
+Require-Bundle: com.tibco.customwizard,
+ com.tibco.tpcl.org.nuxeo.xforms.core,
+ com.tibco.tpcl.org.nuxeo.xforms.ui,
+ com.tibco.tct.framework,
+ org.eclipse.core.runtime,
+ org.eclipse.ui,
+ org.eclipse.ui.forms
+Bundle-ActivationPolicy: lazy
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-Vendor: TIBCO
+Import-Package: com.tibco.tct.fom.common,
+ org.apache.tools.ant
